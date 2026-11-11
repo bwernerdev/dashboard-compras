@@ -80,7 +80,7 @@ const exportacao = { csv: true };
 export function definirExportacao({ csv }) { exportacao.csv = csv; }
 
 /**
- * colunas: [{ id, rotulo, valor(linha), formato?(valor), tipo?: 'data', num?: bool,
+ * colunas: [{ id, rotulo, valor(linha), formato?(valor), tipo?: 'data', num?: bool, centro?: bool,
  *            exibir?(linha) -> Node|texto, classe?(linha) -> string, titulo? }]
  * opções: titulo (legenda acessível), ordem { coluna, desc }, porPagina, pesquisa, nomeArquivo,
  *         rodape(linhas) -> [texto por coluna], vazio (texto sem linhas), aoClicarLinha(linha),
@@ -147,7 +147,7 @@ export function criarTabela(opcoes) {
     substituir(cabeca, el('tr', {}, colunas.map((c) => {
       const ativa = estado.ordem?.coluna === c.id;
       const sort = ativa ? (estado.ordem.desc ? 'descending' : 'ascending') : 'none';
-      return el('th', { scope: 'col', class: c.num ? 'num' : null, 'aria-sort': sort, title: c.titulo ?? null },
+      return el('th', { scope: 'col', class: classeColuna(c), 'aria-sort': sort, title: c.titulo ?? null },
         el('button', {
           type: 'button', class: 'th-botao',
           onclick: () => {
@@ -169,6 +169,11 @@ export function criarTabela(opcoes) {
       mapa.get(k).push(l);
     }
     return [...mapa.values()];
+  }
+
+  /** num: número alinhado à direita; centro: centralizado (vence o num). */
+  function classeColuna(c) {
+    return [c.num ? 'num' : '', c.centro ? 'centro' : ''].join(' ').trim() || null;
   }
 
   const plural = (n, [um, varios]) => `${n.toLocaleString('pt-BR')} ${n === 1 ? um : varios}`;
@@ -193,12 +198,12 @@ export function criarTabela(opcoes) {
       class: [aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '', grupo && i < g.length - 1 ? 'grupo-continua' : ''].join(' ').trim() || null,
       onclick: aoClicarLinha ? () => aoClicarLinha(l) : null,
     }, colunas.map((c) => el('td', {
-      class: [c.num ? 'num' : '', c.classe?.(l) ?? ''].join(' ').trim() || null,
+      class: [classeColuna(c) ?? '', c.classe?.(l) ?? ''].join(' ').trim() || null,
     }, celula(c, l, g[0])))))) : el('tr', {}, el('td', { colspan: colunas.length, class: 'tabela-vazia' }, vazio)));
 
     if (rodape && linhas.length) {
       const totais = rodape(linhas);
-      substituir(pe, el('tr', {}, colunas.map((c, i) => el('td', { class: c.num ? 'num' : null }, totais[i] ?? ''))));
+      substituir(pe, el('tr', {}, colunas.map((c, i) => el('td', { class: classeColuna(c) }, totais[i] ?? ''))));
     } else substituir(pe);
 
     const filtrado = linhas.length !== estado.linhas.length;

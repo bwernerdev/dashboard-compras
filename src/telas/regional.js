@@ -9,7 +9,6 @@ import {
   itensEmAberto, resumoEmAberto, porFaixaDeDias, emAbertoPor, faixaDe, FAIXAS_DIAS,
   recortarPorStatus, itensPorStatus, ehPendencia, RECORTE_PENDENCIAS,
 } from '../analise.js';
-import { ERRO_ND } from '../regras.js';
 
 // Seleções locais da tela (não são filtros globais: só recortam a lista de SCs).
 const local = { faixa: null, sla: 'todos', status: 'todos', agrupar: 'regional' };
@@ -21,26 +20,17 @@ const SLA_OPCOES = [
   { id: 'sem', rotulo: 'Sem prazo' },
 ];
 
-function seloSla(sla) {
-  if (sla === 'No Prazo') return el('span', { class: 'selo-status bom' }, el('span', { 'aria-hidden': 'true' }, '✓'), ' No prazo');
-  if (sla === 'Fora do Prazo') return el('span', { class: 'selo-status critico' }, el('span', { 'aria-hidden': 'true' }, '!'), ' Fora do prazo');
-  if (sla === ERRO_ND) return el('span', { class: 'selo-status neutro', title: 'Prioridade sem linha na tabela de SLA' }, '#N/D');
-  return el('span', { class: 'texto-fraco' }, '-');
-}
-
+// Sem "Dias em aberto", "SLA", "Prazo máx." e "Item" (pedido da equipe, 11/11/2026): o recorte
+// de SLA acima da lista continua valendo.
 const COLUNAS_SCS = [
-  { id: 'dias', rotulo: 'Dias em aberto', num: true, valor: (r) => r.diasEmAberto, formato: fmt.inteiro, titulo: 'Dias úteis (seg–sex) desde a criação da SC' },
-  { id: 'aprov', rotulo: 'Dias da aprovação', num: true, valor: (r) => r.diasDaAprovacao, formato: fmt.inteiro, titulo: 'Dias corridos desde a criação' },
+  { id: 'aprov', rotulo: 'Dias da aprovação', num: true, centro: true, valor: (r) => r.diasDaAprovacao, formato: fmt.inteiro, titulo: 'Dias corridos desde a criação' },
   { id: 'sc', rotulo: 'SC', valor: (r) => r.sc },
   { id: 'data', rotulo: 'Data', tipo: 'data', valor: (r) => r.data },
   { id: 'prioridade', rotulo: 'Prioridade', valor: (r) => r.prioridade },
   { id: 'status', rotulo: 'Status', valor: (r) => r.status },
-  { id: 'sla', rotulo: 'SLA', valor: (r) => r.sla, exibir: (r) => seloSla(r.sla) },
-  { id: 'max', rotulo: 'Prazo máx.', num: true, valor: (r) => (typeof r.slaMax === 'number' ? r.slaMax : null), formato: fmt.inteiro },
-  { id: 'item', rotulo: 'Item', num: true, valor: (r) => r.item, formato: fmt.inteiro },
   { id: 'descricao', rotulo: 'Produto', valor: (r) => r.descricao, classe: () => 'texto-longo' },
   { id: 'codigo', rotulo: 'Código', valor: (r) => r.codigoProduto },
-  { id: 'qtd', rotulo: 'Qtd.', num: true, valor: (r) => r.qtdSolicitacao, formato: fmt.inteiro },
+  { id: 'qtd', rotulo: 'Qtd.', num: true, centro: true, valor: (r) => r.qtdSolicitacao, formato: fmt.inteiro },
   { id: 'solicitante', rotulo: 'Solicitante', valor: (r) => r.solicitante },
   { id: 'filial', rotulo: 'Filial', valor: (r) => r.filial },
   { id: 'nomeFilial', rotulo: 'Nome da filial', valor: (r) => r.nomeFilial },
@@ -171,9 +161,9 @@ export function telaRegional(ctx) {
       titulo: 'SCs em aberto',
       linhas: lista,
       colunas: COLUNAS_SCS,
-      ordem: { coluna: 'dias', desc: true },
+      ordem: { coluna: 'aprov', desc: true },
       // Como a tabela dinâmica da aba Regional: dados da SC só na 1ª linha, itens embaixo.
-      grupo: { chave: (r) => r.solicitacao, colunas: ['dias', 'aprov', 'sc', 'data', 'prioridade'], nome: ['SC', 'SCs'] },
+      grupo: { chave: (r) => r.solicitacao, colunas: ['aprov', 'sc', 'data', 'prioridade'], nome: ['SC', 'SCs'] },
       nomeArquivo: 'scs-em-aberto.csv',
       vazio,
     }).elemento,

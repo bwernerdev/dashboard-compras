@@ -186,6 +186,8 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
   border: 0; background: none; font-weight: 600; color: var(--text); text-align: inherit;
 }
 .num .th-botao { justify-content: flex-end; }
+.tabela .centro { text-align: center; }
+.centro .th-botao { justify-content: center; }
 .th-seta { font-size: 9px; color: var(--accent-text); }
 .tabela-vazia { text-align: center !important; color: var(--text-muted); padding: var(--s5) !important; }
 .texto-longo { max-width: 360px; overflow: hidden; text-overflow: ellipsis; }

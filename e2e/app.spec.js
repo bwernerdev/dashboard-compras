@@ -31,10 +31,11 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
   await expect(lista.locator('.tabela-contagem')).toHaveText('2 SCs, 3 itens');
   const linhas = lista.locator('tbody tr');
-  await expect(linhas.nth(0).locator('td').nth(2)).toHaveText('1000002');
-  await expect(linhas.nth(1).locator('td').nth(2)).toHaveText('');
+  await expect(lista.locator('thead th')).toHaveText([/^Dias da aprovação/, 'SC', 'Data', 'Prioridade', 'Status', 'Produto', 'Código', 'Qtd.', 'Solicitante', 'Filial', 'Nome da filial', 'Comprador', 'Regional']);
+  await expect(linhas.nth(0).locator('td').nth(1)).toHaveText('1000002');
+  await expect(linhas.nth(1).locator('td').nth(1)).toHaveText('');
   await expect(linhas.nth(1)).toContainText('Em pendências de compra');
-  await expect(linhas.nth(2).locator('td').nth(2)).toHaveText('1000001');
+  await expect(linhas.nth(2).locator('td').nth(1)).toHaveText('1000001');
 
   // Status: atalho "Só pendências".
   await lista.getByRole('button', { name: 'Só pendências' }).click();
@@ -93,7 +94,7 @@ test('exporta CSV para o Excel pt-BR', async ({ page }) => {
   const [download] = await Promise.all([page.waitForEvent('download'), bloco.getByRole('button', { name: 'Exportar CSV' }).click()]);
   expect(download.suggestedFilename()).toBe('scs-em-aberto.csv');
   const texto = await readFile(await download.path(), 'utf8');
-  expect(texto.startsWith('﻿Dias em aberto;Dias da aprovação;SC;')).toBe(true);
+  expect(texto.startsWith('﻿Dias da aprovação;SC;Data;Prioridade;Status;Produto;')).toBe(true);
   expect(texto.trim().split('\r\n')).toHaveLength(4); // cabeçalho + 3 itens
 });
 
