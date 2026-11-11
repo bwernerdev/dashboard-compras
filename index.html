@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard de Compras</title>
+  <link rel="stylesheet" href="./src/styles/base.css">
+</head>
+<body>
+  <header class="topo">
+    <h1>Dashboard de Compras</h1>
+    <span class="selo">Fase 1: importação e conferência</span>
+  </header>
+
+  <main class="pagina">
+    <section class="importacao" aria-label="Arquivos do ME">
+      <label class="arquivo" data-tipo="base">
+        <span class="arquivo-titulo">Base</span>
+        <span class="arquivo-dica">base.xlsx (Relatório de Requisição - Friboi V2)</span>
+        <input type="file" accept=".xlsx" data-tipo="base">
+        <span class="arquivo-status" aria-live="polite">Escolha ou arraste o arquivo</span>
+        <progress max="1" value="0" hidden></progress>
+      </label>
+      <label class="arquivo" data-tipo="followUp">
+        <span class="arquivo-titulo">Follow-Up</span>
+        <span class="arquivo-dica">Follow-Up.xlsx (Follow-up - Friboi)</span>
+        <input type="file" accept=".xlsx" data-tipo="followUp">
+        <span class="arquivo-status" aria-live="polite">Escolha ou arraste o arquivo</span>
+        <progress max="1" value="0" hidden></progress>
+      </label>
+    </section>
+
+    <section id="resumo" class="resumo" hidden aria-label="Resumo da importação"></section>
+
+    <section id="previa" class="previa" hidden>
+      <h2>SCs em aberto (prévia da tela Regional)</h2>
+      <div class="tabela-rolagem">
+        <table>
+          <thead>
+            <tr>
+              <th class="num">Dias em aberto</th><th>SC</th><th>Data</th><th>Prioridade</th><th>Status</th>
+              <th>Filial</th><th>Regional</th><th>Comprador</th><th>SLA</th>
+            </tr>
+          </thead>
+          <tbody id="previa-linhas"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

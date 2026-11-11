@@ -2,7 +2,7 @@
 
 Substituir o `DASHBOARD COMPRAS 2026.xlsm` por um app web que lê as duas bases do ME, aplica as regras de negócio em um só lugar e gera um painel leve para a equipe de Suprimentos abrir pela Intranet.
 
-Status: **fase 0 (desenho) concluída**; próxima é a fase 1. Nenhum código ainda.
+Status: **fase 1 concluída** (leitor, regras, testes; resultado na seção 8); próxima é a fase 2.
 
 ---
 
@@ -86,7 +86,7 @@ Chave do item: `Requisição ME` + `Item`. `SC` = 7 caracteres a partir da posi�
 | SLA atendimento | Dias em aberto ≤ máx → No Prazo; senão Fora do Prazo |
 | Contrato? | `Nº Contrato` preenchido |
 | Spend / Total comprado | Soma de `Preço Total do item Pedido c/ Impostos` |
-| Saving Real | `Saving` × `Quantidade do item Solicitação` (mantido como hoje, decisão de 11/11/2026) |
+| Saving Real | `Saving` × `Quantidade do item Solicitação` (mantido como hoje, decisão de 11/11/2026). O ME manda o Saving como texto pt-BR (`"268,93"`); o Excel converte na conta, o app também. Texto vazio vira 0 |
 | % Saving | Economia ÷ (Total comprado + Economia) |
 | Tempo por etapa | Pré-pedido = criação pré-pedido − criação SC; Pedido = pedido − pré-pedido; Cotação = pré-pedido − cotação (ou hoje − cotação se ainda em cotação); Pendência de compra = cotação − criação SC (ou hoje − criação se ainda pendente); Pendência de contrato e Cancelado análogos |
 
@@ -120,10 +120,10 @@ Motivo: ninguém da equipe precisa baixar 65 MB de base; o arquivo fica 10–30�
 Os dois formatos saem do mesmo motor de regras: a escolha não muda as fases 1 e 2.
 
 ### 4.3 Leitura das bases — **em segundo plano, por streaming, só o necessário**
-ExcelJS (usado no `giro-estoque`) carrega o arquivo inteiro na memória; com 54 MB e 190 mil linhas isso trava o navegador. Proposta:
-- Web Worker (a tela não congela) com descompactação por fluxo (`fflate`) e leitura do XML da planilha linha a linha.
-- Ler só as ~35 colunas usadas e **descartar na hora** as linhas fora das 26 filiais.
-- Barra de progresso; meta: < 20 s para a `base.xlsx` atual.
+ExcelJS (usado no `giro-estoque`) carrega o arquivo inteiro na memória; com 54 MB e 190 mil linhas isso trava o navegador. Feito na fase 1 (`src/leitor/`):
+- Web Worker (a tela não congela) com descompactação por fluxo pelo `DecompressionStream` nativo (sem dependência) e leitura do XML da planilha linha a linha.
+- Lê só as colunas usadas e **descarta na hora** as linhas fora das 26 filiais.
+- Barra de progresso; meta: < 20 s para a `base.xlsx` atual. Medido: ~3 s.
 
 As bases continuam vindo como hoje: o favorito do ME (bookmarklet "Relatório de Requisição - Friboi V2" + "Follow-up - Friboi") baixa as duas com todas as filiais. **O filtro das 26 filiais fica no app**, não no ME, para não exigir mudança no favorito nem rodar macro à parte. Se um dia o peso incomodar, dá para acrescentar o filtro de filial no favorito (opcional, fora do escopo).
 
@@ -131,7 +131,7 @@ As bases continuam vindo como hoje: o favorito do ME (bookmarklet "Relatório de
 Sem histórico acumulado (decisão de 11/11/2026). O painel cobre a janela que o favorito baixa (hoje 60 dias). O período aparece no topo do painel, lido da aba "Dados Gerais" de cada base (Data Início / Data Fim).
 
 ### 4.5 Regras em um módulo só, com testes
-`src/rules.js` com uma função por regra da seção 3; `src/config/` com de-para de filiais, apelidos de compradores e tabela SLA **editáveis pela interface** (hoje exigem mexer em aba oculta). Testes unitários com linhas reais anonimizadas cobrindo cada regra, inclusive o caso corrigido da seção 2.
+`src/regras.js` com uma função por regra da seção 3; `src/config/` com de-para de filiais, apelidos de compradores e tabela SLA, **editáveis pela interface** na fase 2 (hoje exigem mexer em aba oculta). Testes unitários com dados fictícios cobrindo cada regra, inclusive o caso corrigido da seção 2. Conferência com a planilha real por script local (`npm run conferir`), sem dados reais no git.
 
 ### 4.6 Repositório próprio e **privado**
 Como o `giro-estoque`, mas privado: as regras e os nomes de filiais são internos. Planilhas (`*.xlsx`, `*.xlsm`) nunca entram no git (`.gitignore` já criado).
@@ -157,7 +157,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | Fase | Entrega | Pronto quando |
 |---|---|---|
 | 0 | Este documento (concluído em 11/11/2026) | Decisões fechadas, exceto o teste da Intranet (adiado para antes da fase 3) |
-| 1 | Leitor das bases (worker) + `rules.js` + configuração + testes | Lê as duas bases atuais em < 20 s; regras testadas |
+| 1 | Leitor das bases (worker) + `regras.js` + configuração + testes (concluída em 11/11/2026) | Lê as duas bases atuais em < 20 s; regras testadas |
 | 2 | Telas Regional, Compradores, Saving + filtros globais | Números de Saving e sc p Compr batem com o `.xlsm`; Regional bate com a regra corrigida |
 | 3 | Teste da Intranet + "Gerar painel" no formato escolhido (`.html` ou `.xlsx` enxuto) | Arquivo anexado na Intranet abre sem importar nada |
 | 4 | Demais telas | Paridade com as abas restantes |
@@ -180,3 +180,30 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 
 ### Em aberto
 1. **Teste da Intranet** (adiado): resultado do anexo `teste-intranet.html` (abre, baixa ou é recusado). Não trava as fases 1 e 2; precisa estar resolvido antes da fase 3.
+
+---
+
+## 8. Resultado da fase 1 (11/11/2026)
+
+### Desempenho (bases de 11/11/2026)
+| Arquivo | Linhas lidas | Mantidas (26 filiais) | Tempo Node | Tempo navegador (worker) |
+|---|---|---|---|---|
+| `base.xlsx` (54 MB) | 190.112 | 8.555 | ~3 s | 3,1 s |
+| `Follow-Up.xlsx` (11 MB) | 76.389 | 2.983 | ~0,7 s | as duas juntas em 4,2 s |
+
+Meta era < 20 s.
+
+### Conferência com a planilha (`npm run conferir`)
+Recalculando as 10.824 linhas da aba `Base` e as 2.357 da `Follow-UP` com `src/regras.js`, **tudo confere**:
+- Colunas por linha: SC, OF, Filial Corr., Nm Fil Corr., Comprador Ajustado Completo, Comprador, Dias da Aprovação, Contrato?, Saving Real, Regional, Filial Ajust, Ano OF, Mês OF.
+- Tabelas dinâmicas: **Spend** (11 filiais, ao centavo), **Saving** (total e economia por filial, com o filtro que estava aplicado: Comprador = Thayane, Contrato? = não) e **sc p Compr** (SCs distintas por comprador × status).
+- Método dos dias úteis: DIATRABALHOTOTAL(0; 11/11/2026) = 33098, o mesmo número que a planilha mostra nas linhas quebradas.
+
+As colunas da seção 2 (dias em aberto, Data, Serviço, SLA, tempos por etapa) não têm como conferir com a planilha, porque lá estão erradas. Ficam cobertas pelos testes unitários.
+
+### Achados durante a fase 1
+- O `Saving` vem do ME como texto pt-BR (`"268,93"`). Uma leitura ingênua zerava 86 linhas; a regra converte como o Excel.
+- Na tabela Saving, os filtros ativos vêm das segmentações, não do filtro de página (que mostra "(Tudo)"). O painel novo precisa deixar os filtros ativos visíveis.
+
+### Tela da fase 1
+`npm run dev`: escolher/arrastar as duas bases, progresso, cartões (linhas, período, SCs em aberto, SLA, Spend, Economia) e prévia das SCs em aberto ordenadas por dias.
