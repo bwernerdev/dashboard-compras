@@ -136,6 +136,18 @@ Sem histórico acumulado (decisão de 11/11/2026). O painel cobre a janela que o
 ### 4.6 Repositório próprio e **privado**
 Como o `giro-estoque`, mas privado: as regras e os nomes de filiais são internos. Planilhas (`*.xlsx`, `*.xlsm`) nunca entram no git (`.gitignore` já criado).
 
+### 4.7 Quem vê o quê — **dois públicos** (11/11/2026)
+O `.xlsm` anexado na Intranet fica protegido por senha (estrutura + 4 abas); a equipe de Suprimentos tem a senha e acesso total. Protegida, a planilha mostra só 8 abas e esconde as outras 11 (e os botões da aba `Botão`):
+
+| Público | Hoje (`.xlsm`) | No app novo |
+|---|---|---|
+| **Equipe de Suprimentos** (acesso total) | Todas as abas, com a senha | O **app** (importar, configurar, todas as telas, inclusive Compradores) |
+| **Quem abre o anexo da Intranet** | Só as abas visíveis: Capa, Status, Entrega, Regional, Spend, Saving, Atendimento, Organograma | O **painel gerado** ("Gerar painel"), só com as telas dessas abas |
+
+Ocultas hoje: Base, Follow-UP, sla, Base Analitico, Botão, Contr - Cot, scs Filial, Med Temp, sc p Compr, sc p Cat, Regularização.
+
+**A senha do Excel não protege dados:** o `.xlsx` não é criptografado, e qualquer leitor de arquivo vê as abas ocultas sem a senha (o leitor do app faz isso). No painel gerado vale o mesmo para tudo que estiver dentro do `.html`. Por isso a regra é: **o que não é para o público da Intranet não entra no arquivo** (nem escondido). A tela Compradores (`sc p Compr`) fica só no app da equipe, e o painel leva só os campos que as telas públicas usam.
+
 ---
 
 ## 5. Telas — prioridade
@@ -159,8 +171,8 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | 0 | Este documento (concluído em 11/11/2026) | Decisões fechadas, exceto o teste da Intranet (adiado para antes da fase 3) |
 | 1 | Leitor das bases (worker) + `regras.js` + configuração + testes (concluída em 11/11/2026) | Lê as duas bases atuais em < 20 s; regras testadas |
 | 2 | Telas Regional, Compradores, Saving + filtros globais (concluída em 11/11/2026) | Números de Saving e sc p Compr batem com o `.xlsm`; Regional bate com a regra corrigida |
-| 3 | Teste da Intranet + "Gerar painel" no formato escolhido (`.html` ou `.xlsx` enxuto) | Arquivo anexado na Intranet abre sem importar nada |
-| 4 | Demais telas | Paridade com as abas restantes |
+| 3 | Teste da Intranet + "Gerar painel" no formato escolhido (`.html` ou `.xlsx` enxuto), só com as telas públicas (seção 4.7) | Arquivo anexado na Intranet abre sem importar nada e não contém dados das telas internas |
+| 4 | Demais telas públicas: Capa, Status, Entrega, Atendimento, Organograma (Spend já está no Saving). Internas, se a equipe quiser: Contr - Cot, scs Filial, Med Temp, sc p Cat, Regularização | Paridade com as abas visíveis da planilha protegida |
 | 5 (opcional) | Favorito do ME abre o app e entrega as bases direto, sem passar por Downloads | Atualização com um clique |
 
 ---
@@ -177,6 +189,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | Período | O que vier nas bases; sem histórico acumulado |
 | Repositório | Próprio e privado: `github.com/bwernerdev/dashboard-compras` |
 | Correção da seção 2 | Aprovada: o painel publica os valores corrigidos (dias em aberto, Data, Serviço, SLA, tempos por etapa) |
+| Públicos (seção 4.7) | Equipe de Suprimentos: app completo. Intranet: painel gerado só com as telas das 8 abas visíveis; Compradores fica de fora do arquivo |
 | Contagem distinta com vazio (fase 2) | Igual à planilha: nos pré-pedidos, SC sem pré-pedido conta como 1 em cada grupo (DISTINCTCOUNT do modelo de dados). Decidido em 11/11/2026 |
 
 ### Em aberto
