@@ -178,6 +178,9 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .tabela .num { text-align: right; font-variant-numeric: tabular-nums; }
 .tabela tbody tr:hover { background: var(--surface-hover); }
 .tabela tr.clicavel { cursor: pointer; }
+/* Linhas agrupadas (itens da mesma SC): separador forte entre grupos, nenhum dentro do grupo. */
+.tabela tbody tr.grupo-inicio:not(:first-child) td { border-top: 2px solid var(--line-strong); }
+.tabela tbody tr.grupo-continua td { border-bottom-color: transparent; }
 .th-botao {
   display: flex; align-items: center; gap: 4px; width: 100%; padding: 8px 10px;
   border: 0; background: none; font-weight: 600; color: var(--text); text-align: inherit;

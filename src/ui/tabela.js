@@ -83,12 +83,15 @@ export function definirExportacao({ csv }) { exportacao.csv = csv; }
  * colunas: [{ id, rotulo, valor(linha), formato?(valor), tipo?: 'data', num?: bool,
  *            exibir?(linha) -> Node|texto, classe?(linha) -> string, titulo? }]
  * opções: titulo (legenda acessível), ordem { coluna, desc }, porPagina, pesquisa, nomeArquivo,
- *         rodape(linhas) -> [texto por coluna], vazio (texto sem linhas), aoClicarLinha(linha).
+ *         rodape(linhas) -> [texto por coluna], vazio (texto sem linhas), aoClicarLinha(linha),
+ *         grupo { chave(linha), colunas: [ids], nome: ['SC', 'SCs'] }: linhas da mesma chave ficam
+ *         juntas (na ordem da 1ª que aparece), as colunas do grupo só na 1ª linha (como a tabela
+ *         dinâmica da planilha) e a paginação conta grupos. CSV e "Copiar tabela" repetem tudo.
  */
 export function criarTabela(opcoes) {
   const {
     colunas, titulo, porPagina = 50, pesquisa = true, nomeArquivo = 'tabela.csv', rodape, vazio = 'Nada para mostrar.',
-    aoClicarLinha,
+    aoClicarLinha, grupo,
   } = opcoes;
   const estado = { linhas: opcoes.linhas ?? [], termo: '', pagina: 0, ordem: opcoes.ordem ?? null };
 
@@ -156,36 +159,64 @@ export function criarTabela(opcoes) {
     })));
   }
 
+  /** Linhas em grupos (cada grupo = array). Sem `grupo`, cada linha é um grupo. */
+  function agrupar(linhas) {
+    if (!grupo) return linhas.map((l) => [l]);
+    const mapa = new Map();
+    for (const l of linhas) {
+      const k = grupo.chave(l);
+      if (!mapa.has(k)) mapa.set(k, []);
+      mapa.get(k).push(l);
+    }
+    return [...mapa.values()];
+  }
+
+  const plural = (n, [um, varios]) => `${n.toLocaleString('pt-BR')} ${n === 1 ? um : varios}`;
+  const NOME_LINHA = ['linha', 'linhas'];
+
+  function celula(c, l, primeira) {
+    // Coluna do grupo fora da 1ª linha: vazia, a não ser que o valor mude dentro do grupo.
+    if (grupo && primeira !== l && grupo.colunas.includes(c.id) && textoDaCelula(c, l) === textoDaCelula(c, primeira)) return '';
+    return c.exibir ? c.exibir(l) : (textoDaCelula(c, l) || '-');
+  }
+
   function render() {
     renderCabecalho();
     const linhas = linhasVisiveis();
-    const paginas = Math.max(1, Math.ceil(linhas.length / porPagina));
+    const grupos = agrupar(linhas);
+    const paginas = Math.max(1, Math.ceil(grupos.length / porPagina));
     estado.pagina = Math.min(estado.pagina, paginas - 1);
     const inicio = estado.pagina * porPagina;
-    const pagina = linhas.slice(inicio, inicio + porPagina);
+    const pagina = grupos.slice(inicio, inicio + porPagina);
 
-    substituir(corpo, pagina.length ? pagina.map((l) => el('tr', {
-      class: aoClicarLinha ? 'clicavel' : null,
+    substituir(corpo, pagina.length ? pagina.flatMap((g) => g.map((l, i) => el('tr', {
+      class: [aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '', grupo && i < g.length - 1 ? 'grupo-continua' : ''].join(' ').trim() || null,
       onclick: aoClicarLinha ? () => aoClicarLinha(l) : null,
     }, colunas.map((c) => el('td', {
       class: [c.num ? 'num' : '', c.classe?.(l) ?? ''].join(' ').trim() || null,
-    }, c.exibir ? c.exibir(l) : (textoDaCelula(c, l) || '-'))))) : el('tr', {}, el('td', { colspan: colunas.length, class: 'tabela-vazia' }, vazio)));
+    }, celula(c, l, g[0])))))) : el('tr', {}, el('td', { colspan: colunas.length, class: 'tabela-vazia' }, vazio)));
 
     if (rodape && linhas.length) {
       const totais = rodape(linhas);
       substituir(pe, el('tr', {}, colunas.map((c, i) => el('td', { class: c.num ? 'num' : null }, totais[i] ?? ''))));
     } else substituir(pe);
 
-    contagem.textContent = linhas.length === estado.linhas.length
-      ? `${linhas.length} linha${linhas.length === 1 ? '' : 's'}`
-      : `${linhas.length} de ${estado.linhas.length} linhas`;
+    const filtrado = linhas.length !== estado.linhas.length;
+    if (grupo) {
+      const total = filtrado ? ` (de ${plural(agrupar(estado.linhas).length, grupo.nome)})` : '';
+      contagem.textContent = `${plural(grupos.length, grupo.nome)}, ${plural(linhas.length, ['item', 'itens'])}${total}`;
+    } else {
+      contagem.textContent = filtrado
+        ? `${linhas.length} de ${plural(estado.linhas.length, NOME_LINHA)}`
+        : plural(linhas.length, NOME_LINHA);
+    }
 
     substituir(paginacao, paginas > 1 ? [
       el('button', {
         type: 'button', class: 'botao botao-sec botao-pequeno', disabled: estado.pagina === 0,
         onclick: () => { estado.pagina--; render(); },
       }, 'Anterior'),
-      el('span', {}, `${inicio + 1}–${Math.min(inicio + porPagina, linhas.length)} de ${linhas.length}`),
+      el('span', {}, `${inicio + 1}–${Math.min(inicio + porPagina, grupos.length)} de ${grupo ? plural(grupos.length, grupo.nome) : grupos.length}`),
       el('button', {
         type: 'button', class: 'botao botao-sec botao-pequeno', disabled: estado.pagina >= paginas - 1,
         onclick: () => { estado.pagina++; render(); },

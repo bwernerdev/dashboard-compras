@@ -32,12 +32,12 @@ const COLUNAS_SCS = [
   { id: 'dias', rotulo: 'Dias em aberto', num: true, valor: (r) => r.diasEmAberto, formato: fmt.inteiro, titulo: 'Dias úteis (seg–sex) desde a criação da SC' },
   { id: 'aprov', rotulo: 'Dias da aprovação', num: true, valor: (r) => r.diasDaAprovacao, formato: fmt.inteiro, titulo: 'Dias corridos desde a criação' },
   { id: 'sc', rotulo: 'SC', valor: (r) => r.sc },
-  { id: 'item', rotulo: 'Item', num: true, valor: (r) => r.item, formato: fmt.inteiro },
   { id: 'data', rotulo: 'Data', tipo: 'data', valor: (r) => r.data },
   { id: 'prioridade', rotulo: 'Prioridade', valor: (r) => r.prioridade },
   { id: 'status', rotulo: 'Status', valor: (r) => r.status },
   { id: 'sla', rotulo: 'SLA', valor: (r) => r.sla, exibir: (r) => seloSla(r.sla) },
   { id: 'max', rotulo: 'Prazo máx.', num: true, valor: (r) => (typeof r.slaMax === 'number' ? r.slaMax : null), formato: fmt.inteiro },
+  { id: 'item', rotulo: 'Item', num: true, valor: (r) => r.item, formato: fmt.inteiro },
   { id: 'descricao', rotulo: 'Produto', valor: (r) => r.descricao, classe: () => 'texto-longo' },
   { id: 'codigo', rotulo: 'Código', valor: (r) => r.codigoProduto },
   { id: 'qtd', rotulo: 'Qtd.', num: true, valor: (r) => r.qtdSolicitacao, formato: fmt.inteiro },
@@ -165,13 +165,15 @@ export function telaRegional(ctx) {
     }, FAIXAS_DIAS.find((f) => f.id === local.faixa).rotulo, el('span', { 'aria-hidden': 'true' }, ' ✕')) : null);
 
   const blocoLista = bloco(
-    { titulo: 'SCs em aberto', subtitulo: 'Um item por linha, da mais antiga para a mais nova.' },
+    { titulo: 'SCs em aberto', subtitulo: 'Itens agrupados por SC, da mais antiga para a mais nova. CSV e "Copiar tabela" trazem um item por linha.' },
     recortes,
     criarTabela({
       titulo: 'SCs em aberto',
       linhas: lista,
       colunas: COLUNAS_SCS,
       ordem: { coluna: 'dias', desc: true },
+      // Como a tabela dinâmica da aba Regional: dados da SC só na 1ª linha, itens embaixo.
+      grupo: { chave: (r) => r.solicitacao, colunas: ['dias', 'aprov', 'sc', 'data', 'prioridade'], nome: ['SC', 'SCs'] },
       nomeArquivo: 'scs-em-aberto.csv',
       vazio,
     }).elemento,

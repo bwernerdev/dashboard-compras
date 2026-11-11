@@ -27,10 +27,24 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   await expect(valorDoCartao(page, 'Itens fora do prazo')).toHaveText('2');
   await expect(valorDoCartao(page, 'SLA no prazo')).toHaveText('33,3%');
 
+  // Lista agrupada por SC: dados da SC só na 1ª linha (como a tabela dinâmica da planilha).
+  const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
+  await expect(lista.locator('.tabela-contagem')).toHaveText('2 SCs, 3 itens');
+  const linhas = lista.locator('tbody tr');
+  await expect(linhas.nth(0).locator('td').nth(2)).toHaveText('1000002');
+  await expect(linhas.nth(1).locator('td').nth(2)).toHaveText('');
+  await expect(linhas.nth(1)).toContainText('Em pendências de compra');
+  await expect(linhas.nth(2).locator('td').nth(2)).toHaveText('1000001');
+
+  // Status: atalho "Só pendências".
+  await lista.getByRole('button', { name: 'Só pendências' }).click();
+  await expect(lista.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
+  await lista.getByLabel('Status').selectOption('todos');
+
   // Faixa "Até 5 dias" recorta a lista.
   await page.getByRole('button', { name: /^Até 5 dias/ }).click();
   await expect(page.locator('.recortes .chip')).toContainText('Até 5 dias');
-  await expect(page.locator('.bloco', { hasText: 'Um item por linha' }).locator('.tabela-contagem')).toHaveText('1 linha');
+  await expect(lista.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
 
   // Clique na linha da regional filtra o painel inteiro.
   await page.locator('tr.clicavel', { hasText: FILIAL_A.regional }).click();
@@ -75,7 +89,7 @@ test('bases ficam salvas no navegador e a aba é lembrada', async ({ page }) => 
 
 test('exporta CSV para o Excel pt-BR', async ({ page }) => {
   await importarBase(page);
-  const bloco = page.locator('.bloco', { hasText: 'Um item por linha' });
+  const bloco = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
   const [download] = await Promise.all([page.waitForEvent('download'), bloco.getByRole('button', { name: 'Exportar CSV' }).click()]);
   expect(download.suggestedFilename()).toBe('scs-em-aberto.csv');
   const texto = await readFile(await download.path(), 'utf8');
