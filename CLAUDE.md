@@ -2,7 +2,7 @@
 
 App web (planejado) que substitui o `DASHBOARD COMPRAS 2026.xlsm`: lê `base.xlsx` e `Follow-Up.xlsx` exportados do ME, aplica as regras de Compras e gera um painel `.html` leve para a equipe de Suprimentos (anexado na Intranet).
 
-Status: fase 0 (desenho). Decisões, regras de negócio e fases: `PROJETO.md`.
+Status: fase 0 (desenho) concluída; próxima é a fase 1. Decisões, regras de negócio e fases: `PROJETO.md`.
 
 ## Arquivos na raiz
 | Arquivo | Conteúdo |

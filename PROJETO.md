@@ -2,7 +2,7 @@
 
 Substituir o `DASHBOARD COMPRAS 2026.xlsm` por um app web que lê as duas bases do ME, aplica as regras de negócio em um só lugar e gera um painel leve para a equipe de Suprimentos abrir pela Intranet.
 
-Status: **fase 0 — desenho**. Nenhum código ainda.
+Status: **fase 0 (desenho) concluída**; próxima é a fase 1. Nenhum código ainda.
 
 ---
 
@@ -156,10 +156,10 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 
 | Fase | Entrega | Pronto quando |
 |---|---|---|
-| 0 | Este documento + teste de anexo `.html` na Intranet | Formato de entrega definido (`.html` ou `.xlsx` enxuto) |
+| 0 | Este documento (concluído em 11/11/2026) | Decisões fechadas, exceto o teste da Intranet (adiado para antes da fase 3) |
 | 1 | Leitor das bases (worker) + `rules.js` + configuração + testes | Lê as duas bases atuais em < 20 s; regras testadas |
 | 2 | Telas Regional, Compradores, Saving + filtros globais | Números de Saving e sc p Compr batem com o `.xlsm`; Regional bate com a regra corrigida |
-| 3 | "Gerar painel" no formato definido na fase 0 | Arquivo anexado na Intranet abre sem importar nada |
+| 3 | Teste da Intranet + "Gerar painel" no formato escolhido (`.html` ou `.xlsx` enxuto) | Arquivo anexado na Intranet abre sem importar nada |
 | 4 | Demais telas | Paridade com as abas restantes |
 | 5 (opcional) | Favorito do ME abre o app e entrega as bases direto, sem passar por Downloads | Atualização com um clique |
 
@@ -176,7 +176,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | Saving Real | Mantido como hoje (quantidade da solicitação) |
 | Período | O que vier nas bases; sem histórico acumulado |
 | Repositório | Próprio e privado: `github.com/bwernerdev/dashboard-compras` |
+| Correção da seção 2 | Aprovada: o painel publica os valores corrigidos (dias em aberto, Data, Serviço, SLA, tempos por etapa) |
 
 ### Em aberto
-1. **Teste da Intranet:** resultado do anexo `.html` de teste (abre, baixa ou é recusado).
-2. **Correção da seção 2:** de acordo em publicar os valores corrigidos (tabela "Quanto muda")?
+1. **Teste da Intranet** (adiado): resultado do anexo `teste-intranet.html` (abre, baixa ou é recusado). Não trava as fases 1 e 2; precisa estar resolvido antes da fase 3.
