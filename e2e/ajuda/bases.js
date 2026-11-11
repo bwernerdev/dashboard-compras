@@ -43,7 +43,7 @@ const linha = (x) => ({
  * Com pedido: SC 1000003 (total 900, saving 10 x 10 = 100, pré-pedido PP-1).
  */
 export const LINHAS_BASE = [
-  linha({ solicitacao: 'FDS-1000001', codigoFilial: FILIAL_A.codigo, criacao: HOJE - 1, prioridade: 'NORMAL', status: 'Em Cotação' }),
+  linha({ solicitacao: 'FDS-1000001', codigoFilial: FILIAL_A.codigo, criacao: HOJE - 1, prioridade: 'NORMAL', status: 'Em Cotação', categoria: 'REGULARIZAÇÃO' }),
   linha({ solicitacao: 'FDS-1000002', codigoFilial: FILIAL_A.codigo, criacao: HOJE - 100, prioridade: 'URGENTE', status: 'Em Cotação' }),
   linha({ solicitacao: 'FDS-1000002', item: 2, codigoFilial: FILIAL_A.codigo, criacao: HOJE - 100, prioridade: 'URGENTE', status: 'Em pendências de compra' }),
   linha({

@@ -9,7 +9,7 @@ import * as fmt from '../ui/formatos.js';
 import { seloDoStatus, marcaDaPrioridade } from '../ui/cores-planilha.js';
 import {
   itensEmAberto, resumoEmAberto, porFaixaDeDias, emAbertoPor, faixaDe, FAIXAS_DIAS,
-  recortarPorStatus, itensPorStatus, ehPendencia,
+  recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao,
 } from '../analise.js';
 import { listaDeMarcar } from '../ui/filtros.js';
 
@@ -32,7 +32,8 @@ const SLA_OPCOES = [
 // de SLA acima da lista continua valendo.
 const COLUNAS_SCS = [
   { id: 'aprov', rotulo: 'Dias da aprovação', num: true, centro: true, valor: (r) => r.diasDaAprovacao, formato: fmt.inteiro, titulo: 'Dias corridos desde a criação' },
-  { id: 'sc', rotulo: 'SC', valor: (r) => r.sc },
+  // Regularização: linha toda em vermelho (classeLinha); o texto escondido diz o mesmo ao leitor de tela.
+  { id: 'sc', rotulo: 'SC', valor: (r) => r.sc, exibir: (r) => (ehRegularizacao(r) ? [r.sc, el('span', { class: 'so-leitor' }, ' (regularização)')] : r.sc) },
   { id: 'data', rotulo: 'Data', tipo: 'data', valor: (r) => r.data },
   { id: 'prioridade', rotulo: 'Prioridade', valor: (r) => r.prioridade, exibir: (r) => marcaDaPrioridade(r.prioridade) },
   { id: 'status', rotulo: 'Status', valor: (r) => r.status, exibir: (r) => seloDoStatus(r.status) },
@@ -231,7 +232,10 @@ export function telaRegional(ctx) {
     grupo: { chave: (r) => r.solicitacao, colunas: ['olho', 'aprov', 'sc', 'data', 'prioridade'], nome: ['SC', 'SCs'] },
     nomeArquivo: 'scs-em-aberto.csv',
     vazio,
-    classeLinha: atendidasLigadas ? (r) => (estaAtendida(r.solicitacao) ? 'linha-atendida' : '') : null,
+    classeLinha: (r) => [
+      ehRegularizacao(r) ? 'linha-regularizacao' : '',
+      atendidasLigadas && estaAtendida(r.solicitacao) ? 'linha-atendida' : '',
+    ].join(' ').trim(),
     aoDuploClique: atendidasLigadas ? (r) => alternarAtendida(r, !estaAtendida(r.solicitacao)) : null,
   });
   if (atendidasLigadas) atualizarLista();
@@ -243,11 +247,21 @@ export function telaRegional(ctx) {
         : 'Itens agrupados por SC, da mais antiga para a mais nova. CSV e "Copiar tabela" trazem um item por linha.',
     },
     recortes,
+    legendaRegularizacao(abertos),
     atendidasLigadas ? aviso : null,
     tabela.elemento,
   );
 
   return el('div', { class: 'tela' }, cartoes, el('div', { class: 'grade-2 grade-2-3' }, graficoFaixas, blocoGrupos), blocoLista);
+}
+
+/** Legenda da linha vermelha (cor nunca sozinha): só quando há SC de regularização em aberto. */
+function legendaRegularizacao(abertos) {
+  const scs = new Set(abertos.filter(ehRegularizacao).map((r) => r.solicitacao)).size;
+  if (!scs) return null;
+  return el('p', { class: 'legenda-lista' },
+    el('span', { class: 'legenda-regularizacao', 'aria-hidden': 'true' }),
+    `Linha vermelha: SC de regularização (${fmt.inteiro(scs)} ${scs === 1 ? 'SC' : 'SCs'} em aberto)`);
 }
 
 /** Zera as seleções locais (ao trocar de bases). */

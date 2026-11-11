@@ -4,7 +4,7 @@
 // Formato: { versao, geradoEm, hoje, periodo, arquivo, campos, linhas } em JSON, gzip, base64.
 // Roda no navegador e no Node (testes).
 
-export const VERSAO = 2; // 2: sem item e slaMax (colunas tiradas da lista da Regional)
+export const VERSAO = 3; // 2: sem item e slaMax; 3: + categoria (linha vermelha de regularização)
 
 /** Campos de toda linha: filtros, contagens e saving. */
 const CAMPOS_BASE = [
@@ -15,7 +15,7 @@ const CAMPOS_BASE = [
 /** Campos só das SCs em aberto (colunas da lista da tela Regional). */
 const CAMPOS_DETALHE = [
   'sc', 'data', 'diasDaAprovacao', 'descricao', 'codigoProduto', 'qtdSolicitacao',
-  'solicitante', 'filial',
+  'solicitante', 'filial', 'categoria',
 ];
 
 export const CAMPOS_PUBLICOS = [...CAMPOS_BASE, ...CAMPOS_DETALHE];

@@ -51,6 +51,9 @@
 
   --danger-fg: #c62828;
   --danger-bg: #fdf2f2;
+  --linha-reg-bg: #ffc7ce; /* "vermelho claro com texto vermelho escuro" do Excel */
+  --linha-reg-fg: #9c0006;
+  --linha-reg-hover: #ffb3bc;
   --warning-fg: #9a6700;
   --warning-bg: #fff7e0;
   --success-fg: #1a7f37;
@@ -131,6 +134,9 @@ html[data-theme="dark"] {
 
   --danger-fg: #f07a7a;
   --danger-bg: #2e1f21;
+  --linha-reg-bg: #4a1d22;
+  --linha-reg-fg: #ffb3b8;
+  --linha-reg-hover: #5a232a;
   --warning-fg: #d9a441;
   --warning-bg: #2b2517;
   --success-fg: #57c27a;

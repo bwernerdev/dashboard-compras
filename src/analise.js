@@ -112,6 +112,13 @@ export const STATUS_PENDENCIAS = ['Em pendências de compra', 'Em pendências de
 const mesmoTexto = (a, b) => String(a ?? '').toLowerCase() === String(b ?? '').toLowerCase();
 export const ehPendencia = (r) => STATUS_PENDENCIAS.some((s) => mesmoTexto(r.status, s));
 
+/**
+ * SC de regularização ("Categoria solicitação" = REGULARIZAÇÃO no ME): compra já feita, SC aberta
+ * depois. A categoria vale para a SC inteira. Sem diferenciar maiúsculas nem acento.
+ */
+export const ehRegularizacao = (r) => String(r.categoria ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .trim().toLowerCase().startsWith('regularizacao');
+
 /** Recorta por status. selecionados: Set de status (vazio/ausente = todos). */
 export function recortarPorStatus(registros, selecionados) {
   if (!selecionados?.size) return registros;
