@@ -12,10 +12,12 @@ import { criarNavegador, ligarTema, ligarImpressao } from './ui/casca.js';
 import { baixar } from './ui/tabela.js';
 import { caixasDeImportacao } from './telas/importacao.js';
 import { abrirConfiguracao } from './telas/configuracao.js';
-import { telaRegional, reiniciarRegional } from './telas/regional.js';
+import { telaRegional, reiniciarRegional, ligarAtendidas } from './telas/regional.js';
 import { telaCompradores } from './telas/compradores.js';
 import { telaSaving } from './telas/saving.js';
 import { gerarPainel, NOME_DO_ARQUIVO } from './painel/gerar.js';
+
+ligarAtendidas(); // olho "atendida" na lista de SCs: só no app da equipe, não no painel publicado
 
 const TELAS = [
   { id: 'regional', rotulo: 'Regional', desenhar: telaRegional },

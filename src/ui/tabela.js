@@ -12,8 +12,12 @@ function textoDaCelula(col, linha) {
   return col.formato ? col.formato(v) : String(v);
 }
 
+/** Colunas que vão para CSV, "Copiar tabela" e pesquisa (não as de controle, como o olho). */
+const exportaveis = (colunas) => colunas.filter((c) => !c.controle);
+
 /** CSV para o Excel em pt-BR: ";" como separador, vírgula decimal, BOM UTF-8. */
-export function gerarCsv(colunas, linhas) {
+export function gerarCsv(todas, linhas) {
+  const colunas = exportaveis(todas);
   const campo = (v) => {
     const s = String(v ?? '');
     return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -31,7 +35,8 @@ export function gerarCsv(colunas, linhas) {
 }
 
 /** Texto para colar no Excel: tabulação entre colunas, vírgula decimal, sem separador de milhar. */
-export function gerarTsv(colunas, linhas) {
+export function gerarTsv(todas, linhas) {
+  const colunas = exportaveis(todas);
   const campo = (v) => String(v ?? '').replace(/[\t\r\n]+/g, ' ');
   const valor = (col, l) => {
     const v = col.valor(l);
@@ -81,9 +86,12 @@ export function definirExportacao({ csv }) { exportacao.csv = csv; }
 
 /**
  * colunas: [{ id, rotulo, valor(linha), formato?(valor), tipo?: 'data', num?: bool, centro?: bool,
- *            exibir?(linha) -> Node|texto, classe?(linha) -> string, titulo? }]
+ *            exibir?(linha) -> Node|texto, classe?(linha) -> string, titulo?,
+ *            controle?: bool (coluna de botão: sem ordenar, fora do CSV, do "Copiar" e da pesquisa;
+ *            o rótulo só para leitor de tela) }]
  * opções: titulo (legenda acessível), ordem { coluna, desc }, porPagina, pesquisa, nomeArquivo,
  *         rodape(linhas) -> [texto por coluna], vazio (texto sem linhas, ou função que o devolve), aoClicarLinha(linha),
+ *         aoDuploClique(linha), classeLinha(linha) -> string,
  *         grupo { chave(linha), colunas: [ids], nome: ['SC', 'SCs'] }: linhas da mesma chave ficam
  *         juntas (na ordem da 1ª que aparece), as colunas do grupo só na 1ª linha (como a tabela
  *         dinâmica da planilha) e a paginação conta grupos. CSV e "Copiar tabela" repetem tudo.
@@ -91,8 +99,9 @@ export function definirExportacao({ csv }) { exportacao.csv = csv; }
 export function criarTabela(opcoes) {
   const {
     colunas, titulo, porPagina = 50, pesquisa = true, nomeArquivo = 'tabela.csv', rodape, vazio = 'Nada para mostrar.',
-    aoClicarLinha, grupo,
+    aoClicarLinha, aoDuploClique, classeLinha, grupo,
   } = opcoes;
+  const pesquisaveis = exportaveis(colunas);
   const estado = { linhas: opcoes.linhas ?? [], termo: '', pagina: 0, ordem: opcoes.ordem ?? null };
 
   const idPesquisa = novoId('pesq');
@@ -125,7 +134,7 @@ export function criarTabela(opcoes) {
   function linhasVisiveis() {
     let linhas = estado.linhas;
     if (estado.termo) {
-      linhas = linhas.filter((l) => colunas.some((c) => normalizar(textoDaCelula(c, l)).includes(estado.termo)));
+      linhas = linhas.filter((l) => pesquisaveis.some((c) => normalizar(textoDaCelula(c, l)).includes(estado.termo)));
     }
     if (estado.ordem) {
       const col = colunas.find((c) => c.id === estado.ordem.coluna);
@@ -145,6 +154,7 @@ export function criarTabela(opcoes) {
 
   function renderCabecalho() {
     substituir(cabeca, el('tr', {}, colunas.map((c) => {
+      if (c.controle) return el('th', { scope: 'col', class: classeColuna(c) }, el('span', { class: 'so-leitor' }, c.rotulo));
       const ativa = estado.ordem?.coluna === c.id;
       const sort = ativa ? (estado.ordem.desc ? 'descending' : 'ascending') : 'none';
       return el('th', { scope: 'col', class: classeColuna(c), 'aria-sort': sort, title: c.titulo ?? null },
@@ -173,7 +183,7 @@ export function criarTabela(opcoes) {
 
   /** num: número alinhado à direita; centro: centralizado (vence o num). */
   function classeColuna(c) {
-    return [c.num ? 'num' : '', c.centro ? 'centro' : ''].join(' ').trim() || null;
+    return [c.num ? 'num' : '', c.centro ? 'centro' : '', c.controle ? 'col-controle' : ''].join(' ').trim() || null;
   }
 
   const plural = (n, [um, varios]) => `${n.toLocaleString('pt-BR')} ${n === 1 ? um : varios}`;
@@ -200,8 +210,9 @@ export function criarTabela(opcoes) {
     const pagina = grupos.slice(inicio, inicio + porPagina);
 
     substituir(corpo, pagina.length ? pagina.flatMap((g) => g.map((l, i) => el('tr', {
-      class: [aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '', grupo && i < g.length - 1 ? 'grupo-continua' : ''].join(' ').trim() || null,
+      class: [aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '', grupo && i < g.length - 1 ? 'grupo-continua' : '', classeLinha?.(l) ?? ''].join(' ').trim() || null,
       onclick: aoClicarLinha ? () => aoClicarLinha(l) : null,
+      ondblclick: aoDuploClique ? (e) => { if (!e.target.closest('button, a, input')) aoDuploClique(l); } : null,
     }, colunas.map((c) => td(c, l, g[0]))))) : el('tr', {}, el('td', { colspan: colunas.length, class: 'tabela-vazia' }, typeof vazio === 'function' ? vazio() : vazio)));
 
     if (rodape && linhas.length) {
@@ -240,6 +251,11 @@ export function criarTabela(opcoes) {
 
   return {
     elemento,
-    atualizar(linhas) { estado.linhas = linhas; estado.pagina = 0; render(); },
+    /** Troca as linhas. `manterPagina`: fica na mesma página (ex.: ao ocultar uma SC da lista). */
+    atualizar(linhas, { manterPagina = false } = {}) {
+      estado.linhas = linhas;
+      if (!manterPagina) estado.pagina = 0;
+      render();
+    },
   };
 }

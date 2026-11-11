@@ -214,6 +214,17 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .paginacao { display: flex; align-items: center; justify-content: flex-end; gap: var(--s2); font-size: var(--fs-sm); color: var(--text-muted); }
 .paginacao:empty { display: none; }
 
+/* Coluna de controle (olho "atendida"): estreita, sem linha à direita, fora da grade de dados. */
+.tabela .col-controle { width: 1%; padding: 0 0 0 4px; text-align: center; border-right: 0; }
+.olho {
+  display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 0;
+  border: 0; border-radius: var(--r-sm); background: none; color: var(--text-muted); cursor: pointer;
+}
+.olho:hover { color: var(--text); background: var(--surface-2); }
+.olho:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tabela tbody tr.linha-atendida td:not(.col-controle) { opacity: .5; }
+.aviso-atendida { display: block; min-height: 1.4em; margin: calc(-1 * var(--s2)) 0 var(--s2); font-size: var(--fs-sm); color: var(--text-muted); }
+
 .recortes { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; margin-bottom: var(--s3); }
 .recorte { display: inline-flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); color: var(--text-muted); }
 

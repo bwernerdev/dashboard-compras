@@ -31,11 +31,11 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
   await expect(lista.locator('.tabela-contagem')).toHaveText('2 SCs, 3 itens');
   const linhas = lista.locator('tbody tr');
-  await expect(lista.locator('thead th')).toHaveText([/^Dias da aprovação/, 'SC', 'Data', 'Prioridade', 'Status', 'Produto', 'Código', 'Qtd.', 'Solicitante', 'Filial', 'Nome da filial', 'Comprador', 'Regional']);
-  await expect(linhas.nth(0).locator('td').nth(1)).toHaveText('1000002');
-  await expect(linhas.nth(1).locator('td').nth(1)).toHaveText('');
+  await expect(lista.locator('thead th')).toHaveText(['Atendida', /^Dias da aprovação/, 'SC', 'Data', 'Prioridade', 'Status', 'Produto', 'Código', 'Qtd.', 'Solicitante', 'Filial', 'Nome da filial', 'Comprador', 'Regional']);
+  await expect(linhas.nth(0).locator('td').nth(2)).toHaveText('1000002');
+  await expect(linhas.nth(1).locator('td').nth(2)).toHaveText('');
   await expect(linhas.nth(1)).toContainText('Em pendências de compra');
-  await expect(linhas.nth(2).locator('td').nth(1)).toHaveText('1000001');
+  await expect(linhas.nth(2).locator('td').nth(2)).toHaveText('1000001');
 
   // Status: atalho "Só pendências".
   await lista.getByRole('button', { name: 'Só pendências' }).click();
@@ -63,6 +63,43 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   await expect(page.locator('[data-filtro="regional"] .filtro-valor')).toHaveText(FILIAL_A.regional);
   await page.getByRole('button', { name: 'Limpar filtros' }).click();
   await expect(page.locator('[data-filtro="regional"] .filtro-valor')).toHaveText('Todos');
+});
+
+test('olho e duplo clique ocultam SC atendida; mostrar e desfazer', async ({ page }) => {
+  await importarBase(page);
+  const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
+  const contagem = lista.locator('.tabela-contagem');
+  await expect(contagem).toHaveText('2 SCs, 3 itens');
+  await expect(lista.getByRole('button', { name: /^Mostrar atendidas/ })).toBeHidden();
+
+  // Olho: some a SC inteira (os 2 itens), cartões não mudam.
+  await lista.getByRole('button', { name: 'Marcar SC 1000002 como atendida (ocultar)' }).click();
+  await expect(contagem).toHaveText('1 SC, 1 item');
+  await expect(lista.getByRole('status')).toContainText('SC 1000002 marcada como atendida e oculta');
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
+
+  // Desfazer volta.
+  await lista.getByRole('button', { name: 'Desfazer' }).click();
+  await expect(contagem).toHaveText('2 SCs, 3 itens');
+
+  // Duplo clique em qualquer linha do item também oculta.
+  await lista.locator('tbody tr', { hasText: '1000001' }).dblclick();
+  await expect(contagem).toHaveText('1 SC, 2 itens');
+
+  // Fica salvo no navegador.
+  await page.reload();
+  await expect(contagem).toHaveText('1 SC, 2 itens');
+
+  // "Mostrar atendidas": volta apagada, olho riscado desfaz.
+  await lista.getByRole('button', { name: 'Mostrar atendidas (1)' }).click();
+  await expect(contagem).toHaveText('2 SCs, 3 itens');
+  await expect(lista.locator('tbody tr.linha-atendida')).toHaveCount(1);
+  await lista.getByRole('button', { name: 'Voltar a SC 1000001 para a lista' }).click();
+  await expect(lista.locator('tbody tr.linha-atendida')).toHaveCount(0);
+
+  // CSV não leva a coluna do olho.
+  const [download] = await Promise.all([page.waitForEvent('download'), lista.getByRole('button', { name: 'Exportar CSV' }).click()]);
+  expect((await readFile(await download.path(), 'utf8')).startsWith('﻿Dias da aprovação;')).toBe(true);
 });
 
 test('filtro global pela lista; Esc fecha', async ({ page }) => {

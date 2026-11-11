@@ -1,6 +1,7 @@
 // Tela Regional: SCs em aberto (sem pedido e não canceladas), dias úteis em aberto e SLA.
 // Substitui a aba "Regional" (e cobre a "Atendimento") da planilha antiga, com os dias corrigidos.
-import { el } from '../ui/dom.js';
+import { el, icone } from '../ui/dom.js';
+import { estaAtendida, marcarAtendida } from '../atendidas.js';
 import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
 import { barras, barraSegmentada } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
@@ -13,7 +14,12 @@ import {
 import { listaDeMarcar } from '../ui/filtros.js';
 
 // Seleções locais da tela (não são filtros globais: só recortam a lista de SCs).
-const local = { faixa: null, sla: 'todos', status: new Set(), agrupar: 'regional' };
+const local = { faixa: null, sla: 'todos', status: new Set(), agrupar: 'regional', mostrarAtendidas: false };
+
+// "Atendida" (olho / duplo clique tira a SC da lista): só no app da equipe. O painel publicado
+// não chama ligarAtendidas e mostra a lista inteira.
+let atendidasLigadas = false;
+export function ligarAtendidas() { atendidasLigadas = true; }
 
 const SLA_OPCOES = [
   { id: 'todos', rotulo: 'Todos' },
@@ -126,6 +132,7 @@ export function telaRegional(ctx) {
 
   const recortar = () => {
     let lista = recortarPorStatus(abertos, local.status);
+    if (atendidasLigadas && !local.mostrarAtendidas) lista = lista.filter((r) => !estaAtendida(r.solicitacao));
     if (local.faixa) lista = lista.filter((r) => faixaDe(r.diasEmAberto) === local.faixa);
     if (local.sla === 'sem') lista = lista.filter((r) => r.sla !== 'No Prazo' && r.sla !== 'Fora do Prazo');
     else if (local.sla !== 'todos') lista = lista.filter((r) => r.sla === local.sla);
@@ -154,9 +161,58 @@ export function telaRegional(ctx) {
     aoMudar: () => { tabela.atualizar(recortar()); atalho.hidden = !statusPendencia.length || soPendencias(); },
   });
 
+  // Atendidas: o olho (ou duplo clique na linha) tira a SC da lista; "Mostrar atendidas" traz
+  // de volta, apagadas, com o olho riscado para desfazer. Cartões e gráficos não mudam.
+  const scsAbertas = [...new Set(abertos.map((r) => r.solicitacao))];
+  const botaoAtendidas = el('button', {
+    type: 'button', class: 'botao botao-sec botao-pequeno', 'aria-pressed': String(local.mostrarAtendidas),
+    onclick: () => {
+      local.mostrarAtendidas = !local.mostrarAtendidas;
+      botaoAtendidas.setAttribute('aria-pressed', String(local.mostrarAtendidas));
+      aviso.replaceChildren();
+      atualizarLista();
+    },
+  });
+  const aviso = el('span', { class: 'aviso-atendida', role: 'status' });
+  let ultimaMarcada = null;
+  const botaoDesfazer = el('button', {
+    type: 'button', class: 'botao-link',
+    onclick: () => { if (ultimaMarcada) alternarAtendida(ultimaMarcada, false); },
+  }, 'Desfazer');
+
+  function atualizarLista() {
+    const n = scsAbertas.filter(estaAtendida).length;
+    botaoAtendidas.textContent = local.mostrarAtendidas ? `Ocultar atendidas (${fmt.inteiro(n)})` : `Mostrar atendidas (${fmt.inteiro(n)})`;
+    botaoAtendidas.hidden = !n && !local.mostrarAtendidas;
+    tabela?.atualizar(recortar(), { manterPagina: true });
+  }
+
+  /** r: um item da SC (a marca vale para a SC inteira, chave `solicitacao`). */
+  function alternarAtendida(r, atendida) {
+    marcarAtendida(r.solicitacao, atendida);
+    ultimaMarcada = atendida ? r : null;
+    aviso.replaceChildren(...(atendida
+      ? [`SC ${r.sc} marcada como atendida${local.mostrarAtendidas ? '' : ' e oculta'}. `, botaoDesfazer]
+      : [`SC ${r.sc} voltou para a lista.`]));
+    atualizarLista();
+  }
+
+  const colunas = atendidasLigadas ? [{
+    id: 'olho', rotulo: 'Atendida', controle: true, valor: (r) => r.solicitacao,
+    exibir: (r) => {
+      const atendida = estaAtendida(r.solicitacao);
+      const rotulo = atendida ? `Voltar a SC ${r.sc} para a lista` : `Marcar SC ${r.sc} como atendida (ocultar)`;
+      return el('button', {
+        type: 'button', class: 'olho', 'aria-label': rotulo, title: rotulo,
+        onclick: (e) => { e.stopPropagation(); alternarAtendida(r, !atendida); },
+      }, icone(atendida ? 'olho-fechado' : 'olho'));
+    },
+  }, ...COLUNAS_SCS] : COLUNAS_SCS;
+
   const recortes = el('div', { class: 'recortes' },
     filtroStatus,
     atalho,
+    atendidasLigadas ? botaoAtendidas : null,
     el('label', { class: 'recorte' }, 'SLA ',
       el('select', {
         class: 'campo', onchange: (ev) => { local.sla = ev.target.value; ctx.redesenhar(); },
@@ -169,16 +225,25 @@ export function telaRegional(ctx) {
   tabela = criarTabela({
     titulo: 'SCs em aberto',
     linhas: recortar(),
-    colunas: COLUNAS_SCS,
+    colunas,
     ordem: { coluna: 'aprov', desc: true },
     // Como a tabela dinâmica da aba Regional: dados da SC só na 1ª linha, itens embaixo.
-    grupo: { chave: (r) => r.solicitacao, colunas: ['aprov', 'sc', 'data', 'prioridade'], nome: ['SC', 'SCs'] },
+    grupo: { chave: (r) => r.solicitacao, colunas: ['olho', 'aprov', 'sc', 'data', 'prioridade'], nome: ['SC', 'SCs'] },
     nomeArquivo: 'scs-em-aberto.csv',
     vazio,
+    classeLinha: atendidasLigadas ? (r) => (estaAtendida(r.solicitacao) ? 'linha-atendida' : '') : null,
+    aoDuploClique: atendidasLigadas ? (r) => alternarAtendida(r, !estaAtendida(r.solicitacao)) : null,
   });
+  if (atendidasLigadas) atualizarLista();
   const blocoLista = bloco(
-    { titulo: 'SCs em aberto', subtitulo: 'Itens agrupados por SC, da mais antiga para a mais nova. CSV e "Copiar tabela" trazem um item por linha.' },
+    {
+      titulo: 'SCs em aberto',
+      subtitulo: atendidasLigadas
+        ? 'Itens agrupados por SC, da mais antiga para a mais nova. Já atendeu? Clique no olho ou dê dois cliques na linha para tirar a SC da lista (fica salvo neste navegador). CSV e "Copiar tabela" trazem um item por linha.'
+        : 'Itens agrupados por SC, da mais antiga para a mais nova. CSV e "Copiar tabela" trazem um item por linha.',
+    },
     recortes,
+    atendidasLigadas ? aviso : null,
     tabela.elemento,
   );
 
@@ -190,4 +255,5 @@ export function reiniciarRegional() {
   local.faixa = null;
   local.sla = 'todos';
   local.status = new Set();
+  local.mostrarAtendidas = false;
 }

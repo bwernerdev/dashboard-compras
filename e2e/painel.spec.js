@@ -35,6 +35,7 @@ test('painel aberto como arquivo: só Regional e Saving, sem dados internos', as
   await expect(painel.locator('#aviso-quadro')).toBeHidden();
   await expect(painel.locator('#acao-imprimir')).toBeVisible();
   await expect(painel.getByRole('button', { name: 'Exportar CSV' }).first()).toBeVisible();
+  await expect(painel.locator('.olho')).toHaveCount(0); // "atendida" é só do app da equipe
 
   await painel.getByRole('tab', { name: 'Saving' }).click();
   await expect(cartao(painel, '% Saving')).toHaveText('10,00%');
