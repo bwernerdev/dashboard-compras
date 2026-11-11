@@ -171,7 +171,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | 0 | Este documento (concluído em 11/11/2026) | Decisões fechadas, exceto o teste da Intranet (adiado para antes da fase 3) |
 | 1 | Leitor das bases (worker) + `regras.js` + configuração + testes (concluída em 11/11/2026) | Lê as duas bases atuais em < 20 s; regras testadas |
 | 2 | Telas Regional, Compradores, Saving + filtros globais (concluída em 11/11/2026) | Números de Saving e sc p Compr batem com o `.xlsm`; Regional bate com a regra corrigida |
-| 3 | Teste da Intranet + "Gerar painel" no formato escolhido (`.html` ou `.xlsx` enxuto), só com as telas públicas (seção 4.7) | Arquivo anexado na Intranet abre sem importar nada e não contém dados das telas internas |
+| 3 | "Gerar painel": `.html` único, só com as telas públicas (seção 4.7), publicado no SharePoint/OneDrive com link na Intranet (seção 7) | Link da Intranet abre o painel no quadro do SharePoint sem importar nada; "Copiar tabela" funciona; o arquivo não contém dados das telas internas |
 | 4 | Demais telas públicas: Capa, Status, Entrega, Atendimento, Organograma (Spend já está no Saving). Internas, se a equipe quiser: Contr - Cot, scs Filial, Med Temp, sc p Cat, Regularização | Paridade com as abas visíveis da planilha protegida |
 | 5 (opcional) | Favorito do ME abre o app e entrega as bases direto, sem passar por Downloads | Atualização com um clique |
 
@@ -182,7 +182,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 ### Decidido em 11/11/2026
 | Tema | Decisão |
 |---|---|
-| Intranet | Hoje só aceita planilha. Testar anexo `.html`; plano B é `.xlsx` enxuto (seção 4.2) |
+| Intranet | Não aceita anexo `.html`, só link. Painel `.html` no SharePoint/OneDrive (link "Pessoas da empresa") cadastrado na Intranet; testes 1–3 na seção 7. Plano B (`.xlsx` enxuto) não é mais necessário |
 | Filiais | Bases continuam com todas as filiais (favorito do ME); filtro no app |
 | Dias úteis | Mesmo método atual: seg–sex, sem feriados |
 | Saving Real | Mantido como hoje (quantidade da solicitação) |
@@ -192,8 +192,8 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | Públicos (seção 4.7) | Equipe de Suprimentos: app completo. Intranet: painel gerado só com as telas das 8 abas visíveis; Compradores fica de fora do arquivo |
 | Contagem distinta com vazio (fase 2) | Igual à planilha: nos pré-pedidos, SC sem pré-pedido conta como 1 em cada grupo (DISTINCTCOUNT do modelo de dados). Decidido em 11/11/2026 |
 
-### Em aberto
-1. **Teste da Intranet (feito em 11/11/2026):** o anexo `.html` foi **recusado**. Fora planilhas, a Intranet só aceita **endereço web** (link). Falta escolher onde o painel fica, sempre **atrás do login da empresa** (os dados são internos; nada em endereço público, como GitHub Pages):
+### Em aberto (nada travando a fase 3)
+1. **Teste da Intranet (resolvido em 11/11/2026):** o anexo `.html` foi **recusado**. Fora planilhas, a Intranet só aceita **endereço web** (link). O painel tem de ficar **atrás do login da empresa** (os dados são internos; nada em endereço público, como GitHub Pages):
    - **a) Link para o `.html` no SharePoint/OneDrive da empresa.** **Teste 1 (11/11/2026): funcionou.** O link pede o login Microsoft da empresa e a pré-visualização mostra a página com o script rodando, mas dentro de um quadro isolado (`about:srcdoc`), não como site. Em quadro isolado costumam falhar: memória do navegador (localStorage/IndexedDB), download de CSV, imprimir e `confirm`. **Teste 2 (11/11/2026, Chrome 156, `teste-intranet.html` gerado por `scripts/gerar-teste-intranet.mjs`):**
 
      | Recurso | No quadro do SharePoint | Efeito no painel |
@@ -203,9 +203,11 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
      | localStorage, IndexedDB | Falham (origem opaca, sem `allow-same-origin`) | Painel não guarda nada; tema e aba não ficam lembrados |
      | Worker | Falha | Painel calcula na thread da tela (8,5 mil linhas: instantâneo) |
      | `window.print()`, `confirm()` | Bloqueados | Painel não usa `confirm`/`alert` (só `<dialog>`); imprimir depende do teste 3 |
-     | Download de CSV | A confirmar | Depende do teste 3 |
+     | Download de CSV (`<a download>`) | Sem confirmação de arquivo baixado: tratar como bloqueado | No quadro, o painel não oferece CSV |
+     | Copiar (`execCommand('copy')`; `navigator.clipboard` falha) | OK (teste 3) | Botão "Copiar tabela" (texto com tabulação, cola em células no Excel) |
+     | Abrir em nova aba (`window.open`) | Bloqueado (teste 3) | Sem "tela cheia" |
 
-     **Teste 3 (pendente):** mesmo arquivo com "Copiar tabela" (área de transferência) e "Abrir em nova aba" (fora do quadro, onde imprimir e baixar devem voltar).
+   **Decidido (11/11/2026): opção a, SharePoint/OneDrive.** O painel publicado detecta o quadro isolado (`self.origin === 'null'`) e então: não usa memória, worker, `confirm`/`alert` nem `print`; troca "Exportar CSV" por **"Copiar tabela"**; mostra o aviso *"Para imprimir ou baixar em CSV, use ⋯ > Baixar no SharePoint e abra o arquivo"*. Aberto fora do quadro (baixado, `file://`), tudo funciona como no app.
    - **b) Endereço num servidor web interno (TI).** Abre direto no navegador; depende da TI.
    - **c) Plano B: `.xlsx` enxuto** (seção 4.2), anexado como hoje. Não precisa de hospedagem; perde a interatividade.
 
