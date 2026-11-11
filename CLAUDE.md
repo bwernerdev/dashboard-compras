@@ -23,7 +23,7 @@ Status: fases 1 (leitor + regras) e 2 (telas, filtros, memória local, configura
 | `src/styles/` | CSS em camadas: tokens (tema escuro, paleta dos gráficos), base, componentes, impressão |
 | `tests/`, `tests/ajuda/` | Testes unitários e gerador de xlsx fictício |
 | `e2e/`, `e2e/ajuda/` | Testes Playwright e bases fictícias |
-| `scripts/` | `medir.mjs`, `conferir-xlsm.mjs` |
+| `scripts/` | `medir.mjs`, `conferir-xlsm.mjs`, `gerar-teste-intranet.mjs` |
 | `node_modules/`, `dist/`, `.npm-cache/`, `test-results/` | Gerados/ignorados: não ler nem editar |
 
 ## Arquivos na raiz
@@ -32,7 +32,7 @@ Status: fases 1 (leitor + regras) e 2 (telas, filtros, memória local, configura
 | `PROJETO.md` | Diagnóstico da planilha, erro encontrado, regras, decisões, telas, fases, perguntas |
 | `README.md` | Visão para quem usa e mapa das pastas |
 | `index.html`, `vite.config.js` (`base: './'`), `package.json`, `playwright.config.js` | Entrada, build e e2e |
-| `teste-intranet.html` | Página mínima para testar se a Intranet aceita/abre `.html` (antes da fase 3) |
+| `teste-intranet.html` | Página de teste do local de publicação (SharePoint): recursos que funcionam e peso. Gerada por `scripts/gerar-teste-intranet.mjs`; não editar à mão |
 | `.claude/launch.json` | Preview quando a sessão abre direto nesta pasta |
 | `*.xlsx`, `*.xlsm` | Bases e planilha antiga: só locais, nunca versionar (`.gitignore`). Para olhar: `npm run medir`/`conferir` ou `openpyxl` com `read_only=True` |
 

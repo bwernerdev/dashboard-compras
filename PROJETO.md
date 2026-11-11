@@ -194,7 +194,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 
 ### Em aberto
 1. **Teste da Intranet (feito em 11/11/2026):** o anexo `.html` foi **recusado**. Fora planilhas, a Intranet só aceita **endereço web** (link). Falta escolher onde o painel fica, sempre **atrás do login da empresa** (os dados são internos; nada em endereço público, como GitHub Pages):
-   - **a) Link para o `.html` no SharePoint/OneDrive da empresa.** O clique baixa o arquivo, que abre no navegador sem servidor. Próximo teste: subir o `teste-intranet.html`, compartilhar com a empresa, pôr o link na Intranet e ver o "Aberto via".
+   - **a) Link para o `.html` no SharePoint/OneDrive da empresa.** **Teste 1 (11/11/2026): funcionou.** O link pede o login Microsoft da empresa e a pré-visualização mostra a página com o script rodando, mas dentro de um quadro isolado (`about:srcdoc`), não como site. Em quadro isolado costumam falhar: memória do navegador (localStorage/IndexedDB), download de CSV, imprimir e `confirm`. **Teste 2 (pendente):** `teste-intranet.html` gerado por `scripts/gerar-teste-intranet.mjs` verifica cada recurso e o peso (1,6 MB, dados fictícios). Num quadro `sandbox="allow-scripts"` local, a memória falha e o resto roda; falta ver no SharePoint de verdade.
    - **b) Endereço num servidor web interno (TI).** Abre direto no navegador; depende da TI.
    - **c) Plano B: `.xlsx` enxuto** (seção 4.2), anexado como hoje. Não precisa de hospedagem; perde a interatividade.
 
