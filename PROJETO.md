@@ -175,8 +175,8 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | Dias úteis | Mesmo método atual: seg–sex, sem feriados |
 | Saving Real | Mantido como hoje (quantidade da solicitação) |
 | Período | O que vier nas bases; sem histórico acumulado |
+| Repositório | Próprio e privado: `github.com/bwernerdev/dashboard-compras` |
 
 ### Em aberto
 1. **Teste da Intranet:** resultado do anexo `.html` de teste (abre, baixa ou é recusado).
 2. **Correção da seção 2:** de acordo em publicar os valores corrigidos (tabela "Quanto muda")?
-3. **Repositório:** próprio e privado (recomendado) ou dentro de `projetos`?

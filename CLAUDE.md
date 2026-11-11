@@ -13,6 +13,9 @@ Status: fase 0 (desenho). Decisões, regras de negócio e fases: `PROJETO.md`.
 | `.gitignore` | Bloqueia planilhas (`*.xlsx`, `*.xlsm`, `*.csv`) e gerados |
 | `*.xlsx`, `*.xlsm` | Bases e planilha atual: só leitura local, nunca versionar. Pesadas (até 54 MB): ler com `openpyxl` em `read_only=True` e só as colunas necessárias |
 
+## Repositório
+PRIVADO `github.com/bwernerdev/dashboard-compras` (branch `main`). Nunca tornar público: regras e nomes de filiais são internos. `gh` portátil: `../RPA/ferramentas/gh/bin/gh.exe` com `GH_CONFIG_DIR=../RPA/ferramentas/gh-config`.
+
 ## Convenções
 - Cada pasta do projeto tem um `README.md` com o mapa dos seus arquivos. Criou pasta: crie o README. Mudou arquivo: atualize o README da pasta.
 - Textos de interface e documentação em português do Brasil.
