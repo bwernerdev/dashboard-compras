@@ -9,7 +9,7 @@ Gráficos em HTML/CSS no padrão da skill de visualização: barras de 16 px com
 | `tabela.js` | `criarTabela`: colunas `num` (à direita) ou `centro` (centralizadas), ordenar por coluna, pesquisar, paginar, linha de total, linha clicável, agrupar linhas (`grupo`: colunas do grupo só na 1ª linha, paginação por grupo; CSV repete tudo), "Copiar tabela" (`gerarTsv` + `copiarTexto`: execCommand primeiro, funciona no quadro do SharePoint), "Exportar CSV" (`gerarCsv`: `;`, vírgula decimal, BOM; desligado por `definirExportacao` no quadro). `baixar(nome, conteudo, tipo)` |
 | `casca.js` | Comum ao app e ao painel: `criarNavegador` (abas com teclado, barra de filtros, tela ativa, filtro por clique), `ligarTema`, `ligarImpressao` (sempre tema claro), `descreverFiltros` |
 | `graficos.js` | `barras` (clicável), `barrasEmpilhadas` (com legenda), `colunas`, `barraSegmentada` (célula de tabela) |
-| `filtros.js` | Barra de filtros globais: lista de marcar por filtro; marca sem fechar; Esc/clique fora fecha; "Limpar filtros" |
+| `filtros.js` | `listaDeMarcar` (botão + lista de marcar, seleção múltipla; marca sem fechar; Esc/clique fora fecha) e a barra de filtros globais feita com ela ("Limpar filtros"). A Regional usa `listaDeMarcar` no recorte Status |
 | `cartoes.js` | `cartao` (indicador; `tom` sempre com texto), `linhaDeCartoes`, `bloco` (título + subtítulo + conteúdo) |
 | `cores-planilha.js` | Cores da planilha antiga (formatação condicional): `seloDoStatus` e `seloDoSaving` (selo com o fundo da planilha), `marcaDaPrioridade` (marca + texto), `corDoStatusNoGrafico` (mesma família, tons validados). Tokens `--pl-*` (tabela) e `--graf-*` (gráfico) |
 | `dica.js` | Dica flutuante única (`ligarDica`, `esconderDica`) |

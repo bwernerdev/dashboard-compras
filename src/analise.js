@@ -109,16 +109,13 @@ export function emAbertoPor(abertos, campo) {
  * então ficam no comprador "Pendente".
  */
 export const STATUS_PENDENCIAS = ['Em pendências de compra', 'Em pendências de contrato'];
-/** Recorte "pendências de compra e contrato" da lista de SCs em aberto. */
-export const RECORTE_PENDENCIAS = 'pendencias';
 const mesmoTexto = (a, b) => String(a ?? '').toLowerCase() === String(b ?? '').toLowerCase();
 export const ehPendencia = (r) => STATUS_PENDENCIAS.some((s) => mesmoTexto(r.status, s));
 
-/** Recorta por status: 'todos', RECORTE_PENDENCIAS ou um status exato. */
-export function recortarPorStatus(registros, escolha) {
-  if (!escolha || escolha === 'todos') return registros;
-  if (escolha === RECORTE_PENDENCIAS) return registros.filter(ehPendencia);
-  return registros.filter((r) => nomeOuTraco(r.status) === escolha);
+/** Recorta por status. selecionados: Set de status (vazio/ausente = todos). */
+export function recortarPorStatus(registros, selecionados) {
+  if (!selecionados?.size) return registros;
+  return registros.filter((r) => selecionados.has(nomeOuTraco(r.status)));
 }
 
 /** Itens por status, na ordem do processo (STATUS_SC), outros status no fim em ordem alfabética. */

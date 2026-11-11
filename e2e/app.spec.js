@@ -40,7 +40,18 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   // Status: atalho "Só pendências".
   await lista.getByRole('button', { name: 'Só pendências' }).click();
   await expect(lista.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
-  await lista.getByLabel('Status').selectOption('todos');
+  await expect(lista.locator('[data-filtro="status"] .filtro-valor')).toHaveText('Em pendências de compra');
+
+  // Status: vários de uma vez; a lista de marcar continua aberta.
+  await lista.locator('[data-filtro="status"] .filtro-botao').click();
+  await lista.getByRole('checkbox', { name: /^Em Cotação/ }).check();
+  await expect(lista.locator('.tabela-contagem')).toHaveText('2 SCs, 3 itens');
+  await expect(lista.locator('[data-filtro="status"] .filtro-valor')).toHaveText('2 selecionados');
+  await expect(lista.getByRole('checkbox', { name: /^Em Cotação/ })).toBeVisible();
+  await lista.getByRole('checkbox', { name: /^Em pendências de compra/ }).uncheck();
+  await expect(lista.locator('.tabela-contagem')).toHaveText('2 SCs, 2 itens');
+  await lista.locator('[data-filtro="status"]').getByRole('button', { name: 'Todos' }).click();
+  await page.keyboard.press('Escape');
 
   // Faixa "Até 5 dias" recorta a lista.
   await page.getByRole('button', { name: /^Até 5 dias/ }).click();

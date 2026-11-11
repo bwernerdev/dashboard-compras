@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   aplicarFiltros, opcoesDosFiltros, chaveMes, rotuloMes, itensEmAberto, resumoEmAberto, porFaixaDeDias,
-  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, RECORTE_PENDENCIAS, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
+  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
   pctSaving, resumoSaving, savingPorFilial, savingPorComprador, savingPorMes,
 } from '../src/analise.js';
 import { brutosDe, recalcular } from '../src/memoria.js';
@@ -43,15 +43,16 @@ test('aplicarFiltros: vazio = todos; vários filtros = E; mês só no Saving', (
   assert.equal(aplicarFiltros(regs, { mes: new Set(['2026-10']) }, 'saving').length, 1);
 });
 
-test('recorte por status: pendências de compra e contrato, status exato, todos', () => {
+test('recorte por status: vários status, vazio = todos; pendências', () => {
   const regs = [
     reg({ status: 'Em pendências de compra' }), reg({ status: 'EM PENDÊNCIAS DE CONTRATO' }),
     reg({ status: 'Em Pré-Pedido' }), reg({ status: 'Em Cotação' }), reg({ status: null }),
   ];
-  assert.equal(recortarPorStatus(regs, 'todos').length, 5);
-  assert.deepEqual(recortarPorStatus(regs, RECORTE_PENDENCIAS).map((r) => r.status), ['Em pendências de compra', 'EM PENDÊNCIAS DE CONTRATO']);
-  assert.equal(recortarPorStatus(regs, 'Em Cotação').length, 1);
-  assert.equal(recortarPorStatus(regs, '-').length, 1);
+  assert.equal(recortarPorStatus(regs, new Set()).length, 5);
+  assert.equal(recortarPorStatus(regs, undefined).length, 5);
+  assert.deepEqual(recortarPorStatus(regs, new Set(['Em Cotação', 'Em Pré-Pedido'])).map((r) => r.status), ['Em Pré-Pedido', 'Em Cotação']);
+  assert.equal(recortarPorStatus(regs, new Set(['-'])).length, 1);
+  assert.deepEqual(regs.filter(ehPendencia).map((r) => r.status), ['Em pendências de compra', 'EM PENDÊNCIAS DE CONTRATO']);
   assert.equal(ehPendencia(reg({ status: 'Em Pedido' })), false);
 });
 

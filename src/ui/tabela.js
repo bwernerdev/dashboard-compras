@@ -83,7 +83,7 @@ export function definirExportacao({ csv }) { exportacao.csv = csv; }
  * colunas: [{ id, rotulo, valor(linha), formato?(valor), tipo?: 'data', num?: bool, centro?: bool,
  *            exibir?(linha) -> Node|texto, classe?(linha) -> string, titulo? }]
  * opções: titulo (legenda acessível), ordem { coluna, desc }, porPagina, pesquisa, nomeArquivo,
- *         rodape(linhas) -> [texto por coluna], vazio (texto sem linhas), aoClicarLinha(linha),
+ *         rodape(linhas) -> [texto por coluna], vazio (texto sem linhas, ou função que o devolve), aoClicarLinha(linha),
  *         grupo { chave(linha), colunas: [ids], nome: ['SC', 'SCs'] }: linhas da mesma chave ficam
  *         juntas (na ordem da 1ª que aparece), as colunas do grupo só na 1ª linha (como a tabela
  *         dinâmica da planilha) e a paginação conta grupos. CSV e "Copiar tabela" repetem tudo.
@@ -202,7 +202,7 @@ export function criarTabela(opcoes) {
     substituir(corpo, pagina.length ? pagina.flatMap((g) => g.map((l, i) => el('tr', {
       class: [aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '', grupo && i < g.length - 1 ? 'grupo-continua' : ''].join(' ').trim() || null,
       onclick: aoClicarLinha ? () => aoClicarLinha(l) : null,
-    }, colunas.map((c) => td(c, l, g[0]))))) : el('tr', {}, el('td', { colspan: colunas.length, class: 'tabela-vazia' }, vazio)));
+    }, colunas.map((c) => td(c, l, g[0]))))) : el('tr', {}, el('td', { colspan: colunas.length, class: 'tabela-vazia' }, typeof vazio === 'function' ? vazio() : vazio)));
 
     if (rodape && linhas.length) {
       const totais = rodape(linhas);

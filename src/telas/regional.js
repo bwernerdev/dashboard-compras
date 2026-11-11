@@ -8,11 +8,12 @@ import * as fmt from '../ui/formatos.js';
 import { seloDoStatus, marcaDaPrioridade } from '../ui/cores-planilha.js';
 import {
   itensEmAberto, resumoEmAberto, porFaixaDeDias, emAbertoPor, faixaDe, FAIXAS_DIAS,
-  recortarPorStatus, itensPorStatus, ehPendencia, RECORTE_PENDENCIAS,
+  recortarPorStatus, itensPorStatus, ehPendencia,
 } from '../analise.js';
+import { listaDeMarcar } from '../ui/filtros.js';
 
 // Seleções locais da tela (não são filtros globais: só recortam a lista de SCs).
-const local = { faixa: null, sla: 'todos', status: 'todos', agrupar: 'regional' };
+const local = { faixa: null, sla: 'todos', status: new Set(), agrupar: 'regional' };
 
 const SLA_OPCOES = [
   { id: 'todos', rotulo: 'Todos' },
@@ -116,36 +117,46 @@ export function telaRegional(ctx) {
     tabelaGrupos(grupos, rotuloGrupo, (valor) => ctx.filtrar(local.agrupar === 'regional' ? 'regional' : 'filial', valor)),
   );
 
-  // Status: opções com o número de itens em aberto (antes dos outros recortes).
+  // Status: lista de marcar (vários de uma vez), cada um com o número de itens em aberto.
   const porStatus = itensPorStatus(abertos);
-  const pendencias = abertos.filter(ehPendencia).length;
-  const opcoesStatus = [
-    { id: 'todos', rotulo: 'Todos' },
-    { id: RECORTE_PENDENCIAS, rotulo: `Pendências de compra e contrato (${fmt.inteiro(pendencias)})` },
-    ...porStatus.map((s) => ({ id: s.status, rotulo: `${s.status} (${fmt.inteiro(s.itens)})` })),
-  ];
-  // A escolha some quando os filtros globais tiram todos os itens daquele status: mantém visível.
-  if (!opcoesStatus.some((o) => o.id === local.status)) opcoesStatus.push({ id: local.status, rotulo: `${local.status} (0)` });
+  const itensDoStatus = new Map(porStatus.map((s) => [s.status, s.itens]));
+  // Status marcado que os filtros globais zeraram continua na lista (com 0) para poder desmarcar.
+  const valoresStatus = [...porStatus.map((s) => s.status), ...[...local.status].filter((s) => !itensDoStatus.has(s))];
+  const statusPendencia = valoresStatus.filter((s) => ehPendencia({ status: s }));
 
-  let lista = recortarPorStatus(abertos, local.status);
-  if (local.faixa) lista = lista.filter((r) => faixaDe(r.diasEmAberto) === local.faixa);
-  if (local.sla === 'sem') lista = lista.filter((r) => r.sla !== 'No Prazo' && r.sla !== 'Fora do Prazo');
-  else if (local.sla !== 'todos') lista = lista.filter((r) => r.sla === local.sla);
+  const recortar = () => {
+    let lista = recortarPorStatus(abertos, local.status);
+    if (local.faixa) lista = lista.filter((r) => faixaDe(r.diasEmAberto) === local.faixa);
+    if (local.sla === 'sem') lista = lista.filter((r) => r.sla !== 'No Prazo' && r.sla !== 'Fora do Prazo');
+    else if (local.sla !== 'todos') lista = lista.filter((r) => r.sla === local.sla);
+    return lista;
+  };
+  const vazio = () => ([...local.status].some((s) => ehPendencia({ status: s }))
+    ? 'Nenhum item com esse recorte. Pendências ficam no comprador "Pendente" (o ME não preenche "Selecionado por"): confira o filtro Comprador.'
+    : 'Nenhuma SC com esse recorte.');
 
-  const escolheuPendencia = local.status === RECORTE_PENDENCIAS || ehPendencia({ status: local.status });
-  const vazio = escolheuPendencia
-    ? 'Nenhum item em pendência com esse recorte. Pendências ficam no comprador "Pendente" (o ME não preenche "Selecionado por"): confira o filtro Comprador.'
-    : 'Nenhuma SC com esse recorte.';
+  const soPendencias = () => local.status.size === statusPendencia.length && statusPendencia.every((s) => local.status.has(s));
+  const atalho = el('button', {
+    type: 'button', class: 'botao botao-sec botao-pequeno',
+    onclick: () => { local.status = new Set(statusPendencia); ctx.redesenhar(); },
+  }, 'Só pendências');
+  atalho.hidden = !statusPendencia.length || soPendencias();
+
+  // Marcar status atualiza só a lista: a lista de marcar continua aberta.
+  let tabela = null;
+  const filtroStatus = listaDeMarcar({
+    id: 'status',
+    rotulo: 'Status',
+    valores: valoresStatus,
+    rotuloValor: (s) => `${s} (${fmt.inteiro(itensDoStatus.get(s) ?? 0)})`,
+    resumoValor: (s) => s,
+    selecionados: local.status,
+    aoMudar: () => { tabela.atualizar(recortar()); atalho.hidden = !statusPendencia.length || soPendencias(); },
+  });
 
   const recortes = el('div', { class: 'recortes' },
-    el('label', { class: 'recorte' }, 'Status ',
-      el('select', {
-        class: 'campo', onchange: (ev) => { local.status = ev.target.value; ctx.redesenhar(); },
-      }, opcoesStatus.map((o) => el('option', { value: o.id, selected: local.status === o.id }, o.rotulo)))),
-    local.status === RECORTE_PENDENCIAS ? null : el('button', {
-      type: 'button', class: 'botao botao-sec botao-pequeno',
-      onclick: () => { local.status = RECORTE_PENDENCIAS; ctx.redesenhar(); },
-    }, 'Só pendências'),
+    filtroStatus,
+    atalho,
     el('label', { class: 'recorte' }, 'SLA ',
       el('select', {
         class: 'campo', onchange: (ev) => { local.sla = ev.target.value; ctx.redesenhar(); },
@@ -155,19 +166,20 @@ export function telaRegional(ctx) {
       'aria-label': `Remover recorte ${FAIXAS_DIAS.find((f) => f.id === local.faixa).rotulo}`,
     }, FAIXAS_DIAS.find((f) => f.id === local.faixa).rotulo, el('span', { 'aria-hidden': 'true' }, ' ✕')) : null);
 
+  tabela = criarTabela({
+    titulo: 'SCs em aberto',
+    linhas: recortar(),
+    colunas: COLUNAS_SCS,
+    ordem: { coluna: 'aprov', desc: true },
+    // Como a tabela dinâmica da aba Regional: dados da SC só na 1ª linha, itens embaixo.
+    grupo: { chave: (r) => r.solicitacao, colunas: ['aprov', 'sc', 'data', 'prioridade'], nome: ['SC', 'SCs'] },
+    nomeArquivo: 'scs-em-aberto.csv',
+    vazio,
+  });
   const blocoLista = bloco(
     { titulo: 'SCs em aberto', subtitulo: 'Itens agrupados por SC, da mais antiga para a mais nova. CSV e "Copiar tabela" trazem um item por linha.' },
     recortes,
-    criarTabela({
-      titulo: 'SCs em aberto',
-      linhas: lista,
-      colunas: COLUNAS_SCS,
-      ordem: { coluna: 'aprov', desc: true },
-      // Como a tabela dinâmica da aba Regional: dados da SC só na 1ª linha, itens embaixo.
-      grupo: { chave: (r) => r.solicitacao, colunas: ['aprov', 'sc', 'data', 'prioridade'], nome: ['SC', 'SCs'] },
-      nomeArquivo: 'scs-em-aberto.csv',
-      vazio,
-    }).elemento,
+    tabela.elemento,
   );
 
   return el('div', { class: 'tela' }, cartoes, el('div', { class: 'grade-2 grade-2-3' }, graficoFaixas, blocoGrupos), blocoLista);
@@ -177,5 +189,5 @@ export function telaRegional(ctx) {
 export function reiniciarRegional() {
   local.faixa = null;
   local.sla = 'todos';
-  local.status = 'todos';
+  local.status = new Set();
 }
