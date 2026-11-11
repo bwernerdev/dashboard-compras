@@ -194,7 +194,18 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 
 ### Em aberto
 1. **Teste da Intranet (feito em 11/11/2026):** o anexo `.html` foi **recusado**. Fora planilhas, a Intranet só aceita **endereço web** (link). Falta escolher onde o painel fica, sempre **atrás do login da empresa** (os dados são internos; nada em endereço público, como GitHub Pages):
-   - **a) Link para o `.html` no SharePoint/OneDrive da empresa.** **Teste 1 (11/11/2026): funcionou.** O link pede o login Microsoft da empresa e a pré-visualização mostra a página com o script rodando, mas dentro de um quadro isolado (`about:srcdoc`), não como site. Em quadro isolado costumam falhar: memória do navegador (localStorage/IndexedDB), download de CSV, imprimir e `confirm`. **Teste 2 (pendente):** `teste-intranet.html` gerado por `scripts/gerar-teste-intranet.mjs` verifica cada recurso e o peso (1,6 MB, dados fictícios). Num quadro `sandbox="allow-scripts"` local, a memória falha e o resto roda; falta ver no SharePoint de verdade.
+   - **a) Link para o `.html` no SharePoint/OneDrive da empresa.** **Teste 1 (11/11/2026): funcionou.** O link pede o login Microsoft da empresa e a pré-visualização mostra a página com o script rodando, mas dentro de um quadro isolado (`about:srcdoc`), não como site. Em quadro isolado costumam falhar: memória do navegador (localStorage/IndexedDB), download de CSV, imprimir e `confirm`. **Teste 2 (11/11/2026, Chrome 156, `teste-intranet.html` gerado por `scripts/gerar-teste-intranet.mjs`):**
+
+     | Recurso | No quadro do SharePoint | Efeito no painel |
+     |---|---|---|
+     | Script, `Intl` pt-BR, `<dialog>` | OK | Funciona |
+     | 1,2 MB de dados embutidos (120 mil linhas) | OK, 142 ms | O painel (~0,5–1 MB) cabe com folga |
+     | localStorage, IndexedDB | Falham (origem opaca, sem `allow-same-origin`) | Painel não guarda nada; tema e aba não ficam lembrados |
+     | Worker | Falha | Painel calcula na thread da tela (8,5 mil linhas: instantâneo) |
+     | `window.print()`, `confirm()` | Bloqueados | Painel não usa `confirm`/`alert` (só `<dialog>`); imprimir depende do teste 3 |
+     | Download de CSV | A confirmar | Depende do teste 3 |
+
+     **Teste 3 (pendente):** mesmo arquivo com "Copiar tabela" (área de transferência) e "Abrir em nova aba" (fora do quadro, onde imprimir e baixar devem voltar).
    - **b) Endereço num servidor web interno (TI).** Abre direto no navegador; depende da TI.
    - **c) Plano B: `.xlsx` enxuto** (seção 4.2), anexado como hoje. Não precisa de hospedagem; perde a interatividade.
 

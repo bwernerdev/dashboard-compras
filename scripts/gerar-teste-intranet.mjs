@@ -41,13 +41,15 @@ const html = `<!doctype html>
 <body>
 <main>
   <h1>Teste Intranet 2: o que funciona aqui</h1>
-  <p>Tire um print desta página inteira depois de clicar nos 4 botões do fim. Dados fictícios.</p>
+  <p>Clique nos 6 botões do fim e tire um print. No 5, cole (Ctrl+V) numa planilha. Dados fictícios.</p>
   <table><tbody id="resultado"></tbody></table>
   <h2 style="font-size:16px;margin:20px 0 8px">Testes com clique (anote se funcionou)</h2>
   <button id="b-csv">1. Baixar CSV</button>
   <button id="b-imprimir">2. Imprimir</button>
   <button id="b-confirm">3. Pergunta (confirm)</button>
   <button id="b-dialogo">4. Janela do app (dialog)</button>
+  <button id="b-copiar">5. Copiar tabela (cole no Excel)</button>
+  <button id="b-aba">6. Abrir em nova aba</button>
   <dialog id="dialogo"><p>Janela do app abriu.</p><button onclick="this.closest('dialog').close()">Fechar</button></dialog>
 </main>
 <script id="dados" type="text/plain">${base64}</script>
@@ -126,6 +128,29 @@ const html = `<!doctype html>
     let r;
     try { r = window.confirm('Pergunta de teste: clique OK'); } catch (e) { marcar(ev.target, 'erro: ' + e.message); return; }
     marcar(ev.target, r ? 'funcionou' : Date.now() - t < 300 ? 'bloqueado' : 'cancelado');
+  };
+  document.getElementById('b-copiar').onclick = async (ev) => {
+    const texto = 'Coluna\\tValor\\r\\nTeste copiado\\t1,5\\r\\n';
+    try {
+      await navigator.clipboard.writeText(texto);
+      marcar(ev.target, 'copiou (área de transferência)');
+      return;
+    } catch (e) { /* tenta o jeito antigo */ }
+    const area = document.createElement('textarea');
+    area.value = texto;
+    document.body.append(area);
+    area.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    area.remove();
+    marcar(ev.target, ok ? 'copiou (jeito antigo)' : 'bloqueado');
+  };
+  document.getElementById('b-aba').onclick = (ev) => {
+    try {
+      const url = URL.createObjectURL(new Blob(['<!doctype html>' + document.documentElement.outerHTML], { type: 'text/html' }));
+      const janela = window.open(url, '_blank');
+      marcar(ev.target, janela ? 'abriu: na aba nova, clique de novo em 1, 2 e 3' : 'bloqueado');
+    } catch (e) { marcar(ev.target, 'erro: ' + e.message); }
   };
   document.getElementById('b-dialogo').onclick = (ev) => {
     try { document.getElementById('dialogo').showModal(); marcar(ev.target, 'abriu'); }
