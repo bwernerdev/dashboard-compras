@@ -284,6 +284,20 @@ Status do acompanhamento diário. No ME esses itens **nunca** têm "Selecionado 
 ### Lista de SCs em aberto agrupada por SC (11/11/2026)
 Pedido da equipe: igual à tabela dinâmica da aba Regional, cada SC aparece uma vez (Dias da aprovação, SC, Data, Prioridade na 1ª linha) com os itens embaixo (Status, Produto, Código, Qtd., Solicitante, Filial, Nome da filial, Comprador, Regional). A equipe pediu para tirar as colunas Dias em aberto, SLA, Prazo máx. e Item; os recortes de SLA e de faixa de dias continuam. Ordem: Dias da aprovação, do maior para o menor. Dias da aprovação e Qtd. centralizados. O painel publicado deixou de levar `item` e `slaMax` (dados versão 2). Contagem "397 SCs, 622 itens"; paginação por SC. CSV e "Copiar tabela" continuam com um item por linha, tudo preenchido (melhor para filtrar no Excel). Conferido com a SC 7715098: 3 itens, como na planilha.
 
+### Cores da planilha (11/11/2026)
+Pedido da equipe: mesmas cores da formatação condicional do `.xlsm` (abas Status, Entrega, Regional, Saving; tema Office).
+| Valor | Cor |
+|---|---|
+| Em Pedido | `#C6E0B4` (verde claro) |
+| Em Cotação | `#FFE699` (amarelo claro) |
+| Em pendências de compra / de contrato | `#B4C6E7` (azul claro; no gráfico, contrato em `#4472C4` para separar as duas) |
+| Em Pré-Pedido | `#2F5597` (azul escuro, texto branco) |
+| Cancelado | `#FF0000` (texto branco) |
+| NORMAL / URGENTE / EMERGENCIAL | `#D9D9D9` / `#FFFF00` / `#C00000` (texto branco) |
+| % Saving "-" ou < 0,1% / ≥ 6% | `#FFD966` / `#00B050` |
+
+Aplicadas nas células de Status e Prioridade da lista de SCs em aberto, no % Saving das tabelas do Saving e nas barras de status da tela Compradores. Iguais nos dois temas.
+
 ### Publicar (toda atualização)
 1. App da equipe: "Atualizar bases" e depois "Gerar painel".
 2. OneDrive/SharePoint, pasta do painel: enviar `painel-compras.html` e escolher **Substituir** (mesmo nome).

@@ -10,6 +10,7 @@
 | `importar.test.js` | Importação ponta a ponta com xlsx fictício: filtro de filial, conversão de tipos, Dados Gerais, coluna faltando, cancelamento |
 | `analise.test.js` | Agregações e filtros das telas (`src/analise.js`), memória (`brutosDe`, `recalcular`), `validarConfig` e CSV |
 | `painel.test.js` | Dados do painel publicado (`src/painel/dados.js`): só campos públicos, detalhe só de SC em aberto, versão, compactar/descompactar; texto do "Copiar tabela" (`gerarTsv`) |
+| `cores-planilha.test.js` | Cores da planilha antiga por status, prioridade e % saving; status separados no gráfico |
 | `ajuda/` | Gerador de `.xlsx` em memória para os testes (também usado pelo `e2e/`) |
 
 Testes no navegador: `npm run test:e2e` (ver `e2e/`).

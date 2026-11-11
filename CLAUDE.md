@@ -50,5 +50,6 @@ PRIVADO `github.com/bwernerdev/dashboard-compras` (branch `main`). Nunca tornar 
 - Regras de negócio só em `src/regras.js`; contas das telas só em `src/analise.js`; a UI não as reimplementa. Mudou regra: teste em `tests/regras.test.js`, `npm run conferir` e `PROJETO.md` seção 3.
 - Fidelidade à planilha antiga: célula vazia = 0 em conta; `""` não é vazia; comparação de texto sem maiúsculas; texto > número. Única correção aprovada: o erro de referência (PROJETO.md seção 2).
 - Testes só com dados fictícios. Dados reais só em scripts locais.
+- Cores de status, prioridade e % saving = as da planilha antiga (`src/ui/cores-planilha.js`, tokens `--pl-*`), em células e no gráfico de status. Pedido da equipe; não trocar pela paleta.
 - Gráficos: padrão da skill de visualização (paleta validada em `tokens.css`, cor fixa por status, legenda com 2+ séries, sempre uma tabela com os mesmos números). Contagem de SC = distinta por Solicitação. Pré-pedidos: vazio conta 1 por grupo, igual à planilha (`PROJETO.md` seção 9).
 - Sessões usam as skills do caveman: respostas terse (`caveman`), exploração ampla com `caveman-explore`.

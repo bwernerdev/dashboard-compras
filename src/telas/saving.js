@@ -5,6 +5,7 @@ import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
 import { barras, colunas } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
+import { classeDoSaving } from '../ui/cores-planilha.js';
 import {
   resumoSaving, savingPorFilial, savingPorComprador, savingPorMes, rotuloMes, pctSaving,
 } from '../analise.js';
@@ -16,7 +17,7 @@ function colunasSaving(rotulo) {
     { id: 'chave', rotulo, valor: (g) => g.chave },
     { id: 'total', rotulo: 'Total comprado', num: true, valor: (g) => g.total, formato: fmt.moedaCentavos },
     { id: 'economia', rotulo: 'Economia', num: true, valor: (g) => g.economia, formato: fmt.moedaCentavos },
-    { id: 'pct', rotulo: '% Saving', num: true, valor: (g) => g.pct, formato: fmt.pctFino },
+    { id: 'pct', rotulo: '% Saving', num: true, valor: (g) => g.pct, formato: fmt.pctFino, classe: (g) => classeDoSaving(g.pct) },
     { id: 'itens', rotulo: 'Itens com saving', num: true, valor: (g) => g.itensComSaving, formato: fmt.inteiro },
   ];
 }

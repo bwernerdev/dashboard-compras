@@ -187,6 +187,19 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 }
 .num .th-botao { justify-content: flex-end; }
 .tabela .centro { text-align: center; }
+
+/* Células com a cor da planilha antiga (ui/cores-planilha.js). */
+.tabela td[class*="cel-"] { color: var(--pl-texto-claro); }
+.tabela td.cel-pedido { background: var(--pl-pedido); }
+.tabela td.cel-cotacao { background: var(--pl-cotacao); }
+.tabela td.cel-pendencia { background: var(--pl-pendencia); }
+.tabela td.cel-pre-pedido { background: var(--pl-pre-pedido); color: var(--pl-texto-escuro); }
+.tabela td.cel-cancelado { background: var(--pl-cancelado); color: var(--pl-texto-escuro); }
+.tabela td.cel-normal { background: var(--pl-normal); }
+.tabela td.cel-urgente { background: var(--pl-urgente); }
+.tabela td.cel-emergencial { background: var(--pl-emergencial); color: var(--pl-texto-escuro); }
+.tabela td.cel-saving-baixo { background: var(--pl-saving-baixo); }
+.tabela td.cel-saving-bom { background: var(--pl-saving-bom); }
 .centro .th-botao { justify-content: center; }
 .th-seta { font-size: 9px; color: var(--accent-text); }
 .tabela-vazia { text-align: center !important; color: var(--text-muted); padding: var(--s5) !important; }

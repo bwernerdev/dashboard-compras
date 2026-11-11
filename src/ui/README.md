@@ -11,6 +11,7 @@ Gráficos em HTML/CSS no padrão da skill de visualização: barras de 16 px com
 | `graficos.js` | `barras` (clicável), `barrasEmpilhadas` (com legenda), `colunas`, `barraSegmentada` (célula de tabela) |
 | `filtros.js` | Barra de filtros globais: lista de marcar por filtro; marca sem fechar; Esc/clique fora fecha; "Limpar filtros" |
 | `cartoes.js` | `cartao` (indicador; `tom` sempre com texto), `linhaDeCartoes`, `bloco` (título + subtítulo + conteúdo) |
+| `cores-planilha.js` | Cores da planilha antiga (formatação condicional): `classeDoStatus`, `classeDaPrioridade`, `classeDoSaving` (célula pintada) e `corDoStatusNoGrafico`. Tokens `--pl-*` |
 | `dica.js` | Dica flutuante única (`ligarDica`, `esconderDica`) |
 
-Cores dos gráficos: tokens `--serie-1..7`, `--serie-unica`, `--st-bom`, `--st-critico` em `../styles/tokens.css`.
+Cores dos gráficos: tokens `--serie-1..7`, `--serie-unica`, `--st-bom`, `--st-critico` em `../styles/tokens.css`. Status, prioridade e % saving usam as cores da planilha antiga (`--pl-*`, pedido da equipe): o que a equipe já reconhece vence a paleta.

@@ -179,10 +179,15 @@ export function criarTabela(opcoes) {
   const plural = (n, [um, varios]) => `${n.toLocaleString('pt-BR')} ${n === 1 ? um : varios}`;
   const NOME_LINHA = ['linha', 'linhas'];
 
-  function celula(c, l, primeira) {
-    // Coluna do grupo fora da 1ª linha: vazia, a não ser que o valor mude dentro do grupo.
-    if (grupo && primeira !== l && grupo.colunas.includes(c.id) && textoDaCelula(c, l) === textoDaCelula(c, primeira)) return '';
-    return c.exibir ? c.exibir(l) : (textoDaCelula(c, l) || '-');
+  /** Coluna do grupo fora da 1ª linha: vazia (e sem cor), a não ser que o valor mude dentro do grupo. */
+  const ocultaNoGrupo = (c, l, primeira) => grupo && primeira !== l && grupo.colunas.includes(c.id)
+    && textoDaCelula(c, l) === textoDaCelula(c, primeira);
+
+  function td(c, l, primeira) {
+    const oculta = ocultaNoGrupo(c, l, primeira);
+    return el('td', {
+      class: [classeColuna(c) ?? '', oculta ? '' : (c.classe?.(l) ?? '')].join(' ').trim() || null,
+    }, oculta ? '' : (c.exibir ? c.exibir(l) : (textoDaCelula(c, l) || '-')));
   }
 
   function render() {
@@ -197,9 +202,7 @@ export function criarTabela(opcoes) {
     substituir(corpo, pagina.length ? pagina.flatMap((g) => g.map((l, i) => el('tr', {
       class: [aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '', grupo && i < g.length - 1 ? 'grupo-continua' : ''].join(' ').trim() || null,
       onclick: aoClicarLinha ? () => aoClicarLinha(l) : null,
-    }, colunas.map((c) => el('td', {
-      class: [classeColuna(c) ?? '', c.classe?.(l) ?? ''].join(' ').trim() || null,
-    }, celula(c, l, g[0])))))) : el('tr', {}, el('td', { colspan: colunas.length, class: 'tabela-vazia' }, vazio)));
+    }, colunas.map((c) => td(c, l, g[0]))))) : el('tr', {}, el('td', { colspan: colunas.length, class: 'tabela-vazia' }, vazio)));
 
     if (rodape && linhas.length) {
       const totais = rodape(linhas);

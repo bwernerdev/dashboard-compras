@@ -6,13 +6,14 @@ import { barrasEmpilhadas } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
 import {
-  scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores, STATUS_SC, OUTROS,
+  scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores, OUTROS,
   itensEmAberto, resumoEmAberto,
 } from '../analise.js';
 import { PENDENTE } from '../regras.js';
+import { corDoStatusNoGrafico } from '../ui/cores-planilha.js';
 
-/** Cor fixa por status (slots da paleta validada, na ordem do processo). */
-export const corDoStatus = (s) => (s === OUTROS ? 'var(--serie-outros)' : `var(--serie-${STATUS_SC.indexOf(s) + 1})`);
+/** Cor fixa por status: a mesma da planilha antiga (ui/cores-planilha.js). */
+export const corDoStatus = (s) => (s === OUTROS ? 'var(--serie-outros)' : corDoStatusNoGrafico(s));
 
 const destacarPendente = (linha) => (linha.comprador === PENDENTE ? 'linha-destaque' : '');
 

@@ -77,6 +77,22 @@
   --st-critico: #d03b3b;
   --trilho: #eef0f3;
   --grafico-selecionado: #1d5fb0;
+
+  /* Cores da planilha antiga (formatação condicional das abas Status, Entrega, Regional e Saving;
+     tema Office). Iguais nos dois temas: a equipe reconhece pela cor. Uso: ui/cores-planilha.js. */
+  --pl-pedido: #c6e0b4;          /* Em Pedido: Verde, Ênfase 6, 60% mais claro */
+  --pl-cotacao: #ffe699;         /* Em Cotação: Ouro, Ênfase 4, 60% mais claro */
+  --pl-pendencia: #b4c6e7;       /* Em pendências de compra e de contrato: Azul, Ênfase 5, 60% mais claro */
+  --pl-pendencia-forte: #4472c4; /* Só no gráfico: separa pendência de contrato da de compra (mesma cor na planilha) */
+  --pl-pre-pedido: #2f5597;      /* Em Pré-Pedido: Azul, Ênfase 5, 25% mais escuro */
+  --pl-cancelado: #ff0000;
+  --pl-normal: #d9d9d9;          /* NORMAL: Branco, 15% mais escuro */
+  --pl-urgente: #ffff00;
+  --pl-emergencial: #c00000;
+  --pl-saving-baixo: #ffd966;    /* % Saving "-" ou < 0,1%: Ouro, Ênfase 4, 40% mais claro */
+  --pl-saving-bom: #00b050;      /* % Saving >= 6% */
+  --pl-texto-claro: #1a1a1a;     /* texto sobre fundo claro */
+  --pl-texto-escuro: #ffffff;    /* texto sobre fundo escuro */
 }
 
 html[data-theme="dark"] {
