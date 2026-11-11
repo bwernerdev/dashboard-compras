@@ -53,7 +53,7 @@ test('Compradores e Saving', async ({ page }) => {
   await importarBase(page);
   await page.getByRole('tab', { name: 'Compradores' }).click();
   await expect(valorDoCartao(page, 'SCs no período')).toHaveText('3');
-  await expect(valorDoCartao(page, 'Pré-pedidos')).toHaveText('1');
+  await expect(valorDoCartao(page, 'Pré-pedidos')).toHaveText('2'); // PP-1 + vazio (como na planilha)
   const tabela = page.getByRole('table', { name: 'SCs por comprador e status' });
   await expect(tabela.locator('tbody tr', { hasText: COMPRADOR.apelido }).locator('td').last()).toHaveText('3');
 

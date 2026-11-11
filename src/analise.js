@@ -144,26 +144,40 @@ export function scsPorCompradorStatus(registros) {
   return { status, linhas, totaisStatus, totalGeral };
 }
 
-/** Pré-pedidos distintos por comprador x regional (tabela dinâmica 1 da aba sc p Compr). */
+const temPrePedido = (r) => r.numeroPrePedido !== null && r.numeroPrePedido !== undefined && r.numeroPrePedido !== '';
+const VAZIO = Symbol('vazio');
+
+/**
+ * Pré-pedidos distintos por comprador x regional (tabela dinâmica 1 da aba sc p Compr).
+ * Igual à planilha (decisão de 11/11/2026): a contagem distinta do modelo de dados (DISTINCTCOUNT)
+ * conta o pré-pedido VAZIO como um valor, então todo grupo com alguma SC sem pré-pedido soma 1.
+ * Só aparecem compradores e regionais com pelo menos um pré-pedido de verdade.
+ */
 export function prePedidosPorCompradorRegional(registros) {
-  const comPre = registros.filter((r) => r.numeroPrePedido !== null && r.numeroPrePedido !== '');
+  const comPre = registros.filter(temPrePedido);
+  const compradores = new Set(comPre.map((r) => nomeOuTraco(r.comprador)));
   const regionais = [...new Set(comPre.map((r) => nomeOuTraco(r.regional)))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const valor = (r) => (temPrePedido(r) ? r.numeroPrePedido : VAZIO);
   const porComprador = new Map();
-  for (const r of comPre) {
+  for (const r of registros) {
     const c = nomeOuTraco(r.comprador);
+    if (!compradores.has(c)) continue;
     if (!porComprador.has(c)) porComprador.set(c, { todos: new Set(), porRegional: new Map() });
     const g = porComprador.get(c);
-    g.todos.add(r.numeroPrePedido);
+    g.todos.add(valor(r));
     const reg = nomeOuTraco(r.regional);
     if (!g.porRegional.has(reg)) g.porRegional.set(reg, new Set());
-    g.porRegional.get(reg).add(r.numeroPrePedido);
+    g.porRegional.get(reg).add(valor(r));
   }
   const linhas = [...porComprador].map(([comprador, g]) => ({
     comprador,
     porRegional: Object.fromEntries(regionais.map((x) => [x, g.porRegional.get(x)?.size ?? 0])),
     total: g.todos.size,
   })).sort((a, b) => b.total - a.total || a.comprador.localeCompare(b.comprador, 'pt-BR'));
-  return { regionais, linhas, totalGeral: new Set(comPre.map((r) => r.numeroPrePedido)).size };
+  const doPainel = registros.filter((r) => compradores.has(nomeOuTraco(r.comprador)));
+  const totaisRegional = Object.fromEntries(regionais.map((x) => [x,
+    new Set(doPainel.filter((r) => nomeOuTraco(r.regional) === x).map(valor)).size]));
+  return { regionais, linhas, totaisRegional, totalGeral: comPre.length ? new Set(doPainel.map(valor)).size : 0 };
 }
 
 /**

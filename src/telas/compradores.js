@@ -32,7 +32,7 @@ export function telaCompradores(ctx) {
       rotulo: 'SCs sem comprador (Pendente)', valor: fmt.inteiro(pendente?.total ?? 0), tom: pendente?.total ? 'alerta' : null,
       detalhe: 'Itens sem "Selecionado por" no ME',
     }),
-    cartao({ rotulo: 'Pré-pedidos', valor: fmt.inteiro(pre.totalGeral), detalhe: 'Números de pré-pedido distintos' }),
+    cartao({ rotulo: 'Pré-pedidos', valor: fmt.inteiro(pre.totalGeral), detalhe: 'Distintos, como na planilha (SC sem pré-pedido conta 1)' }),
     cartao({
       rotulo: 'Itens em aberto fora do prazo', valor: fmt.inteiro(aberto.fora), tom: aberto.fora ? 'critico' : null,
       detalhe: `${fmt.pct(aberto.pctNoPrazo)} dos itens em aberto no prazo`,
@@ -65,7 +65,7 @@ export function telaCompradores(ctx) {
   );
 
   const prePedidos = bloco(
-    { titulo: 'Pré-pedidos por comprador e regional', subtitulo: 'Números de pré-pedido distintos.' },
+    { titulo: 'Pré-pedidos por comprador e regional', subtitulo: 'Números de pré-pedido distintos. Como na planilha, as SCs sem pré-pedido contam como 1 em cada grupo.' },
     criarTabela({
       titulo: 'Pré-pedidos por comprador e regional',
       linhas: pre.linhas,
@@ -77,7 +77,7 @@ export function telaCompradores(ctx) {
         ...pre.regionais.map((r) => ({ id: `r-${r}`, rotulo: r, num: true, valor: (l) => l.porRegional[r] || null, formato: fmt.inteiro })),
         { id: 'total', rotulo: 'Total', num: true, valor: (l) => l.total, formato: fmt.inteiro },
       ],
-      rodape: (linhas) => ['Total geral', ...pre.regionais.map((r) => fmt.inteiro(linhas.reduce((s, l) => s + l.porRegional[r], 0))), fmt.inteiro(pre.totalGeral)],
+      rodape: () => ['Total geral', ...pre.regionais.map((r) => fmt.inteiro(pre.totaisRegional[r])), fmt.inteiro(pre.totalGeral)],
     }).elemento,
   );
 

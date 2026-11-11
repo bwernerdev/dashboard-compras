@@ -177,7 +177,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | Período | O que vier nas bases; sem histórico acumulado |
 | Repositório | Próprio e privado: `github.com/bwernerdev/dashboard-compras` |
 | Correção da seção 2 | Aprovada: o painel publica os valores corrigidos (dias em aberto, Data, Serviço, SLA, tempos por etapa) |
-| Contagem distinta com vazio (fase 2) | O app conta só valores reais. A planilha conta o vazio como 1 (pré-pedidos: +1 por grupo). Decisão tomada na implementação; confirmar com a equipe (seção 9) |
+| Contagem distinta com vazio (fase 2) | Igual à planilha: nos pré-pedidos, SC sem pré-pedido conta como 1 em cada grupo (DISTINCTCOUNT do modelo de dados). Decidido em 11/11/2026 |
 
 ### Em aberto
 1. **Teste da Intranet** (adiado): resultado do anexo `teste-intranet.html` (abre, baixa ou é recusado). Não trava as fases 1 e 2; precisa estar resolvido antes da fase 3.
@@ -226,7 +226,7 @@ As colunas da seção 2 (dias em aberto, Data, Serviço, SLA, tempos por etapa) 
 ### Conferência (`npm run conferir`, usando `src/analise.js`, as mesmas funções das telas)
 - **Spend** e **Saving** por filial: batem ao centavo.
 - **sc p Compr, SCs por comprador × status:** batem. Única diferença: a planilha tem 1 SC a mais em "-", que é uma linha vazia da tabela Base (o app não lê linha sem filial).
-- **sc p Compr, pré-pedidos por comprador × regional:** a planilha mostra **1 a mais** em cada grupo que tem SC sem pré-pedido (ex.: Thayane 1.354; o app mostra 1.353). Motivo: a contagem distinta do modelo de dados conta o pré-pedido vazio como um valor. Somando esse 1, tudo bate. O app mostra o número real.
+- **sc p Compr, pré-pedidos por comprador × regional:** batem (ex.: Thayane 1.354). A contagem distinta do modelo de dados da planilha conta o pré-pedido vazio como um valor (+1 em cada grupo com SC sem pré-pedido); por decisão de 11/11/2026 o app conta igual. Só aparecem compradores e regionais com pelo menos um pré-pedido de verdade.
 
 ### Base de 11/11/2026 na tela
 397 SCs em aberto (622 itens), 74,1% no prazo, 143 itens fora do prazo, 70 sem prazo (status sem SLA ou sem linha na tabela), média de 9,7 dias úteis, mais antiga com 42.

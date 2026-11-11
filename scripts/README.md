@@ -10,4 +10,4 @@ Sem argumentos, procuram os arquivos com o nome padrão na raiz do projeto. As p
 `conferir-xlsm.mjs`:
 - As tabelas dinâmicas são recalculadas com as **mesmas funções das telas** (`src/analise.js`).
 - A tabela Saving da planilha estava filtrada por segmentação (Comprador = Thayane, Contrato? = não) em 11/11/2026; se o filtro mudar, ajuste `FILTRO_SAVING` no script.
-- A contagem distinta do modelo de dados da planilha conta o **vazio** como um valor. Por isso a planilha mostra 1 pré-pedido a mais em cada grupo com SC sem pré-pedido, e 1 SC a mais em "-" (linha vazia da tabela Base). O app conta só valores reais; o script soma esse 1 e marca com `*`/`OK*`.
+- A contagem distinta do modelo de dados da planilha conta o **vazio** como um valor. Nos pré-pedidos o app conta igual (decisão de 11/11/2026). Em "SCs por comprador x status", a planilha tem 1 SC a mais em "-" por causa de uma linha vazia da tabela Base, que o app não lê; o script marca com `OK*`.

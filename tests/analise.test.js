@@ -104,18 +104,22 @@ test('scsPorCompradorStatus: distintas por status e no total; status desconhecid
   assert.deepEqual(r.totaisStatus, { 'Em Pedido': 2, 'Em Cotação': 1, Outros: 1 });
 });
 
-test('prePedidosPorCompradorRegional: pré-pedidos distintos', () => {
+test('prePedidosPorCompradorRegional: distintos, vazio conta 1 como na planilha (DISTINCTCOUNT)', () => {
   const r = prePedidosPorCompradorRegional([
     reg({ comprador: 'Ana', regional: 'Sul', numeroPrePedido: 'P1' }),
     reg({ comprador: 'Ana', regional: 'Sul', numeroPrePedido: 'P1' }),
     reg({ comprador: 'Ana', regional: 'Norte', numeroPrePedido: 'P2' }),
     reg({ comprador: 'Bia', regional: 'Sul', numeroPrePedido: 'P3' }),
-    reg({ comprador: 'Bia', regional: 'Sul', numeroPrePedido: null }),
+    reg({ comprador: 'Bia', regional: 'Sul', numeroPrePedido: null }), // vazio: +1 em Bia/Sul e Bia
+    reg({ comprador: 'Bia', regional: 'Leste', numeroPrePedido: '' }), // Leste sem pré-pedido real: não vira coluna
+    reg({ comprador: 'Caio', regional: 'Sul', numeroPrePedido: null }), // sem pré-pedido real: não vira linha
   ]);
   assert.deepEqual(r.regionais, ['Norte', 'Sul']);
   assert.deepEqual(r.linhas.map((l) => [l.comprador, l.porRegional.Norte, l.porRegional.Sul, l.total]),
-    [['Ana', 1, 1, 2], ['Bia', 0, 1, 1]]);
-  assert.equal(r.totalGeral, 3);
+    [['Ana', 1, 1, 2], ['Bia', 0, 2, 2]]);
+  assert.equal(r.totalGeral, 4, 'P1, P2, P3 e o vazio');
+  assert.deepEqual(r.totaisRegional, { Norte: 1, Sul: 3 }, 'Sul: P1, P3 e o vazio');
+  assert.equal(prePedidosPorCompradorRegional([reg({ numeroPrePedido: null })]).totalGeral, 0);
 });
 
 test('participacaoCompradores: % das linhas de SC e SLA em aberto', () => {

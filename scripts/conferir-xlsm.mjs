@@ -164,35 +164,22 @@ const abaCompr = await lerAbaInteira(pasta, 'sc p Compr');
 {
   const calc = prePedidosPorCompradorRegional(base.registros);
   const regionais = new Set(calc.regionais);
-  // A contagem distinta do modelo de dados (DISTINCTCOUNT) conta o pré-pedido VAZIO como um valor:
-  // em cada grupo com alguma SC sem pré-pedido a planilha mostra 1 a mais. O app conta só
-  // pré-pedidos de verdade; aqui o vazio é somado para provar que o resto bate.
-  const temVazio = new Set();
-  for (const r of base.registros) {
-    if (r.numeroPrePedido !== null && r.numeroPrePedido !== '') continue;
-    const c = r.comprador ?? '-';
-    temVazio.add(c);
-    temVazio.add(`${c}|${r.regional ?? '-'}`);
-  }
-  console.log('\n== Tabela dinâmica sc p Compr (pré-pedidos distintos por comprador e regional; * = +1 do vazio)');
+  // Como a planilha, o vazio conta como um pré-pedido em cada grupo com SC sem pré-pedido.
+  console.log('\n== Tabela dinâmica sc p Compr (pré-pedidos distintos por comprador e regional)');
   let atual = null;
   for (const l of abaCompr.slice(5, 19)) {
     const rotulo = l?.[2];
     if (rotulo === undefined || rotulo === null || rotulo === '') continue;
     const esperado = l[3] ?? 0;
     let obtido;
-    let vazio;
-    if (regionais.has(String(rotulo)) && atual) {
-      obtido = atual.porRegional[String(rotulo)] ?? 0;
-      vazio = temVazio.has(`${atual.comprador}|${rotulo}`);
-    } else {
+    if (regionais.has(String(rotulo)) && atual) obtido = atual.porRegional[String(rotulo)] ?? 0;
+    else {
       atual = calc.linhas.find((x) => x.comprador === String(rotulo));
       obtido = atual?.total ?? 0;
-      vazio = temVazio.has(String(rotulo));
     }
-    const ok = esperado === obtido + (vazio ? 1 : 0);
+    const ok = esperado === obtido;
     if (!ok) falhas++;
-    console.log(`${ok ? 'OK   ' : 'DIFERE'} ${regionais.has(String(rotulo)) ? '  ' : ''}${String(rotulo).padEnd(16)} ${esperado} x ${obtido}${vazio ? ' +1*' : ''}`);
+    console.log(`${ok ? 'OK   ' : 'DIFERE'} ${regionais.has(String(rotulo)) ? '  ' : ''}${String(rotulo).padEnd(16)} ${esperado} x ${obtido}`);
   }
 }
 
