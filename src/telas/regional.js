@@ -7,11 +7,12 @@ import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
 import {
   itensEmAberto, resumoEmAberto, porFaixaDeDias, emAbertoPor, faixaDe, FAIXAS_DIAS,
+  recortarPorStatus, itensPorStatus, ehPendencia, RECORTE_PENDENCIAS,
 } from '../analise.js';
 import { ERRO_ND } from '../regras.js';
 
 // Seleções locais da tela (não são filtros globais: só recortam a lista de SCs).
-const local = { faixa: null, sla: 'todos', agrupar: 'regional' };
+const local = { faixa: null, sla: 'todos', status: 'todos', agrupar: 'regional' };
 
 const SLA_OPCOES = [
   { id: 'todos', rotulo: 'Todos' },
@@ -124,12 +125,36 @@ export function telaRegional(ctx) {
     tabelaGrupos(grupos, rotuloGrupo, (valor) => ctx.filtrar(local.agrupar === 'regional' ? 'regional' : 'filial', valor)),
   );
 
-  let lista = abertos;
+  // Status: opções com o número de itens em aberto (antes dos outros recortes).
+  const porStatus = itensPorStatus(abertos);
+  const pendencias = abertos.filter(ehPendencia).length;
+  const opcoesStatus = [
+    { id: 'todos', rotulo: 'Todos' },
+    { id: RECORTE_PENDENCIAS, rotulo: `Pendências de compra e contrato (${fmt.inteiro(pendencias)})` },
+    ...porStatus.map((s) => ({ id: s.status, rotulo: `${s.status} (${fmt.inteiro(s.itens)})` })),
+  ];
+  // A escolha some quando os filtros globais tiram todos os itens daquele status: mantém visível.
+  if (!opcoesStatus.some((o) => o.id === local.status)) opcoesStatus.push({ id: local.status, rotulo: `${local.status} (0)` });
+
+  let lista = recortarPorStatus(abertos, local.status);
   if (local.faixa) lista = lista.filter((r) => faixaDe(r.diasEmAberto) === local.faixa);
   if (local.sla === 'sem') lista = lista.filter((r) => r.sla !== 'No Prazo' && r.sla !== 'Fora do Prazo');
   else if (local.sla !== 'todos') lista = lista.filter((r) => r.sla === local.sla);
 
+  const escolheuPendencia = local.status === RECORTE_PENDENCIAS || ehPendencia({ status: local.status });
+  const vazio = escolheuPendencia
+    ? 'Nenhum item em pendência com esse recorte. Pendências ficam no comprador "Pendente" (o ME não preenche "Selecionado por"): confira o filtro Comprador.'
+    : 'Nenhuma SC com esse recorte.';
+
   const recortes = el('div', { class: 'recortes' },
+    el('label', { class: 'recorte' }, 'Status ',
+      el('select', {
+        class: 'campo', onchange: (ev) => { local.status = ev.target.value; ctx.redesenhar(); },
+      }, opcoesStatus.map((o) => el('option', { value: o.id, selected: local.status === o.id }, o.rotulo)))),
+    local.status === RECORTE_PENDENCIAS ? null : el('button', {
+      type: 'button', class: 'botao botao-sec botao-pequeno',
+      onclick: () => { local.status = RECORTE_PENDENCIAS; ctx.redesenhar(); },
+    }, 'Só pendências'),
     el('label', { class: 'recorte' }, 'SLA ',
       el('select', {
         class: 'campo', onchange: (ev) => { local.sla = ev.target.value; ctx.redesenhar(); },
@@ -148,7 +173,7 @@ export function telaRegional(ctx) {
       colunas: COLUNAS_SCS,
       ordem: { coluna: 'dias', desc: true },
       nomeArquivo: 'scs-em-aberto.csv',
-      vazio: 'Nenhuma SC com esse recorte.',
+      vazio,
     }).elemento,
   );
 
@@ -159,4 +184,5 @@ export function telaRegional(ctx) {
 export function reiniciarRegional() {
   local.faixa = null;
   local.sla = 'todos';
+  local.status = 'todos';
 }

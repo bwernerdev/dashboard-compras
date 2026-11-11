@@ -104,6 +104,35 @@ export function emAbertoPor(abertos, campo) {
     .sort((a, b) => b.scs - a.scs || a.chave.localeCompare(b.chave, 'pt-BR'));
 }
 
+/**
+ * Status do acompanhamento diário. No ME esses itens nunca têm "Selecionado por",
+ * então ficam no comprador "Pendente".
+ */
+export const STATUS_PENDENCIAS = ['Em pendências de compra', 'Em pendências de contrato'];
+/** Recorte "pendências de compra e contrato" da lista de SCs em aberto. */
+export const RECORTE_PENDENCIAS = 'pendencias';
+const mesmoTexto = (a, b) => String(a ?? '').toLowerCase() === String(b ?? '').toLowerCase();
+export const ehPendencia = (r) => STATUS_PENDENCIAS.some((s) => mesmoTexto(r.status, s));
+
+/** Recorta por status: 'todos', RECORTE_PENDENCIAS ou um status exato. */
+export function recortarPorStatus(registros, escolha) {
+  if (!escolha || escolha === 'todos') return registros;
+  if (escolha === RECORTE_PENDENCIAS) return registros.filter(ehPendencia);
+  return registros.filter((r) => nomeOuTraco(r.status) === escolha);
+}
+
+/** Itens por status, na ordem do processo (STATUS_SC), outros status no fim em ordem alfabética. */
+export function itensPorStatus(registros) {
+  const contagem = new Map();
+  for (const r of registros) {
+    const s = nomeOuTraco(r.status);
+    contagem.set(s, (contagem.get(s) ?? 0) + 1);
+  }
+  const posicao = (s) => { const i = STATUS_SC.indexOf(s); return i < 0 ? STATUS_SC.length : i; };
+  return [...contagem].map(([status, itens]) => ({ status, itens }))
+    .sort((a, b) => posicao(a.status) - posicao(b.status) || a.status.localeCompare(b.status, 'pt-BR'));
+}
+
 // ---------- Compradores (aba sc p Compr) ----------
 
 /** Ordem fixa dos status (processo) e cor por status: a cor segue o status, nunca a posição. */

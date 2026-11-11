@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   aplicarFiltros, opcoesDosFiltros, chaveMes, rotuloMes, itensEmAberto, resumoEmAberto, porFaixaDeDias,
-  faixaDe, emAbertoPor, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
+  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, RECORTE_PENDENCIAS, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
   pctSaving, resumoSaving, savingPorFilial, savingPorComprador, savingPorMes,
 } from '../src/analise.js';
 import { brutosDe, recalcular } from '../src/memoria.js';
@@ -41,6 +41,25 @@ test('aplicarFiltros: vazio = todos; vários filtros = E; mês só no Saving', (
   assert.equal(aplicarFiltros(regs, { comprador: new Set(['-']) }, 'regional').length, 1, 'sem comprador vira "-"');
   assert.equal(aplicarFiltros(regs, { mes: new Set(['2026-10']) }, 'regional').length, 3, 'mês não vale na Regional');
   assert.equal(aplicarFiltros(regs, { mes: new Set(['2026-10']) }, 'saving').length, 1);
+});
+
+test('recorte por status: pendências de compra e contrato, status exato, todos', () => {
+  const regs = [
+    reg({ status: 'Em pendências de compra' }), reg({ status: 'EM PENDÊNCIAS DE CONTRATO' }),
+    reg({ status: 'Em Pré-Pedido' }), reg({ status: 'Em Cotação' }), reg({ status: null }),
+  ];
+  assert.equal(recortarPorStatus(regs, 'todos').length, 5);
+  assert.deepEqual(recortarPorStatus(regs, RECORTE_PENDENCIAS).map((r) => r.status), ['Em pendências de compra', 'EM PENDÊNCIAS DE CONTRATO']);
+  assert.equal(recortarPorStatus(regs, 'Em Cotação').length, 1);
+  assert.equal(recortarPorStatus(regs, '-').length, 1);
+  assert.equal(ehPendencia(reg({ status: 'Em Pedido' })), false);
+});
+
+test('itensPorStatus: ordem do processo, outros no fim', () => {
+  const regs = [reg({ status: 'Zeta' }), reg({ status: 'Em pendências de compra' }), reg({ status: 'Em Pré-Pedido' }), reg({ status: 'Em Pré-Pedido' })];
+  assert.deepEqual(itensPorStatus(regs), [
+    { status: 'Em Pré-Pedido', itens: 2 }, { status: 'Em pendências de compra', itens: 1 }, { status: 'Zeta', itens: 1 },
+  ]);
 });
 
 test('opcoesDosFiltros: ordem alfabética, "-" por último', () => {

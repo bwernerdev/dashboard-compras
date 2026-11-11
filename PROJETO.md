@@ -278,6 +278,9 @@ As colunas da seção 2 (dias em aberto, Data, Serviço, SLA, tempos por etapa) 
 ### Base de 11/11/2026
 Painel com 8.555 linhas: **0,18 MB**, gerado em ~0,1 s. Aberto num quadro isolado igual ao do SharePoint, mostra os mesmos números do app (397 SCs em aberto, 622 itens, 74,1% no prazo, 143 fora).
 
+### Pendências de compra e contrato (11/11/2026)
+Status do acompanhamento diário. No ME esses itens **nunca** têm "Selecionado por" (6.099 de 6.099 na base de 11/11/2026), então ficam no comprador **"Pendente"**: filtrar por um comprador os esconde. A lista de SCs em aberto (Regional) ganhou o recorte **Status** com contagem e o atalho **"Só pendências"** (378 itens nas 26 filiais: 210 de compra, 168 de contrato). Lista vazia com pendência escolhida explica o filtro Comprador. Em aberto: como a equipe divide as pendências entre compradores (categoria/"Grupo Produto", filial?). Com a regra, o app pode atribuir o comprador.
+
 ### Publicar (toda atualização)
 1. App da equipe: "Atualizar bases" e depois "Gerar painel".
 2. OneDrive/SharePoint, pasta do painel: enviar `painel-compras.html` e escolher **Substituir** (mesmo nome).
