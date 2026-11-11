@@ -193,7 +193,10 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | Contagem distinta com vazio (fase 2) | Igual à planilha: nos pré-pedidos, SC sem pré-pedido conta como 1 em cada grupo (DISTINCTCOUNT do modelo de dados). Decidido em 11/11/2026 |
 
 ### Em aberto
-1. **Teste da Intranet** (adiado): resultado do anexo `teste-intranet.html` (abre, baixa ou é recusado). Não trava as fases 1 e 2; precisa estar resolvido antes da fase 3.
+1. **Teste da Intranet (feito em 11/11/2026):** o anexo `.html` foi **recusado**. Fora planilhas, a Intranet só aceita **endereço web** (link). Falta escolher onde o painel fica, sempre **atrás do login da empresa** (os dados são internos; nada em endereço público, como GitHub Pages):
+   - **a) Link para o `.html` no SharePoint/OneDrive da empresa.** O clique baixa o arquivo, que abre no navegador sem servidor. Próximo teste: subir o `teste-intranet.html`, compartilhar com a empresa, pôr o link na Intranet e ver o "Aberto via".
+   - **b) Endereço num servidor web interno (TI).** Abre direto no navegador; depende da TI.
+   - **c) Plano B: `.xlsx` enxuto** (seção 4.2), anexado como hoje. Não precisa de hospedagem; perde a interatividade.
 
 ---
 
