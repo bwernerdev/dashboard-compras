@@ -2,7 +2,7 @@
 
 Substituir o `DASHBOARD COMPRAS 2026.xlsm` por um app web que lê as duas bases do ME, aplica as regras de negócio em um só lugar e gera um painel leve para a equipe de Suprimentos abrir pela Intranet.
 
-Status: **fase 2 concluída** (telas Regional, Compradores, Saving; resultado na seção 9); fase 1 na seção 8. Próxima é a fase 3 (antes, o teste da Intranet).
+Status: **fase 3 concluída** ("Gerar painel" para o SharePoint; resultado na seção 10); fase 2 na seção 9, fase 1 na seção 8. Falta publicar o primeiro painel e cadastrar o link na Intranet. Próxima é a fase 4.
 
 ---
 
@@ -171,7 +171,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | 0 | Este documento (concluído em 11/11/2026) | Decisões fechadas, exceto o teste da Intranet (adiado para antes da fase 3) |
 | 1 | Leitor das bases (worker) + `regras.js` + configuração + testes (concluída em 11/11/2026) | Lê as duas bases atuais em < 20 s; regras testadas |
 | 2 | Telas Regional, Compradores, Saving + filtros globais (concluída em 11/11/2026) | Números de Saving e sc p Compr batem com o `.xlsm`; Regional bate com a regra corrigida |
-| 3 | "Gerar painel": `.html` único, só com as telas públicas (seção 4.7), publicado no SharePoint/OneDrive com link na Intranet (seção 7) | Link da Intranet abre o painel no quadro do SharePoint sem importar nada; "Copiar tabela" funciona; o arquivo não contém dados das telas internas |
+| 3 | "Gerar painel": `.html` único, só com as telas públicas (seção 4.7), publicado no SharePoint/OneDrive com link na Intranet (seção 7). Concluída em 11/11/2026 (seção 10) | Link da Intranet abre o painel no quadro do SharePoint sem importar nada; "Copiar tabela" funciona; o arquivo não contém dados das telas internas |
 | 4 | Demais telas públicas: Capa, Status, Entrega, Atendimento, Organograma (Spend já está no Saving). Internas, se a equipe quiser: Contr - Cot, scs Filial, Med Temp, sc p Cat, Regularização | Paridade com as abas visíveis da planilha protegida |
 | 5 (opcional) | Favorito do ME abre o app e entrega as bases direto, sem passar por Downloads | Atualização com um clique |
 
@@ -207,7 +207,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
      | Copiar (`execCommand('copy')`; `navigator.clipboard` falha) | OK (teste 3) | Botão "Copiar tabela" (texto com tabulação, cola em células no Excel) |
      | Abrir em nova aba (`window.open`) | Bloqueado (teste 3) | Sem "tela cheia" |
 
-   **Decidido (11/11/2026): opção a, SharePoint/OneDrive.** O painel publicado detecta o quadro isolado (`self.origin === 'null'`) e então: não usa memória, worker, `confirm`/`alert` nem `print`; troca "Exportar CSV" por **"Copiar tabela"**; mostra o aviso *"Para imprimir ou baixar em CSV, use ⋯ > Baixar no SharePoint e abra o arquivo"*. Aberto fora do quadro (baixado, `file://`), tudo funciona como no app.
+   **Decidido (11/11/2026): opção a, SharePoint/OneDrive.** O painel publicado detecta o quadro isolado (`window.top !== window`; `self.origin === 'null'` não serve, porque `file://` também dá `null`) e então: não usa memória, worker, `confirm`/`alert` nem `print`; troca "Exportar CSV" por **"Copiar tabela"**; mostra o aviso *"Para imprimir ou baixar em CSV, use ⋯ > Baixar no SharePoint e abra o arquivo"*. Aberto fora do quadro (baixado, `file://`), tudo funciona como no app.
    - **b) Endereço num servidor web interno (TI).** Abre direto no navegador; depende da TI.
    - **c) Plano B: `.xlsx` enxuto** (seção 4.2), anexado como hoje. Não precisa de hospedagem; perde a interatividade.
 
@@ -263,3 +263,26 @@ As colunas da seção 2 (dias em aberto, Data, Serviço, SLA, tempos por etapa) 
 ### Testes
 - `npm test`: 48 testes unitários (inclui `tests/analise.test.js`).
 - `npm run test:e2e`: 8 testes no Chrome com bases fictícias (importação, filtros, as três telas, memória, CSV, configuração, tema).
+
+---
+
+## 10. Resultado da fase 3 (11/11/2026)
+
+### O que existe
+- **Botão "Gerar painel"** no app da equipe (ativo depois de importar a Base): baixa `painel-compras.html` e mostra como publicar.
+- **O arquivo** é um `.html` único (CSS, JS e dados embutidos), com as telas **Regional** e **Saving**, os filtros globais, tema e "Copiar tabela". Números congelados na data em que foi gerado (o topo mostra "dados de dd/mm/aaaa hh:mm").
+- **Dados dentro do arquivo:** só os campos que essas duas telas usam (`src/painel/dados.js`). O detalhe do item (descrição, solicitante, código) vai só para SC em aberto. **Não vão:** tela Compradores, pré-pedidos, configuração (de-para com descrições e nomes completos), regras de importação.
+- **No quadro do SharePoint:** aviso no topo, sem "Exportar CSV" e sem "Imprimir"; "Copiar tabela" cola em células no Excel. Baixado e aberto no computador: CSV e Imprimir voltam.
+- Casca comum ao app e ao painel (`src/ui/casca.js`): o painel usa as mesmas telas e contas do app.
+
+### Base de 11/11/2026
+Painel com 8.555 linhas: **0,18 MB**, gerado em ~0,1 s. Aberto num quadro isolado igual ao do SharePoint, mostra os mesmos números do app (397 SCs em aberto, 622 itens, 74,1% no prazo, 143 fora).
+
+### Publicar (toda atualização)
+1. App da equipe: "Atualizar bases" e depois "Gerar painel".
+2. OneDrive/SharePoint, pasta do painel: enviar `painel-compras.html` e escolher **Substituir** (mesmo nome).
+3. O link "Pessoas da empresa" e o cadastro na Intranet continuam os mesmos. A primeira vez: criar o link desse arquivo e cadastrar na Intranet.
+
+### Testes
+- `npm test`: 53 testes unitários (novos em `tests/painel.test.js`: campos públicos, compactação, `gerarTsv`).
+- `npm run test:e2e`: 10 testes. Novos em `e2e/painel.spec.js`: painel aberto como arquivo e num iframe `sandbox` + `srcdoc` (como o SharePoint), conferindo telas, números, aviso, botões e que os dados embutidos não têm pré-pedido nem nome completo.

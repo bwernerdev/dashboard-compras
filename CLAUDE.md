@@ -1,10 +1,11 @@
 # dashboard — mapa rápido
 
-App web (Vite, JS puro, sem framework) que substitui o `DASHBOARD COMPRAS 2026.xlsm`: lê `base.xlsx` e `Follow-Up.xlsx` exportados do ME (favorito do navegador baixa as duas), aplica as regras de Compras no navegador e mostra as telas Regional, Compradores e Saving para a equipe de Suprimentos (painel para a Intranet na fase 3).
+App web (Vite, JS puro, sem framework) que substitui o `DASHBOARD COMPRAS 2026.xlsm`: lê `base.xlsx` e `Follow-Up.xlsx` exportados do ME (favorito do navegador baixa as duas), aplica as regras de Compras no navegador e mostra as telas Regional, Compradores e Saving para a equipe de Suprimentos. "Gerar painel" baixa `painel-compras.html` (só Regional e Saving, dados públicos) para o SharePoint, com link na Intranet.
 
-Status: fases 1 (leitor + regras) e 2 (telas, filtros, memória local, configuração, e2e) concluídas; próxima é a fase 3 (teste da Intranet + "Gerar painel"). Decisões, regras de negócio e fases: `PROJETO.md`.
+Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configuração, e2e) e 3 (painel publicado) concluídas; próxima é a fase 4 (demais telas públicas). Decisões, regras de negócio e fases: `PROJETO.md`.
 
 ## Comandos (PowerShell: `npm.cmd`; instalar com `npm.cmd install --cache ./.npm-cache`)
+- `npm run build:painel`: gera `src/painel/modelo.gerado.html` (`vite.painel.config.js`). Roda sozinho antes de `dev` e `build`; mudou algo que entra no painel com o dev aberto, rode de novo.
 - `npm run dev`: servidor Vite. No preview do app: configuração `dashboard` em `../.claude/launch.json` (porta 5180).
 - `npm test`: testes unitários (`node --test tests/*.test.js`), só dados fictícios.
 - `npm run test:e2e`: build + Playwright (Chrome instalado) em `127.0.0.1:4187` (`vite preview`), bases fictícias.
@@ -16,8 +17,9 @@ Status: fases 1 (leitor + regras) e 2 (telas, filtros, memória local, configura
 | Pasta | Conteúdo |
 |---|---|
 | `src/` | App: casca (`main.js`), importação, regras, agregações (`analise.js`), memória local |
+| `src/painel/` | Painel publicado: dados públicos, entrada, modelo, geração. Nada de `config/` pode entrar nele |
 | `src/telas/` | Telas Regional, Compradores, Saving; diálogos de importação e configuração |
-| `src/ui/` | Componentes: tabela, gráficos, filtros, cartões, dica, formatos |
+| `src/ui/` | Componentes: casca (abas, filtros, tema), tabela, gráficos, filtros, cartões, dica, formatos |
 | `src/leitor/` | Leitor de `.xlsx` por fluxo (zip + XML, sem dependência) |
 | `src/config/` | De-para de filiais, compradores e SLA |
 | `src/styles/` | CSS em camadas: tokens (tema escuro, paleta dos gráficos), base, componentes, impressão |
@@ -32,6 +34,8 @@ Status: fases 1 (leitor + regras) e 2 (telas, filtros, memória local, configura
 | `PROJETO.md` | Diagnóstico da planilha, erro encontrado, regras, decisões, telas, fases, perguntas |
 | `README.md` | Visão para quem usa e mapa das pastas |
 | `index.html`, `vite.config.js` (`base: './'`), `package.json`, `playwright.config.js` | Entrada, build e e2e |
+| `vite.painel.config.js` | Build do modelo do painel (JS + CSS num script só, encaixados em `src/painel/modelo.html`) |
+| `.painel-build/`, `painel-compras*.html` | Gerados/ignorados |
 | `teste-intranet.html` | Página de teste do local de publicação (SharePoint): recursos que funcionam e peso. Gerada por `scripts/gerar-teste-intranet.mjs`; não editar à mão |
 | `.claude/launch.json` | Preview quando a sessão abre direto nesta pasta |
 | `*.xlsx`, `*.xlsm` | Bases e planilha antiga: só locais, nunca versionar (`.gitignore`). Para olhar: `npm run medir`/`conferir` ou `openpyxl` com `read_only=True` |

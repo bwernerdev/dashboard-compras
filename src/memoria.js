@@ -109,11 +109,3 @@ export function salvarConfig(config) {
 export function apagarConfig() {
   try { localStorage.removeItem(CHAVE_CONFIG); } catch { /* sem armazenamento */ }
 }
-
-/** Preferências pequenas (aba, tema). */
-export function lerPreferencia(nome, padrao = null) {
-  try { return localStorage.getItem(`dashboard-compras:${nome}`) ?? padrao; } catch { return padrao; }
-}
-export function salvarPreferencia(nome, valor) {
-  try { localStorage.setItem(`dashboard-compras:${nome}`, valor); } catch { /* sem armazenamento */ }
-}

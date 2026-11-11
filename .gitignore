@@ -10,3 +10,6 @@ dist/
 test-results/
 .npm-cache/
 playwright-report/
+.painel-build/
+src/painel/modelo.gerado.html
+painel-compras*.html

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel de Compras</title>
+<script>
+  // Tema antes do primeiro desenho: escolha salva (se o navegador deixar), senão o do sistema.
+  (function () {
+    var tema = null;
+    try { tema = localStorage.getItem('dashboard-compras:tema'); } catch (e) { tema = null; }
+    try { if (!tema) tema = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; } catch (e) { tema = 'light'; }
+    document.documentElement.dataset.theme = tema;
+  })();
+</script>
+<style>/*CSS*/</style>
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<header class="topo">
+  <div class="topo-marca">
+    <h1>Painel de Compras</h1>
+    <span id="periodo" class="selo" hidden></span>
+  </div>
+  <nav id="abas" class="abas" role="tablist" aria-label="Telas"></nav>
+  <div class="topo-acoes">
+    <button type="button" id="acao-imprimir" class="botao botao-sec">Imprimir</button>
+    <button type="button" id="acao-tema" class="botao botao-sec" aria-pressed="false">Tema escuro</button>
+  </div>
+</header>
+<p id="aviso-quadro" class="aviso" hidden>Aberto dentro do SharePoint: aqui dá para consultar e usar "Copiar tabela". Para imprimir ou exportar CSV, use ⋯ › Baixar e abra o arquivo baixado.</p>
+<div id="filtros" class="faixa-filtros" hidden></div>
+<p id="filtros-impressao" class="so-impressao"></p>
+<main id="conteudo" class="pagina" role="tabpanel" tabindex="-1"><div class="estado-vazio">Abrindo o painel...</div></main>
+<script id="dados" type="text/plain">__DADOS_DO_PAINEL__</script>
+<script>/*JS*/</script>
+</body>
+</html>

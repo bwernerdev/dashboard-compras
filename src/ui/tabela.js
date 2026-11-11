@@ -1,4 +1,4 @@
-// Tabela com ordenação por coluna, pesquisa, paginação, linha de total e exportação CSV.
+// Tabela com ordenação por coluna, pesquisa, paginação, linha de total, "Copiar tabela" e exportação CSV.
 import { el, substituir, novoId } from './dom.js';
 import { formatarSerie } from '../datas.js';
 
@@ -30,14 +30,54 @@ export function gerarCsv(colunas, linhas) {
   return `﻿${corpo.join('\r\n')}\r\n`;
 }
 
-function baixar(nome, conteudo) {
-  const url = URL.createObjectURL(new Blob([conteudo], { type: 'text/csv;charset=utf-8' }));
+/** Texto para colar no Excel: tabulação entre colunas, vírgula decimal, sem separador de milhar. */
+export function gerarTsv(colunas, linhas) {
+  const campo = (v) => String(v ?? '').replace(/[\t\r\n]+/g, ' ');
+  const valor = (col, l) => {
+    const v = col.valor(l);
+    if (v === null || v === undefined) return '';
+    if (col.tipo === 'data') return formatarSerie(v);
+    if (typeof v === 'number') return String(Math.round(v * 1e6) / 1e6).replace('.', ',');
+    return v;
+  };
+  return [colunas.map((c) => campo(c.rotulo)).join('\t'),
+    ...linhas.map((l) => colunas.map((c) => campo(valor(c, l))).join('\t'))].join('\r\n');
+}
+
+/** Baixa um arquivo gerado na hora. */
+export function baixar(nome, conteudo, tipo = 'text/csv;charset=utf-8') {
+  const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
   const a = el('a', { href: url, download: nome });
   document.body.append(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+/**
+ * Copia texto. Primeiro o jeito antigo (execCommand), que funciona no quadro isolado do
+ * SharePoint (teste 3); depois a API nova. Retorna true se copiou.
+ */
+export async function copiarTexto(texto) {
+  const area = el('textarea', { readonly: true, 'aria-hidden': 'true', style: { position: 'fixed', top: '0', left: '-9999px', opacity: '0' } });
+  area.value = texto;
+  document.body.append(area);
+  area.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch { ok = false; }
+  area.remove();
+  if (ok) return true;
+  try {
+    await navigator.clipboard.writeText(texto);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Exportar CSV só onde download funciona (no quadro do SharePoint não: painel/painel.js desliga). */
+const exportacao = { csv: true };
+export function definirExportacao({ csv }) { exportacao.csv = csv; }
 
 /**
  * colunas: [{ id, rotulo, valor(linha), formato?(valor), tipo?: 'data', num?: bool,
@@ -59,10 +99,19 @@ export function criarTabela(opcoes) {
     oninput: (ev) => { estado.termo = normalizar(ev.target.value); estado.pagina = 0; render(); },
   }) : null;
   const contagem = el('span', { class: 'tabela-contagem', 'aria-live': 'polite' });
-  const botaoCsv = el('button', {
+  const botaoCsv = exportacao.csv ? el('button', {
     type: 'button', class: 'botao botao-sec botao-pequeno',
     onclick: () => baixar(nomeArquivo, gerarCsv(colunas, linhasVisiveis())),
-  }, 'Exportar CSV');
+  }, 'Exportar CSV') : null;
+  const botaoCopiar = el('button', {
+    type: 'button', class: 'botao botao-sec botao-pequeno', title: 'Copia as linhas filtradas para colar no Excel',
+    onclick: async () => {
+      const ok = await copiarTexto(gerarTsv(colunas, linhasVisiveis()));
+      botaoCopiar.textContent = ok ? 'Copiado: cole no Excel' : 'Não foi possível copiar';
+      clearTimeout(botaoCopiar.relogio);
+      botaoCopiar.relogio = setTimeout(() => { botaoCopiar.textContent = 'Copiar tabela'; }, 2500);
+    },
+  }, 'Copiar tabela');
 
   const cabeca = el('thead');
   const corpo = el('tbody');
@@ -145,7 +194,7 @@ export function criarTabela(opcoes) {
   }
 
   const elemento = el('div', { class: 'tabela-bloco' },
-    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, botaoCsv),
+    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, botaoCopiar, botaoCsv),
     el('div', { class: 'tabela-rolagem' }, tabela),
     paginacao);
   render();

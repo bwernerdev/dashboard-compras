@@ -5,7 +5,7 @@
   html, body { background: #fff !important; }
   html[data-theme="dark"] { color-scheme: light; }
   .topo-acoes, .abas, .faixa-filtros, .pular, .tabela-barra .campo, .tabela-barra .botao,
-  .paginacao, .recortes, .alternador, .dica, dialog { display: none !important; }
+  .paginacao, .recortes, .alternador, .dica, .aviso, dialog { display: none !important; }
   .so-impressao { display: block; padding: 0 0 6px; font-size: 11px; color: #333; }
   .topo { padding: 0 0 6px; border: 0; }
   .pagina { padding: 0; max-width: none; }

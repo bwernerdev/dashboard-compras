@@ -2,9 +2,11 @@
 
 | Arquivo / pasta | Conteúdo |
 |---|---|
-| `main.js` | Casca do app: topo (abas Regional/Compradores/Saving, período, Atualizar bases, Configuração, Imprimir, tema), barra de filtros, tela ativa. Guarda o estado (bases, filtros, config) e recalcula ao mudar config ou virar o dia |
+| `main.js` | App da equipe: estado (bases, config), período, ações do topo (Atualizar bases, Gerar painel, Configuração, Imprimir, tema). Abas, filtros e tela vêm de `ui/casca.js`. Recalcula ao mudar config ou virar o dia |
 | `analise.js` | Filtros globais (`FILTROS`, `aplicarFiltros`) e agregações puras das telas (SCs em aberto, faixas de dias, comprador x status, pré-pedidos, participação, saving). Sem DOM. Usado também pelo `scripts/conferir-xlsm.mjs` |
-| `memoria.js` | Memória local: última importação de cada base no IndexedDB (só colunas do ME; `recalcular` refaz os campos calculados), configuração e preferências no localStorage |
+| `memoria.js` | Memória local do app da equipe: última importação de cada base no IndexedDB (só colunas do ME; `recalcular` refaz os campos calculados) e configuração no localStorage |
+| `preferencias.js` | Aba e tema no localStorage, com try/catch (no quadro do SharePoint não há armazenamento). Usado pelo app e pelo painel |
+| `painel/` | Painel publicado (`painel-compras.html`): dados públicos, entrada, modelo e geração. Ver `painel/README.md` |
 | `importacao.js` | Ponte tela ↔ worker (`importarNoWorker`) |
 | `importacao.worker.js` | Worker: roda `importar` fora da thread da tela e manda o progresso |
 | `importar.js` | Importação de um relatório: lê por fluxo, descarta filiais fora do de-para, converte tipos, aplica `regras.js`. Roda no worker e no Node (scripts e testes) |
@@ -24,3 +26,4 @@
 - Contagem de SC = distinta por "Solicitação de Compra"; contagem de itens = linhas.
 - Datas sempre em série do Excel (número). Para mostrar: `formatarSerie` ou `ui/formatos.js`.
 - Texto das bases entra no DOM só como texto (`ui/dom.js`, sem `innerHTML`).
+- Tudo o que `painel/painel.js` importa vai para dentro do painel público: `ui/`, `analise.js`, `datas.js`, `preferencias.js`, `telas/regional.js` e `telas/saving.js` não podem importar `config/`, `memoria.js` nem `importar.js`.

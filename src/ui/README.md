@@ -6,7 +6,8 @@ Gráficos em HTML/CSS no padrão da skill de visualização: barras de 16 px com
 |---|---|
 | `dom.js` | `el(tag, atributos, ...filhos)` (texto sempre como texto), `substituir`, `novoId` |
 | `formatos.js` | Números pt-BR: `inteiro`, `decimal`, `moeda`, `moedaCentavos`, `moedaCompacta`, `pct`, `pctFino` (2 casas, saving), `data`, `texto` |
-| `tabela.js` | `criarTabela`: ordenar por coluna, pesquisar, paginar, linha de total, linha clicável, "Exportar CSV" (`gerarCsv`: `;`, vírgula decimal, BOM) |
+| `tabela.js` | `criarTabela`: ordenar por coluna, pesquisar, paginar, linha de total, linha clicável, "Copiar tabela" (`gerarTsv` + `copiarTexto`: execCommand primeiro, funciona no quadro do SharePoint), "Exportar CSV" (`gerarCsv`: `;`, vírgula decimal, BOM; desligado por `definirExportacao` no quadro). `baixar(nome, conteudo, tipo)` |
+| `casca.js` | Comum ao app e ao painel: `criarNavegador` (abas com teclado, barra de filtros, tela ativa, filtro por clique), `ligarTema`, `ligarImpressao` (sempre tema claro), `descreverFiltros` |
 | `graficos.js` | `barras` (clicável), `barrasEmpilhadas` (com legenda), `colunas`, `barraSegmentada` (célula de tabela) |
 | `filtros.js` | Barra de filtros globais: lista de marcar por filtro; marca sem fechar; Esc/clique fora fecha; "Limpar filtros" |
 | `cartoes.js` | `cartao` (indicador; `tom` sempre com texto), `linhaDeCartoes`, `bloco` (título + subtítulo + conteúdo) |
