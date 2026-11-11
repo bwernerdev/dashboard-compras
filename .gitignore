@@ -9,3 +9,4 @@ node_modules/
 dist/
 test-results/
 .npm-cache/
+playwright-report/

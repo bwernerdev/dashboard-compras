@@ -1,0 +1,228 @@
+// Filtros e agregações das telas. Funções puras (sem DOM): testadas em tests/analise.test.js.
+// Contagens de SC são DISTINTAS por "Solicitação de Compra", como a contagem distinta
+// do modelo de dados da planilha antiga; contagem de itens = linhas.
+
+const SEM_VALOR = '-';
+const nomeOuTraco = (v) => (v === null || v === undefined || v === '' ? SEM_VALOR : String(v));
+
+/** Mês do pedido como "aaaa-mm" (ou null sem pedido). */
+export function chaveMes(r) {
+  return r.anoPedido ? `${r.anoPedido}-${String(r.mesPedido).padStart(2, '0')}` : null;
+}
+
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+export function rotuloMes(chave) {
+  if (!chave) return SEM_VALOR;
+  const [ano, mes] = chave.split('-');
+  return `${MESES[Number(mes) - 1]}/${ano}`;
+}
+
+/**
+ * Filtros globais. telas: em quais telas o filtro vale (ausente = todas).
+ * "Mês do pedido" só faz sentido onde há pedido (Saving).
+ */
+export const FILTROS = [
+  { id: 'regional', rotulo: 'Regional', valor: (r) => nomeOuTraco(r.regional) },
+  { id: 'filial', rotulo: 'Filial', valor: (r) => nomeOuTraco(r.nomeFilial) },
+  { id: 'comprador', rotulo: 'Comprador', valor: (r) => nomeOuTraco(r.comprador) },
+  { id: 'prioridade', rotulo: 'Prioridade', valor: (r) => nomeOuTraco(r.prioridade) },
+  { id: 'contrato', rotulo: 'Contrato?', valor: (r) => nomeOuTraco(r.temContrato) },
+  { id: 'mes', rotulo: 'Mês do pedido', valor: (r) => chaveMes(r) ?? SEM_VALOR, rotuloValor: rotuloMes, telas: ['saving'] },
+];
+
+export const filtroValeNaTela = (f, tela) => !f.telas || f.telas.includes(tela);
+
+/**
+ * Aplica os filtros ativos. selecao: { idFiltro: Set de valores } (vazio/ausente = todos).
+ */
+export function aplicarFiltros(registros, selecao, tela) {
+  const ativos = FILTROS.filter((f) => filtroValeNaTela(f, tela) && selecao[f.id]?.size);
+  if (!ativos.length) return registros;
+  return registros.filter((r) => ativos.every((f) => selecao[f.id].has(f.valor(r))));
+}
+
+/** Valores possíveis de cada filtro (para montar as listas), em ordem. */
+export function opcoesDosFiltros(registros) {
+  const opcoes = {};
+  for (const f of FILTROS) {
+    const valores = new Set(registros.map(f.valor));
+    opcoes[f.id] = [...valores].sort((a, b) => (a === SEM_VALOR) - (b === SEM_VALOR) || a.localeCompare(b, 'pt-BR'));
+  }
+  return opcoes;
+}
+
+// ---------- Regional (SCs em aberto) ----------
+
+/** Itens em aberto: sem pedido e não cancelados (têm dias em aberto). */
+export const itensEmAberto = (registros) => registros.filter((r) => r.diasEmAberto !== null);
+
+export const FAIXAS_DIAS = [
+  { id: 'ate5', rotulo: 'Até 5 dias', ate: 5 },
+  { id: '6a10', rotulo: '6 a 10 dias', ate: 10 },
+  { id: '11a15', rotulo: '11 a 15 dias', ate: 15 },
+  { id: '16a30', rotulo: '16 a 30 dias', ate: 30 },
+  { id: 'mais30', rotulo: 'Mais de 30 dias', ate: Infinity },
+];
+export const faixaDe = (dias) => FAIXAS_DIAS.find((f) => dias <= f.ate).id;
+
+const distintas = (linhas) => new Set(linhas.map((r) => r.solicitacao)).size;
+
+/** Cartões da tela Regional. */
+export function resumoEmAberto(abertos) {
+  const noPrazo = abertos.filter((r) => r.sla === 'No Prazo').length;
+  const fora = abertos.filter((r) => r.sla === 'Fora do Prazo').length;
+  const dias = abertos.map((r) => r.diasEmAberto);
+  return {
+    scs: distintas(abertos),
+    itens: abertos.length,
+    noPrazo,
+    fora,
+    semPrazo: abertos.length - noPrazo - fora,
+    pctNoPrazo: noPrazo + fora ? noPrazo / (noPrazo + fora) : null,
+    mediaDias: dias.length ? dias.reduce((s, d) => s + d, 0) / dias.length : null,
+    maxDias: dias.length ? Math.max(...dias) : null,
+  };
+}
+
+/** SCs e itens por faixa de dias úteis em aberto. */
+export function porFaixaDeDias(abertos) {
+  return FAIXAS_DIAS.map((f) => {
+    const linhas = abertos.filter((r) => faixaDe(r.diasEmAberto) === f.id);
+    return { ...f, scs: distintas(linhas), itens: linhas.length };
+  });
+}
+
+/** Agrupa e resume (SCs, SLA, média de dias) por um campo; ordena por SCs. */
+export function emAbertoPor(abertos, campo) {
+  const grupos = new Map();
+  for (const r of abertos) {
+    const k = nomeOuTraco(r[campo]);
+    if (!grupos.has(k)) grupos.set(k, []);
+    grupos.get(k).push(r);
+  }
+  return [...grupos].map(([chave, linhas]) => ({ chave, ...resumoEmAberto(linhas) }))
+    .sort((a, b) => b.scs - a.scs || a.chave.localeCompare(b.chave, 'pt-BR'));
+}
+
+// ---------- Compradores (aba sc p Compr) ----------
+
+/** Ordem fixa dos status (processo) e cor por status: a cor segue o status, nunca a posição. */
+export const STATUS_SC = [
+  'Em Pedido', 'Em Pré-Pedido', 'Em Cotação', 'Em pendências de compra',
+  'Em pendências de contrato', 'Sel. Comprador', 'Cancelado',
+];
+export const OUTROS = 'Outros';
+const statusDoGrafico = (s) => (STATUS_SC.includes(s) ? s : OUTROS);
+
+/**
+ * SCs distintas por comprador x status (tabela dinâmica 3 da aba sc p Compr).
+ * total = SCs distintas do comprador (uma SC com itens em dois status conta uma vez).
+ */
+export function scsPorCompradorStatus(registros) {
+  const porComprador = new Map();
+  const statusVistos = new Set();
+  for (const r of registros) {
+    const c = nomeOuTraco(r.comprador);
+    const s = statusDoGrafico(r.status);
+    statusVistos.add(s);
+    if (!porComprador.has(c)) porComprador.set(c, { todas: new Set(), porStatus: new Map() });
+    const g = porComprador.get(c);
+    g.todas.add(r.solicitacao);
+    if (!g.porStatus.has(s)) g.porStatus.set(s, new Set());
+    g.porStatus.get(s).add(r.solicitacao);
+  }
+  const status = [...STATUS_SC, OUTROS].filter((s) => statusVistos.has(s));
+  const linhas = [...porComprador].map(([comprador, g]) => ({
+    comprador,
+    porStatus: Object.fromEntries(status.map((s) => [s, g.porStatus.get(s)?.size ?? 0])),
+    total: g.todas.size,
+  })).sort((a, b) => b.total - a.total || a.comprador.localeCompare(b.comprador, 'pt-BR'));
+  const totalGeral = new Set(registros.map((r) => r.solicitacao)).size;
+  const totaisStatus = Object.fromEntries(status.map((s) => [s, new Set(
+    registros.filter((r) => statusDoGrafico(r.status) === s).map((r) => r.solicitacao),
+  ).size]));
+  return { status, linhas, totaisStatus, totalGeral };
+}
+
+/** Pré-pedidos distintos por comprador x regional (tabela dinâmica 1 da aba sc p Compr). */
+export function prePedidosPorCompradorRegional(registros) {
+  const comPre = registros.filter((r) => r.numeroPrePedido !== null && r.numeroPrePedido !== '');
+  const regionais = [...new Set(comPre.map((r) => nomeOuTraco(r.regional)))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const porComprador = new Map();
+  for (const r of comPre) {
+    const c = nomeOuTraco(r.comprador);
+    if (!porComprador.has(c)) porComprador.set(c, { todos: new Set(), porRegional: new Map() });
+    const g = porComprador.get(c);
+    g.todos.add(r.numeroPrePedido);
+    const reg = nomeOuTraco(r.regional);
+    if (!g.porRegional.has(reg)) g.porRegional.set(reg, new Set());
+    g.porRegional.get(reg).add(r.numeroPrePedido);
+  }
+  const linhas = [...porComprador].map(([comprador, g]) => ({
+    comprador,
+    porRegional: Object.fromEntries(regionais.map((x) => [x, g.porRegional.get(x)?.size ?? 0])),
+    total: g.todos.size,
+  })).sort((a, b) => b.total - a.total || a.comprador.localeCompare(b.comprador, 'pt-BR'));
+  return { regionais, linhas, totalGeral: new Set(comPre.map((r) => r.numeroPrePedido)).size };
+}
+
+/**
+ * Participação de cada comprador nas linhas de SC (tabela dinâmica 2 da aba sc p Compr:
+ * contagem de SC, % do total) e SLA dos itens em aberto.
+ */
+export function participacaoCompradores(registros) {
+  const total = registros.filter((r) => r.sc !== null).length;
+  const grupos = new Map();
+  for (const r of registros) {
+    const c = nomeOuTraco(r.comprador);
+    if (!grupos.has(c)) grupos.set(c, []);
+    grupos.get(c).push(r);
+  }
+  return [...grupos].map(([comprador, linhas]) => {
+    const itens = linhas.filter((r) => r.sc !== null).length;
+    const aberto = resumoEmAberto(itensEmAberto(linhas));
+    return {
+      comprador,
+      itens,
+      participacao: total ? itens / total : 0,
+      abertas: aberto.scs,
+      noPrazo: aberto.noPrazo,
+      fora: aberto.fora,
+      pctNoPrazo: aberto.pctNoPrazo,
+    };
+  }).sort((a, b) => b.itens - a.itens);
+}
+
+// ---------- Saving ----------
+
+/** % Saving = economia ÷ (total comprado + economia), como na planilha. */
+export const pctSaving = (total, economia) => (total + economia ? economia / (total + economia) : null);
+
+/** Total comprado (pedido c/ impostos) e economia (Saving Real) agrupados por uma função de chave. */
+export function savingPor(registros, chaveDe) {
+  const grupos = new Map();
+  for (const r of registros) {
+    const k = chaveDe(r);
+    const g = grupos.get(k) ?? { chave: k, total: 0, economia: 0, itensComSaving: 0 };
+    g.total += r.totalPedidoComImpostos ?? 0;
+    g.economia += r.savingReal;
+    if (r.savingReal) g.itensComSaving++;
+    grupos.set(k, g);
+  }
+  return [...grupos.values()].map((g) => ({ ...g, pct: pctSaving(g.total, g.economia) }));
+}
+
+export function resumoSaving(registros) {
+  const [g] = savingPor(registros, () => 'total');
+  return g ?? { chave: 'total', total: 0, economia: 0, itensComSaving: 0, pct: null };
+}
+
+export const savingPorFilial = (registros) => savingPor(registros, (r) => nomeOuTraco(r.nomeFilial))
+  .sort((a, b) => b.total - a.total);
+
+export const savingPorComprador = (registros) => savingPor(registros, (r) => nomeOuTraco(r.comprador))
+  .sort((a, b) => b.economia - a.economia || b.total - a.total);
+
+/** Por mês do pedido, em ordem cronológica (só linhas com pedido). */
+export const savingPorMes = (registros) => savingPor(registros.filter((r) => chaveMes(r)), chaveMes)
+  .sort((a, b) => a.chave.localeCompare(b.chave));

@@ -2,7 +2,7 @@
 
 Substituir o `DASHBOARD COMPRAS 2026.xlsm` por um app web que lê as duas bases do ME, aplica as regras de negócio em um só lugar e gera um painel leve para a equipe de Suprimentos abrir pela Intranet.
 
-Status: **fase 1 concluída** (leitor, regras, testes; resultado na seção 8); próxima é a fase 2.
+Status: **fase 2 concluída** (telas Regional, Compradores, Saving; resultado na seção 9); fase 1 na seção 8. Próxima é a fase 3 (antes, o teste da Intranet).
 
 ---
 
@@ -158,7 +158,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 |---|---|---|
 | 0 | Este documento (concluído em 11/11/2026) | Decisões fechadas, exceto o teste da Intranet (adiado para antes da fase 3) |
 | 1 | Leitor das bases (worker) + `regras.js` + configuração + testes (concluída em 11/11/2026) | Lê as duas bases atuais em < 20 s; regras testadas |
-| 2 | Telas Regional, Compradores, Saving + filtros globais | Números de Saving e sc p Compr batem com o `.xlsm`; Regional bate com a regra corrigida |
+| 2 | Telas Regional, Compradores, Saving + filtros globais (concluída em 11/11/2026) | Números de Saving e sc p Compr batem com o `.xlsm`; Regional bate com a regra corrigida |
 | 3 | Teste da Intranet + "Gerar painel" no formato escolhido (`.html` ou `.xlsx` enxuto) | Arquivo anexado na Intranet abre sem importar nada |
 | 4 | Demais telas | Paridade com as abas restantes |
 | 5 (opcional) | Favorito do ME abre o app e entrega as bases direto, sem passar por Downloads | Atualização com um clique |
@@ -177,6 +177,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | Período | O que vier nas bases; sem histórico acumulado |
 | Repositório | Próprio e privado: `github.com/bwernerdev/dashboard-compras` |
 | Correção da seção 2 | Aprovada: o painel publica os valores corrigidos (dias em aberto, Data, Serviço, SLA, tempos por etapa) |
+| Contagem distinta com vazio (fase 2) | O app conta só valores reais. A planilha conta o vazio como 1 (pré-pedidos: +1 por grupo). Decisão tomada na implementação; confirmar com a equipe (seção 9) |
 
 ### Em aberto
 1. **Teste da Intranet** (adiado): resultado do anexo `teste-intranet.html` (abre, baixa ou é recusado). Não trava as fases 1 e 2; precisa estar resolvido antes da fase 3.
@@ -207,3 +208,29 @@ As colunas da seção 2 (dias em aberto, Data, Serviço, SLA, tempos por etapa) 
 
 ### Tela da fase 1
 `npm run dev`: escolher/arrastar as duas bases, progresso, cartões (linhas, período, SCs em aberto, SLA, Spend, Economia) e prévia das SCs em aberto ordenadas por dias.
+
+---
+
+## 9. Resultado da fase 2 (11/11/2026)
+
+### O que existe
+- **Casca:** topo com as abas Regional | Compradores | Saving, período das bases (Dados Gerais), "Atualizar bases", "Configuração", "Imprimir" e tema claro/escuro.
+- **Filtros globais** numa faixa fixa acima de tudo: Regional, Filial, Comprador, Prioridade, Contrato?; "Mês do pedido" só no Saving. Clicar numa linha de regional/filial/comprador filtra o painel inteiro.
+- **Regional:** SCs em aberto, % no prazo, itens fora do prazo, média e mais antiga; SCs por faixa de dias úteis (clique recorta a lista); tabela por regional ou filial com barra de SLA; lista dos itens em aberto com recorte por SLA.
+- **Compradores:** SCs distintas por comprador × status (barras empilhadas + tabela), pré-pedidos por comprador × regional, participação e SLA. "Pendente" destacado.
+- **Saving:** total comprado, economia, % saving (2 casas), por filial, por mês do pedido e por comprador.
+- **Toda tabela** ordena, pesquisa (lista de SCs), pagina e exporta CSV para o Excel pt-BR. "Imprimir" sai em A4 deitado com os filtros ativos escritos no topo.
+- **Memória local:** a última importação fica no navegador (IndexedDB). Ao abrir, dias em aberto e SLA são recalculados para hoje. Nada sai do computador.
+- **Configuração** editável na tela (filiais, compradores, SLA), salva no navegador, com "Restaurar padrão". Filial nova no de-para pede reimportar a Base.
+
+### Conferência (`npm run conferir`, usando `src/analise.js`, as mesmas funções das telas)
+- **Spend** e **Saving** por filial: batem ao centavo.
+- **sc p Compr, SCs por comprador × status:** batem. Única diferença: a planilha tem 1 SC a mais em "-", que é uma linha vazia da tabela Base (o app não lê linha sem filial).
+- **sc p Compr, pré-pedidos por comprador × regional:** a planilha mostra **1 a mais** em cada grupo que tem SC sem pré-pedido (ex.: Thayane 1.354; o app mostra 1.353). Motivo: a contagem distinta do modelo de dados conta o pré-pedido vazio como um valor. Somando esse 1, tudo bate. O app mostra o número real.
+
+### Base de 11/11/2026 na tela
+397 SCs em aberto (622 itens), 74,1% no prazo, 143 itens fora do prazo, 70 sem prazo (status sem SLA ou sem linha na tabela), média de 9,7 dias úteis, mais antiga com 42.
+
+### Testes
+- `npm test`: 48 testes unitários (inclui `tests/analise.test.js`).
+- `npm run test:e2e`: 8 testes no Chrome com bases fictícias (importação, filtros, as três telas, memória, CSV, configuração, tema).

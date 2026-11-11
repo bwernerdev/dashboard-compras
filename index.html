@@ -4,50 +4,36 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Dashboard de Compras</title>
+  <script>
+    // Tema antes do primeiro desenho (evita piscar): escolha salva, senão o do sistema.
+    try {
+      var t = localStorage.getItem('dashboard-compras:tema');
+      document.documentElement.dataset.theme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    } catch (e) { document.documentElement.dataset.theme = 'light'; }
+  </script>
+  <link rel="stylesheet" href="./src/styles/tokens.css">
   <link rel="stylesheet" href="./src/styles/base.css">
+  <link rel="stylesheet" href="./src/styles/componentes.css">
+  <link rel="stylesheet" href="./src/styles/impressao.css">
 </head>
 <body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
   <header class="topo">
-    <h1>Dashboard de Compras</h1>
-    <span class="selo">Fase 1: importação e conferência</span>
+    <div class="topo-marca">
+      <h1>Dashboard de Compras</h1>
+      <span id="periodo" class="selo" hidden></span>
+    </div>
+    <nav id="abas" class="abas" role="tablist" aria-label="Telas"></nav>
+    <div class="topo-acoes">
+      <button type="button" id="acao-importar" class="botao">Atualizar bases</button>
+      <button type="button" id="acao-config" class="botao botao-sec">Configuração</button>
+      <button type="button" id="acao-imprimir" class="botao botao-sec">Imprimir</button>
+      <button type="button" id="acao-tema" class="botao botao-sec" aria-pressed="false">Tema escuro</button>
+    </div>
   </header>
-
-  <main class="pagina">
-    <section class="importacao" aria-label="Arquivos do ME">
-      <label class="arquivo" data-tipo="base">
-        <span class="arquivo-titulo">Base</span>
-        <span class="arquivo-dica">base.xlsx (Relatório de Requisição - Friboi V2)</span>
-        <input type="file" accept=".xlsx" data-tipo="base">
-        <span class="arquivo-status" aria-live="polite">Escolha ou arraste o arquivo</span>
-        <progress max="1" value="0" hidden></progress>
-      </label>
-      <label class="arquivo" data-tipo="followUp">
-        <span class="arquivo-titulo">Follow-Up</span>
-        <span class="arquivo-dica">Follow-Up.xlsx (Follow-up - Friboi)</span>
-        <input type="file" accept=".xlsx" data-tipo="followUp">
-        <span class="arquivo-status" aria-live="polite">Escolha ou arraste o arquivo</span>
-        <progress max="1" value="0" hidden></progress>
-      </label>
-    </section>
-
-    <section id="resumo" class="resumo" hidden aria-label="Resumo da importação"></section>
-
-    <section id="previa" class="previa" hidden>
-      <h2>SCs em aberto (prévia da tela Regional)</h2>
-      <div class="tabela-rolagem">
-        <table>
-          <thead>
-            <tr>
-              <th class="num">Dias em aberto</th><th>SC</th><th>Data</th><th>Prioridade</th><th>Status</th>
-              <th>Filial</th><th>Regional</th><th>Comprador</th><th>SLA</th>
-            </tr>
-          </thead>
-          <tbody id="previa-linhas"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
+  <div id="filtros" class="faixa-filtros" hidden></div>
+  <p id="filtros-impressao" class="so-impressao"></p>
+  <main id="conteudo" class="pagina" role="tabpanel" tabindex="-1"></main>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // Confere as regras do app com o DASHBOARD COMPRAS 2026.xlsm.
 // Lê as abas Base e Follow-UP da planilha (dados colados + colunas calculadas),
 // recalcula cada linha com src/regras.js e compara coluna a coluna.
-// Também compara os totais das tabelas dinâmicas Saving e sc p Compr.
+// Também compara as tabelas dinâmicas Spend, Saving e sc p Compr usando src/analise.js (as telas).
 // Uso: npm run conferir -- "DASHBOARD COMPRAS 2026.xlsm"
 
 import { openAsBlob } from 'node:fs';
@@ -9,6 +9,9 @@ import { importar } from '../src/importar.js';
 import { criarConfig } from '../src/config/index.js';
 import { diasUteis, formatarSerie } from '../src/datas.js';
 import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
+import {
+  aplicarFiltros, savingPorFilial, scsPorCompradorStatus, prePedidosPorCompradorRegional, OUTROS,
+} from '../src/analise.js';
 
 const caminho = process.argv[2] ?? 'DASHBOARD COMPRAS 2026.xlsm';
 const blob = await openAsBlob(caminho);
@@ -107,20 +110,15 @@ for (const r of base.registros) {
   }
 }
 
+// As tabelas abaixo usam as MESMAS funções das telas (src/analise.js).
+
 // Saving: por filial, Total Comprado (soma pedido c/ impostos) e Economia (soma Saving Real) (D5:F10).
 // Na planilha de 11/11/2026 as segmentações filtravam Comprador = Thayane e Contrato? = não.
 // Se a planilha for salva com outro filtro, ajuste FILTRO_SAVING.
-const FILTRO_SAVING = (r) => r.comprador === 'Thayane' && r.temContrato === 'não';
+const FILTRO_SAVING = { comprador: new Set(['Thayane']), contrato: new Set(['não']) };
 {
   const linhas = await lerAbaInteira(pasta, 'Saving');
-  const calc = new Map();
-  for (const r of base.registros.filter(FILTRO_SAVING)) {
-    const k = r.nomeFilial ?? '-';
-    const t = calc.get(k) ?? { total: 0, economia: 0 };
-    t.total += r.totalPedidoComImpostos ?? 0;
-    t.economia += r.savingReal;
-    calc.set(k, t);
-  }
+  const calc = new Map(savingPorFilial(aplicarFiltros(base.registros, FILTRO_SAVING, 'saving')).map((g) => [g.chave, g]));
   console.log('\n== Tabela dinâmica Saving (por filial; Comprador = Thayane, Contrato? = não)');
   for (const l of linhas.slice(5, 10)) {
     const filial = l?.[3];
@@ -132,29 +130,69 @@ const FILTRO_SAVING = (r) => r.comprador === 'Thayane' && r.temContrato === 'nã
   }
 }
 
-// sc p Compr: SCs distintas por comprador x status (C56:L64).
+const abaCompr = await lerAbaInteira(pasta, 'sc p Compr');
+
+// sc p Compr, tabela 3: SCs distintas por comprador x status (C56:L64), com o total distinto.
 {
-  const linhas = await lerAbaInteira(pasta, 'sc p Compr');
-  const cab = linhas[56];
-  const calc = new Map();
-  for (const r of base.registros) {
-    const k = `${r.comprador ?? '-'}|${r.status ?? ''}`;
-    if (!calc.has(k)) calc.set(k, new Set());
-    calc.get(k).add(r.solicitacao);
-  }
+  const cab = abaCompr[56];
+  const calc = scsPorCompradorStatus(base.registros);
+  const statusDaColuna = (s) => (s === '(vazio)' ? OUTROS : s);
   console.log('\n== Tabela dinâmica sc p Compr (SCs distintas por comprador x status)');
-  for (const l of linhas.slice(57, 64)) {
+  for (const l of abaCompr.slice(57, 64)) {
     const comprador = l[2];
     if (comprador === undefined || comprador === 'Total Geral' || comprador === '(vazio)') continue;
+    const linha = calc.linhas.find((x) => x.comprador === String(comprador));
     const difs = [];
-    for (let c = 4; c <= 10; c++) {
-      const status = cab[c];
+    const explicadas = [];
+    for (let c = 3; c <= 11; c++) {
+      const coluna = cab[c];
       const esperado = l[c] ?? 0;
-      const obtido = calc.get(`${comprador}|${status}`)?.size ?? 0;
-      if (esperado !== obtido) difs.push(`${status}: ${esperado} x ${obtido}`);
+      const obtido = coluna === 'Total Geral' ? (linha?.total ?? 0) : (linha?.porStatus[statusDaColuna(coluna)] ?? 0);
+      if (esperado === obtido) continue;
+      // Linha vazia da tabela Base (sem SC, sem status; comprador "-" pela fórmula): a contagem
+      // distinta do modelo de dados conta o vazio como 1 SC. O app não lê linha sem filial.
+      if (comprador === '-' && (coluna === '(vazio)' || coluna === 'Total Geral') && esperado === obtido + 1) explicadas.push(`${coluna}: ${esperado} x ${obtido}`);
+      else difs.push(`${coluna}: ${esperado} x ${obtido}`);
     }
     if (difs.length) falhas++;
-    console.log(`${difs.length ? 'DIFERE' : 'OK   '} ${String(comprador).padEnd(10)} ${difs.join('; ')}`);
+    const situacao = difs.length ? 'DIFERE' : explicadas.length ? 'OK*  ' : 'OK   ';
+    console.log(`${situacao} ${String(comprador).padEnd(10)} ${[...difs, ...explicadas.map((e) => `${e} (*linha vazia da planilha)`)].join('; ')}`);
+  }
+}
+
+// sc p Compr, tabela 1: pré-pedidos distintos por comprador e regional (C5:D18).
+{
+  const calc = prePedidosPorCompradorRegional(base.registros);
+  const regionais = new Set(calc.regionais);
+  // A contagem distinta do modelo de dados (DISTINCTCOUNT) conta o pré-pedido VAZIO como um valor:
+  // em cada grupo com alguma SC sem pré-pedido a planilha mostra 1 a mais. O app conta só
+  // pré-pedidos de verdade; aqui o vazio é somado para provar que o resto bate.
+  const temVazio = new Set();
+  for (const r of base.registros) {
+    if (r.numeroPrePedido !== null && r.numeroPrePedido !== '') continue;
+    const c = r.comprador ?? '-';
+    temVazio.add(c);
+    temVazio.add(`${c}|${r.regional ?? '-'}`);
+  }
+  console.log('\n== Tabela dinâmica sc p Compr (pré-pedidos distintos por comprador e regional; * = +1 do vazio)');
+  let atual = null;
+  for (const l of abaCompr.slice(5, 19)) {
+    const rotulo = l?.[2];
+    if (rotulo === undefined || rotulo === null || rotulo === '') continue;
+    const esperado = l[3] ?? 0;
+    let obtido;
+    let vazio;
+    if (regionais.has(String(rotulo)) && atual) {
+      obtido = atual.porRegional[String(rotulo)] ?? 0;
+      vazio = temVazio.has(`${atual.comprador}|${rotulo}`);
+    } else {
+      atual = calc.linhas.find((x) => x.comprador === String(rotulo));
+      obtido = atual?.total ?? 0;
+      vazio = temVazio.has(String(rotulo));
+    }
+    const ok = esperado === obtido + (vazio ? 1 : 0);
+    if (!ok) falhas++;
+    console.log(`${ok ? 'OK   ' : 'DIFERE'} ${regionais.has(String(rotulo)) ? '  ' : ''}${String(rotulo).padEnd(16)} ${esperado} x ${obtido}${vazio ? ' +1*' : ''}`);
   }
 }
 

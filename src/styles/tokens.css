@@ -1,0 +1,134 @@
+/* Tokens de design, no padrão do ../giro-estoque: toda cor, tamanho, raio e sombra nasce aqui.
+   O tema escuro (html[data-theme="dark"]) só redefine tokens.
+   Séries dos gráficos: paleta categórica validada (skill de visualização), uma cor por status,
+   em ordem fixa. Status bom/crítico são reservados para SLA (no prazo / fora do prazo). */
+:root {
+  color-scheme: light;
+
+  --font-body: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --fs-2xs: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 20px;
+  --fs-2xl: 26px;
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-pill: 999px;
+  --h-control: 34px;
+  --h-control-sm: 28px;
+
+  --bg: #f6f7f9;
+  --surface: #fff;
+  --surface-2: #f9fafb;
+  --surface-hover: #f1f3f5;
+  --surface-selected: #eef3fd;
+  --ring: #2f5bd3;
+
+  --text: #1f2328;
+  --text-strong: #111418;
+  --text-muted: #5f6672;
+
+  --line: #e2e5ea;
+  --line-strong: #c9ced6;
+  --control-border: #9aa1ab;
+
+  --accent: #2f5bd3;
+  --accent-hover: #2749ad;
+  --accent-ink: #fff;
+  --accent-text: #2f5bd3;
+  --button-bg: #e8ebef;
+  --button-hover: #dde1e7;
+
+  --danger-fg: #c62828;
+  --danger-bg: #fdf2f2;
+  --warning-fg: #9a6700;
+  --warning-bg: #fff7e0;
+  --success-fg: #1a7f37;
+  --success-bg: #e3f4e8;
+  --neutral-fg: #5f6672;
+  --neutral-bg: #f1f3f5;
+
+  --shadow-1: 0 1px 2px rgba(17, 20, 24, .05);
+  --shadow-2: 0 6px 16px rgba(17, 20, 24, .08), 0 1px 3px rgba(17, 20, 24, .06);
+  --shadow-3: 0 12px 32px rgba(17, 20, 24, .16);
+  --backdrop: rgba(17, 20, 24, .25);
+
+  /* Gráficos */
+  --serie-1: #2a78d6;
+  --serie-2: #eb6834;
+  --serie-3: #1baf7a;
+  --serie-4: #eda100;
+  --serie-5: #e87ba4;
+  --serie-6: #008300;
+  --serie-7: #6250d6;
+  --serie-outros: #9aa1ab;
+  --serie-unica: #2a78d6;
+  --st-bom: #0ca30c;
+  --st-critico: #d03b3b;
+  --trilho: #eef0f3;
+  --grafico-selecionado: #1d5fb0;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: #17191e;
+  --surface: #1f2229;
+  --surface-2: #232730;
+  --surface-hover: #2a2f38;
+  --surface-selected: #222c40;
+  --ring: #6b93f0;
+
+  --text: #e6e8eb;
+  --text-strong: #f3f4f6;
+  --text-muted: #a3aab4;
+
+  --line: #2e333c;
+  --line-strong: #454c58;
+  --control-border: #5c6470;
+
+  --accent: #6b93f0;
+  --accent-hover: #86a7f3;
+  --accent-ink: #0f1115;
+  --accent-text: #86a7f3;
+  --button-bg: #2b3039;
+  --button-hover: #353b46;
+
+  --danger-fg: #f07a7a;
+  --danger-bg: #2e1f21;
+  --warning-fg: #d9a441;
+  --warning-bg: #2b2517;
+  --success-fg: #57c27a;
+  --success-bg: #1f3d2a;
+  --neutral-fg: #a3aab4;
+  --neutral-bg: #262a32;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .25);
+  --shadow-2: 0 6px 18px rgba(0, 0, 0, .4);
+  --shadow-3: 0 12px 32px rgba(0, 0, 0, .55);
+  --backdrop: rgba(0, 0, 0, .45);
+
+  --serie-1: #3987e5;
+  --serie-2: #d95926;
+  --serie-3: #199e70;
+  --serie-4: #c98500;
+  --serie-5: #d55181;
+  --serie-6: #008300;
+  --serie-7: #9085e9;
+  --serie-outros: #6b7280;
+  --serie-unica: #3987e5;
+  --st-bom: #2bb52b;
+  --st-critico: #e05252;
+  --trilho: #282c34;
+  --grafico-selecionado: #6ea8f0;
+}
