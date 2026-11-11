@@ -1,0 +1,10 @@
+# Planilhas com dados internos: nunca versionar
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+~$*
+
+node_modules/
+dist/
+test-results/
