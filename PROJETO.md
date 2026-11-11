@@ -286,17 +286,22 @@ Pedido da equipe: igual à tabela dinâmica da aba Regional, cada SC aparece uma
 
 ### Cores da planilha (11/11/2026)
 Pedido da equipe: mesmas cores da formatação condicional do `.xlsm` (abas Status, Entrega, Regional, Saving; tema Office).
-| Valor | Cor |
-|---|---|
-| Em Pedido | `#C6E0B4` (verde claro) |
-| Em Cotação | `#FFE699` (amarelo claro) |
-| Em pendências de compra / de contrato | `#B4C6E7` (azul claro; no gráfico, contrato em `#4472C4` para separar as duas) |
-| Em Pré-Pedido | `#2F5597` (azul escuro, texto branco) |
-| Cancelado | `#FF0000` (texto branco) |
-| NORMAL / URGENTE / EMERGENCIAL | `#D9D9D9` / `#FFFF00` / `#C00000` (texto branco) |
-| % Saving "-" ou < 0,1% / ≥ 6% | `#FFD966` / `#00B050` |
+| Valor | Planilha (selo na tabela) | Gráfico claro / escuro |
+|---|---|---|
+| Em Pedido | `#C6E0B4` | `#1BAF7A` / `#199E70` |
+| Em Pré-Pedido | `#2F5597` (texto branco) | `#6250D6` / `#9085E9` |
+| Em Cotação | `#FFE699` | `#EDA100` / `#C98500` |
+| Em pendências de compra | `#B4C6E7` | `#6AA8F0` / `#5594DC` |
+| Em pendências de contrato | `#8EA9DB` (planilha: `#B4C6E7`, igual à de compra) | `#1D5FB0` / `#2A5FC4` |
+| Sel. Comprador | sem cor (como na planilha) | `#9AA1AB` / `#8B929C` |
+| Cancelado | `#FF0000` | `#E5483B` / `#E0584C` |
+| NORMAL / URGENTE / EMERGENCIAL | marca `#D9D9D9` / `#FFFF00` / `#C00000` | — |
+| % Saving "-" ou < 0,1% / ≥ 6% | `#FFD966` / `#00B050` | — |
 
-Aplicadas nas células de Status e Prioridade da lista de SCs em aberto, no % Saving das tabelas do Saving e nas barras de status da tela Compradores. Iguais nos dois temas.
+**Reavaliação (11/11/2026).** A 1ª versão pintava a célula inteira e usava os fundos da planilha também nas barras. Problemas: no gráfico, os fundos claros somem no tema claro e o azul-escuro e o roxo somem no escuro (o validador reprova); branco sobre `#FF0000` tem contraste 4,0, abaixo de 4,5; amarelo e vermelho significam coisas diferentes em Prioridade e Status, colunas vizinhas; contrato tinha uma cor na lista e outra no gráfico. Ficou assim:
+- **Tabela:** Status e % Saving em selo com o fundo exato da planilha e texto preto (contraste ≥ 5:1); branco só no azul-escuro. Prioridade como marca quadrada + texto, então não se confunde com o status.
+- **Gráfico:** a mesma família de cor de cada status, em tons validados por tema (luminosidade, daltonismo, contraste). As duas pendências se separam por claro/escuro, e o selo de contrato fica um tom acima para casar.
+- Sel. Comprador fica cinza neutro no gráfico de propósito, porque não tem cor na planilha.
 
 ### Publicar (toda atualização)
 1. App da equipe: "Atualizar bases" e depois "Gerar painel".

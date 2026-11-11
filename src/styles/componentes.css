@@ -188,18 +188,24 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .num .th-botao { justify-content: flex-end; }
 .tabela .centro { text-align: center; }
 
-/* Células com a cor da planilha antiga (ui/cores-planilha.js). */
-.tabela td[class*="cel-"] { color: var(--pl-texto-claro); }
-.tabela td.cel-pedido { background: var(--pl-pedido); }
-.tabela td.cel-cotacao { background: var(--pl-cotacao); }
-.tabela td.cel-pendencia { background: var(--pl-pendencia); }
-.tabela td.cel-pre-pedido { background: var(--pl-pre-pedido); color: var(--pl-texto-escuro); }
-.tabela td.cel-cancelado { background: var(--pl-cancelado); color: var(--pl-texto-escuro); }
-.tabela td.cel-normal { background: var(--pl-normal); }
-.tabela td.cel-urgente { background: var(--pl-urgente); }
-.tabela td.cel-emergencial { background: var(--pl-emergencial); color: var(--pl-texto-escuro); }
-.tabela td.cel-saving-baixo { background: var(--pl-saving-baixo); }
-.tabela td.cel-saving-bom { background: var(--pl-saving-bom); }
+/* Cores da planilha antiga (ui/cores-planilha.js): selo para status e % saving, marca para prioridade. */
+.selo-pl {
+  display: inline-block; padding: 1px 8px; border-radius: var(--r-sm);
+  color: #000; line-height: 1.5; white-space: nowrap; font-variant-numeric: tabular-nums;
+}
+.pl-pedido { background: var(--pl-pedido); }
+.pl-pre-pedido { background: var(--pl-pre-pedido); color: #fff; }
+.pl-cotacao { background: var(--pl-cotacao); }
+.pl-pend-compra { background: var(--pl-pend-compra); }
+.pl-pend-contrato { background: var(--pl-pend-contrato); }
+.pl-cancelado { background: var(--pl-cancelado); }
+.pl-saving-baixo { background: var(--pl-saving-baixo); }
+.pl-saving-bom { background: var(--pl-saving-bom); }
+.marca-prio { display: inline-flex; align-items: center; gap: 6px; }
+.marca-prio-cor { width: 10px; height: 10px; border-radius: 2px; flex: none; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .3); }
+.prio-normal { background: var(--pl-normal); }
+.prio-urgente { background: var(--pl-urgente); }
+.prio-emergencial { background: var(--pl-emergencial); }
 .centro .th-botao { justify-content: center; }
 .th-seta { font-size: 9px; color: var(--accent-text); }
 .tabela-vazia { text-align: center !important; color: var(--text-muted); padding: var(--s5) !important; }

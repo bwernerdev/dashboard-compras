@@ -5,7 +5,7 @@ import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
 import { barras, barraSegmentada } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
-import { classeDoStatus, classeDaPrioridade } from '../ui/cores-planilha.js';
+import { seloDoStatus, marcaDaPrioridade } from '../ui/cores-planilha.js';
 import {
   itensEmAberto, resumoEmAberto, porFaixaDeDias, emAbertoPor, faixaDe, FAIXAS_DIAS,
   recortarPorStatus, itensPorStatus, ehPendencia, RECORTE_PENDENCIAS,
@@ -27,8 +27,8 @@ const COLUNAS_SCS = [
   { id: 'aprov', rotulo: 'Dias da aprovação', num: true, centro: true, valor: (r) => r.diasDaAprovacao, formato: fmt.inteiro, titulo: 'Dias corridos desde a criação' },
   { id: 'sc', rotulo: 'SC', valor: (r) => r.sc },
   { id: 'data', rotulo: 'Data', tipo: 'data', valor: (r) => r.data },
-  { id: 'prioridade', rotulo: 'Prioridade', valor: (r) => r.prioridade, classe: (r) => classeDaPrioridade(r.prioridade) },
-  { id: 'status', rotulo: 'Status', valor: (r) => r.status, classe: (r) => classeDoStatus(r.status) },
+  { id: 'prioridade', rotulo: 'Prioridade', valor: (r) => r.prioridade, exibir: (r) => marcaDaPrioridade(r.prioridade) },
+  { id: 'status', rotulo: 'Status', valor: (r) => r.status, exibir: (r) => seloDoStatus(r.status) },
   { id: 'descricao', rotulo: 'Produto', valor: (r) => r.descricao, classe: () => 'texto-longo' },
   { id: 'codigo', rotulo: 'Código', valor: (r) => r.codigoProduto },
   { id: 'qtd', rotulo: 'Qtd.', num: true, centro: true, valor: (r) => r.qtdSolicitacao, formato: fmt.inteiro },
