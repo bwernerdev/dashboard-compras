@@ -18,12 +18,15 @@ export function descreverFiltros(selecao, tela) {
  * Controla abas, filtros e tela.
  * telas: [{ id, rotulo, desenhar(ctx) }]; raiz: { abas, filtros, conteudo, filtrosImpressao };
  * telaVazia(): conteúdo quando não há registros; aoTrocarAba(id) opcional.
+ * ctx de cada tela: { registros, followUp (null sem a base Follow-Up), redesenhar, filtrar }.
+ * Os filtros globais valem para as duas bases; as opções vêm só da base principal.
  */
 export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba }) {
   const estado = {
     aba: telas.some((t) => t.id === abaInicial) ? abaInicial : telas[0].id,
     selecao: {},
     registros: null,
+    followUp: null,
     opcoes: null,
   };
   let pedido = 0;
@@ -35,6 +38,10 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     for (const [id, valores] of Object.entries(estado.selecao)) {
       estado.selecao[id] = new Set([...valores].filter((v) => estado.opcoes?.[id]?.includes(v)));
     }
+  }
+
+  function definirFollowUp(registros) {
+    estado.followUp = registros ?? null;
   }
 
   function trocarAba(id) {
@@ -91,6 +98,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     if (raiz.filtrosImpressao) raiz.filtrosImpressao.textContent = descreverFiltros(estado.selecao, estado.aba);
     substituir(raiz.conteudo, tela.desenhar({
       registros: aplicarFiltros(estado.registros, estado.selecao, estado.aba),
+      followUp: estado.followUp ? aplicarFiltros(estado.followUp, estado.selecao, estado.aba) : null,
       redesenhar: desenharTela,
       filtrar(idFiltro, valor) {
         const atual = estado.selecao[idFiltro];
@@ -109,7 +117,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     desenharTela();
   }
 
-  return { estado, definirRegistros, desenhar, desenharTela };
+  return { estado, definirRegistros, definirFollowUp, desenhar, desenharTela };
 }
 
 /** Botão de tema claro/escuro (html[data-theme]); a escolha fica no navegador quando dá. */

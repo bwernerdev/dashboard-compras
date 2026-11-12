@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   aplicarFiltros, opcoesDosFiltros, chaveMes, rotuloMes, itensEmAberto, resumoEmAberto, porFaixaDeDias,
-  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
+  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorStatus, spendPorFilial, resumoSpend, entregasPorStatus, recortarPor, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
   pctSaving, resumoSaving, savingPorFilial, savingPorComprador, savingPorMes,
 } from '../src/analise.js';
 import { brutosDe, recalcular } from '../src/memoria.js';
@@ -219,4 +219,52 @@ test('ehRegularizacao: categoria REGULARIZAÇÃO, sem maiúsculas nem acento', (
   assert.equal(ehRegularizacao({ categoria: 'NORMAL' }), false);
   assert.equal(ehRegularizacao({ categoria: null }), false);
   assert.equal(ehRegularizacao({}), false);
+});
+
+test('scsPorStatus: SCs distintas e itens por status', () => {
+  const regs = [
+    { solicitacao: 'S1', status: 'Em Cotação' }, { solicitacao: 'S1', status: 'Em Cotação' },
+    { solicitacao: 'S2', status: 'Em Cotação' }, { solicitacao: 'S2', status: 'Em Pedido' },
+  ];
+  assert.deepEqual(scsPorStatus(regs), [
+    { status: 'Em Pedido', itens: 1, scs: 1 },
+    { status: 'Em Cotação', itens: 3, scs: 2 },
+  ]);
+});
+
+test('spendPorFilial: valor por filial (com ou sem nº de pedido, como a planilha), % do total, sem filial "-"', () => {
+  const regs = [
+    { nomeFilial: 'A', numeroPedido: 'OF-1', totalPedidoComImpostos: 100 },
+    { nomeFilial: 'A', numeroPedido: 'OF-1', totalPedidoComImpostos: 50 },
+    { nomeFilial: 'B', numeroPedido: 'OF-2', totalPedidoComImpostos: 300 },
+    { nomeFilial: 'B', numeroPedido: null, totalPedidoComImpostos: 50 },
+    { nomeFilial: 'C', numeroPedido: null, totalPedidoComImpostos: null },
+    { nomeFilial: null, numeroPedido: 'OF-3', totalPedidoComImpostos: 999 },
+  ];
+  assert.deepEqual(spendPorFilial(regs), [
+    { chave: 'B', valor: 350, ofs: 1, pct: 0.7 },
+    { chave: 'A', valor: 150, ofs: 1, pct: 0.3 },
+  ]);
+  const r = resumoSpend(regs);
+  assert.equal(r.total, 500);
+  assert.equal(r.ofs, 2);
+  assert.equal(r.filiais, 2);
+  assert.equal(r.maior.chave, 'B');
+  assert.deepEqual(spendPorFilial([]), []);
+});
+
+test('entregasPorStatus: OFs distintas e itens, na ordem do acompanhamento; recortarPor', () => {
+  const regs = [
+    { numeroPedido: 'OF-1', statusEntrega: 'ENTREGUE' },
+    { numeroPedido: 'OF-2', statusEntrega: 'NÃO ENTREGUE' },
+    { numeroPedido: 'OF-2', statusEntrega: 'NÃO ENTREGUE' },
+    { numeroPedido: 'OF-3', statusEntrega: 'ENTREGUE PARCIAL' },
+  ];
+  assert.deepEqual(entregasPorStatus(regs), [
+    { status: 'NÃO ENTREGUE', itens: 2, ofs: 1 },
+    { status: 'ENTREGUE PARCIAL', itens: 1, ofs: 1 },
+    { status: 'ENTREGUE', itens: 1, ofs: 1 },
+  ]);
+  assert.equal(recortarPor(regs, 'statusEntrega', new Set(['ENTREGUE'])).length, 1);
+  assert.equal(recortarPor(regs, 'statusEntrega', new Set()).length, 4);
 });

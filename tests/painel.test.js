@@ -1,7 +1,9 @@
 // Dados do painel publicado (src/painel/dados.js) e texto do "Copiar tabela" (gerarTsv). Dados fictícios.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { montarDadosDoPainel, registrosDoPainel, compactar, descompactar, CAMPOS_PUBLICOS, VERSAO } from '../src/painel/dados.js';
+import {
+  montarDadosDoPainel, registrosDoPainel, followUpDoPainel, compactar, descompactar, CAMPOS_PUBLICOS, CAMPOS_FOLLOW_UP, VERSAO,
+} from '../src/painel/dados.js';
 import { gerarTsv } from '../src/ui/tabela.js';
 
 const aberto = {
@@ -31,15 +33,36 @@ test('montarDadosDoPainel leva só os campos públicos', () => {
   for (const valor of ['PRE-9', 'Descrição interna', 'Ana Interna', 'x@y']) assert.ok(!texto.includes(valor), valor);
 });
 
-test('detalhe do item só nas SCs em aberto', () => {
+test('produto e solicitante em toda linha (tela Status); dias da aprovação, código, qtd. e prazo só nas abertas', () => {
   const d = montarDadosDoPainel({ registros: [aberto, fechado], meta, hoje: 46001, geradoEm: 'x' });
   const [a, f] = registrosDoPainel(d);
   assert.equal(a.descricao, 'Parafuso');
-  assert.equal(a.solicitante, 'Beto');
-  assert.equal(f.descricao, null);
-  assert.equal(f.solicitante, null);
+  assert.equal(a.slaMax, 10);
+  assert.equal(a.codigoProduto, 'P1');
+  assert.equal(f.descricao, 'Detalhe de pedido fechado');
+  assert.equal(f.solicitante, 'Beto');
+  assert.equal(f.codigoProduto, null);
+  assert.equal(f.slaMax, null);
+  assert.equal(f.diasDaAprovacao, null);
   assert.equal(f.savingReal, 50.5); // saving continua
   assert.equal(f.comprador, 'Ana');
+  assert.equal(followUpDoPainel(d), null); // gerado sem Follow-Up
+});
+
+test('Follow-Up: só os campos da tela Entrega', () => {
+  const fu = {
+    solicitacao: 'SC-1', sc: '1', numeroPedido: 'OF-7', of: '7', dataPedido: 46000, filial: '101', nomeFilial: 'Filial A',
+    regional: 'Sul', solicitante: 'Beto', comprador: 'Ana', prioridade: 'Normal', temContrato: 'não',
+    codigoProduto: 'P1', descricao: 'Parafuso', fornecedor: 'Fornecedor X', cnpj: '00.000.000/0001-00', statusEntrega: 'ENTREGUE',
+    compradorCompleto: 'Ana Interna', qtdPendente: 3,
+  };
+  const d = montarDadosDoPainel({ registros: [aberto], followUp: [fu], meta, hoje: 46001, geradoEm: 'x' });
+  assert.deepEqual(d.followUp.campos, CAMPOS_FOLLOW_UP);
+  assert.ok(!JSON.stringify(d).includes('Ana Interna'));
+  const [r] = followUpDoPainel(d);
+  assert.equal(r.statusEntrega, 'ENTREGUE');
+  assert.equal(r.fornecedor, 'Fornecedor X');
+  assert.equal(r.qtdPendente, undefined);
 });
 
 test('registrosDoPainel recusa versão desconhecida', () => {

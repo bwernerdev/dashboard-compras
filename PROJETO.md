@@ -158,7 +158,7 @@ Ocultas hoje: Base, Follow-UP, sla, Base Analitico, Botão, Contr - Cot, scs Fil
 2. **Compradores** (`sc p Compr`) — por comprador: SCs por status (barras empilhadas), pré-pedidos distintos por regional, % de SCs atendidas, SLA no prazo. Linha "Pendente" destacada (SC sem comprador).
 3. **Saving** — por filial e por comprador: total comprado, economia, % saving; evolução mensal; ranking.
 
-Depois: Spend, Entrega (Follow-Up), Tempos por etapa, Contrato × Spot, Regularização.
+Fase 4 (12/11/2026): Status, Entrega (Follow-Up), Spend, Atendimento e Organograma (seção 11). Depois, se a equipe quiser: Tempos por etapa, Contrato × Spot, Regularização.
 
 Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 
@@ -172,7 +172,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | 1 | Leitor das bases (worker) + `regras.js` + configuração + testes (concluída em 11/11/2026) | Lê as duas bases atuais em < 20 s; regras testadas |
 | 2 | Telas Regional, Compradores, Saving + filtros globais (concluída em 11/11/2026) | Números de Saving e sc p Compr batem com o `.xlsm`; Regional bate com a regra corrigida |
 | 3 | "Gerar painel": `.html` único, só com as telas públicas (seção 4.7), publicado no SharePoint/OneDrive com link na Intranet (seção 7). Concluída em 11/11/2026 (seção 10) | Link da Intranet abre o painel no quadro do SharePoint sem importar nada; "Copiar tabela" funciona; o arquivo não contém dados das telas internas |
-| 4 | Demais telas públicas: Capa, Status, Entrega, Atendimento, Organograma (Spend já está no Saving). Internas, se a equipe quiser: Contr - Cot, scs Filial, Med Temp, sc p Cat, Regularização | Paridade com as abas visíveis da planilha protegida |
+| 4 | Demais telas públicas: Status, Entrega, Spend, Atendimento, Organograma, no app e no painel (Capa não: as abas já navegam). Concluída em 12/11/2026 (seção 11). Internas, se a equipe quiser: Contr - Cot, scs Filial, Med Temp, sc p Cat, Regularização | Paridade com as abas visíveis da planilha protegida |
 | 5 (opcional) | Favorito do ME abre o app e entrega as bases direto, sem passar por Downloads | Atualização com um clique |
 
 ---
@@ -332,3 +332,28 @@ Pedido da equipe: mesmas cores da formatação condicional do `.xlsm` (abas Stat
 ### Testes
 - `npm test`: 53 testes unitários (novos em `tests/painel.test.js`: campos públicos, compactação, `gerarTsv`).
 - `npm run test:e2e`: 10 testes. Novos em `e2e/painel.spec.js`: painel aberto como arquivo e num iframe `sandbox` + `srcdoc` (como o SharePoint), conferindo telas, números, aviso, botões e que os dados embutidos não têm pré-pedido nem nome completo.
+
+---
+
+## 11. Resultado da fase 4 (12/11/2026)
+
+Pedido da equipe: tudo o que as abas visíveis da planilha mostram precisa estar no painel gerado.
+
+### O que existe
+- **Abas na ordem da planilha**, no app e no painel (`src/telas/publicas.js`): Status, Entrega, Regional, Spend, Saving, Atendimento, Organograma. O app põe Compradores (interna) depois da Regional. Aba inicial: Regional.
+- **Status** (aba Status): todas as SCs do período, SCs distintas por status (barra recorta a lista), lista agrupada por SC com recorte por Status e pesquisa (no lugar da segmentação Solicitante).
+- **Entrega** (aba Entrega, base Follow-Up): OFs distintas por status de entrega e por filial, lista agrupada por SC e OF com fornecedor e CNPJ. Os filtros globais valem para o Follow-Up (`comprador` e `temContrato` passaram a ser calculados também no Follow-Up, `src/regras.js`). Sem Follow-Up importado, a tela avisa.
+- **Spend** (aba Spend): pedido c/ impostos por filial com % do total e OFs distintas; por mês do pedido. A pizza virou barras ordenadas. Soma toda linha com valor, mesmo sem nº de pedido, como a planilha.
+- **Atendimento** (aba Atendimento): itens em aberto um por linha, do mais antigo, com SLA e prazo máximo; recorte Todos / Fora do prazo / No prazo.
+- **Organograma**: texto da aba (cargos e filiais de cada comprador), iniciais no lugar das fotos (fotos não entram no arquivo). Corrigidos "Bruno Wener" e "Acessoria". Cada comprador mostra as SCs em aberto da regional dele e filtra o painel ao clicar. Mudou a equipe: editar `src/telas/organograma.js`.
+- **Painel** (`src/painel/dados.js`, `VERSAO` 4): produto, solicitante, data e filial em toda linha (tela Status), `numeroPedido` (Spend) e `slaMax` (Atendimento); bloco `followUp` só com os campos da Entrega. Continuam fora: Compradores, pré-pedidos, configuração.
+
+### Bases de 11/11/2026
+- `npm run conferir`: tudo confere, inclusive a tabela dinâmica Spend, agora calculada com a função da tela (`spendPorFilial`).
+- Follow-Up: 2.983 itens, 1.259 OFs; não entregue 919 OFs (2.032 itens), parcial 409 (938), entregue 8 (13).
+- Painel com Base + Follow-Up: ~0,72 MB (0,55 MB sem o Follow-Up).
+
+### Testes
+- `npm test`: 67 testes unitários (novos: SCs por status, spend por filial, entregas por status, Follow-Up no painel).
+- `npm run test:e2e`: 15 testes (novos: ordem das abas, Status, Spend, Atendimento, Organograma, Entrega com e sem Follow-Up; painel com as 7 telas públicas e o Follow-Up).
+

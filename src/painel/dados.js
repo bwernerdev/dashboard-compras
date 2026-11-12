@@ -1,29 +1,36 @@
 // Dados que vão DENTRO do painel publicado (PROJETO.md, seção 4.7): só os campos que as telas
-// públicas (Regional e Saving) usam. Nada da configuração (de-para, nomes completos), nada de
-// pré-pedido (tela Compradores, interna). Detalhes do item só para SCs em aberto (lista da Regional).
-// Formato: { versao, geradoEm, hoje, periodo, arquivo, campos, linhas } em JSON, gzip, base64.
-// Roda no navegador e no Node (testes).
+// públicas (telas/publicas.js) usam. Nada da configuração (de-para, nomes completos), nada de
+// pré-pedido (tela Compradores, interna). Alguns campos só para SCs em aberto (Regional, Atendimento).
+// Formato: { versao, geradoEm, hoje, periodo, arquivo, campos, linhas, followUp: { campos, linhas } | null }
+// em JSON, gzip, base64. Roda no navegador e no Node (testes).
 
-export const VERSAO = 3; // 2: sem item e slaMax; 3: + categoria (linha vermelha de regularização)
+// 2: sem item e slaMax; 3: + categoria (linha vermelha de regularização);
+// 4: telas Status, Entrega, Spend, Atendimento (detalhe em toda linha, numeroPedido, slaMax, Follow-Up)
+export const VERSAO = 4;
 
-/** Campos de toda linha: filtros, contagens e saving. */
+/** Campos de toda linha: filtros, contagens, saving, spend e a lista da tela Status. */
 const CAMPOS_BASE = [
   'solicitacao', 'regional', 'nomeFilial', 'comprador', 'prioridade', 'temContrato', 'status',
   'diasEmAberto', 'sla', 'totalPedidoComImpostos', 'savingReal', 'anoPedido', 'mesPedido',
+  'numeroPedido', 'sc', 'data', 'descricao', 'solicitante', 'filial', 'categoria',
 ];
 
-/** Campos só das SCs em aberto (colunas da lista da tela Regional). */
-const CAMPOS_DETALHE = [
-  'sc', 'data', 'diasDaAprovacao', 'descricao', 'codigoProduto', 'qtdSolicitacao',
-  'solicitante', 'filial', 'categoria',
-];
+/** Campos só das SCs em aberto (listas das telas Regional e Atendimento). */
+const CAMPOS_DETALHE = ['diasDaAprovacao', 'codigoProduto', 'qtdSolicitacao', 'slaMax'];
 
 export const CAMPOS_PUBLICOS = [...CAMPOS_BASE, ...CAMPOS_DETALHE];
+
+/** Campos do Follow-Up (tela Entrega e filtros globais). */
+export const CAMPOS_FOLLOW_UP = [
+  'solicitacao', 'sc', 'numeroPedido', 'of', 'dataPedido', 'filial', 'nomeFilial', 'regional',
+  'solicitante', 'comprador', 'prioridade', 'temContrato', 'codigoProduto', 'descricao',
+  'fornecedor', 'cnpj', 'statusEntrega',
+];
 
 const valorOuNulo = (v) => (v === undefined || (typeof v === 'number' && Number.isNaN(v)) ? null : v);
 
 /** Monta o objeto de dados do painel a partir dos registros calculados do app. */
-export function montarDadosDoPainel({ registros, meta, hoje, geradoEm }) {
+export function montarDadosDoPainel({ registros, followUp = null, meta, hoje, geradoEm }) {
   const g = meta?.dadosGerais ?? {};
   return {
     versao: VERSAO,
@@ -39,19 +46,27 @@ export function montarDadosDoPainel({ registros, meta, hoje, geradoEm }) {
         ...CAMPOS_DETALHE.map((c) => (aberto ? valorOuNulo(r[c]) : null)),
       ];
     }),
+    followUp: followUp ? {
+      campos: CAMPOS_FOLLOW_UP,
+      linhas: followUp.map((r) => CAMPOS_FOLLOW_UP.map((c) => valorOuNulo(r[c]))),
+    } : null,
   };
 }
+
+const paraObjetos = ({ campos, linhas }) => linhas.map((linha) => {
+  const r = {};
+  for (let i = 0; i < campos.length; i++) r[campos[i]] = linha[i];
+  return r;
+});
 
 /** Registros (objetos) de volta, para as telas. */
 export function registrosDoPainel(dados) {
   if (dados?.versao !== VERSAO) throw new Error(`Versão de dados desconhecida: ${dados?.versao}`);
-  const { campos } = dados;
-  return dados.linhas.map((linha) => {
-    const r = {};
-    for (let i = 0; i < campos.length; i++) r[campos[i]] = linha[i];
-    return r;
-  });
+  return paraObjetos(dados);
 }
+
+/** Registros do Follow-Up, ou null se o painel foi gerado sem ele. */
+export const followUpDoPainel = (dados) => (dados.followUp ? paraObjetos(dados.followUp) : null);
 
 function paraBase64(bytes) {
   let texto = '';

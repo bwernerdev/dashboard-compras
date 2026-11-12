@@ -1,8 +1,8 @@
 # dashboard — mapa rápido
 
-App web (Vite, JS puro, sem framework) que substitui o `DASHBOARD COMPRAS 2026.xlsm`: lê `base.xlsx` e `Follow-Up.xlsx` exportados do ME (favorito do navegador baixa as duas), aplica as regras de Compras no navegador e mostra as telas Regional, Compradores e Saving para a equipe de Suprimentos. "Gerar painel" baixa `painel-compras.html` (só Regional e Saving, dados públicos) para o SharePoint, com link na Intranet.
+App web (Vite, JS puro, sem framework) que substitui o `DASHBOARD COMPRAS 2026.xlsm`: lê `base.xlsx` e `Follow-Up.xlsx` exportados do ME (favorito do navegador baixa as duas), aplica as regras de Compras no navegador e mostra as telas Status, Entrega, Regional, Compradores, Spend, Saving, Atendimento e Organograma para a equipe de Suprimentos. "Gerar painel" baixa `painel-compras.html` (as mesmas telas sem Compradores, só dados públicos) para o SharePoint, com link na Intranet.
 
-Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configuração, e2e) e 3 (painel publicado) concluídas; próxima é a fase 4 (demais telas públicas). Decisões, regras de negócio e fases: `PROJETO.md`.
+Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configuração, e2e), 3 (painel publicado) e 4 (demais telas públicas) concluídas; fase 5 (favorito abre o app) é opcional. Decisões, regras de negócio e fases: `PROJETO.md`.
 
 ## Comandos (PowerShell: `npm.cmd`; instalar com `npm.cmd install --cache ./.npm-cache`)
 - `npm run build:painel`: gera `src/painel/modelo.gerado.html` (`vite.painel.config.js`). Roda sozinho antes de `dev` e `build`; mudou algo que entra no painel com o dev aberto, rode de novo.
@@ -18,7 +18,7 @@ Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configura�
 |---|---|
 | `src/` | App: casca (`main.js`), importação, regras, agregações (`analise.js`), memória local |
 | `src/painel/` | Painel publicado: dados públicos, entrada, modelo, geração. Nada de `config/` pode entrar nele |
-| `src/telas/` | Telas Regional, Compradores, Saving; diálogos de importação e configuração |
+| `src/telas/` | Telas (públicas em `publicas.js` + Compradores); diálogos de importação e configuração |
 | `src/ui/` | Componentes: casca (abas, filtros, tema), tabela, gráficos, filtros, cartões, dica, formatos |
 | `src/leitor/` | Leitor de `.xlsx` por fluxo (zip + XML, sem dependência) |
 | `src/config/` | De-para de filiais, compradores e SLA |

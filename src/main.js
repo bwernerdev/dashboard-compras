@@ -12,18 +12,17 @@ import { criarNavegador, ligarTema, ligarImpressao } from './ui/casca.js';
 import { baixar } from './ui/tabela.js';
 import { caixasDeImportacao } from './telas/importacao.js';
 import { abrirConfiguracao } from './telas/configuracao.js';
-import { telaRegional, reiniciarRegional, ligarAtendidas } from './telas/regional.js';
+import { TELAS_PUBLICAS, reiniciarTelas } from './telas/publicas.js';
+import { ligarAtendidas } from './telas/regional.js';
 import { telaCompradores } from './telas/compradores.js';
-import { telaSaving } from './telas/saving.js';
 import { gerarPainel, NOME_DO_ARQUIVO } from './painel/gerar.js';
 
 ligarAtendidas(); // olho "atendida" na lista de SCs: só no app da equipe, não no painel publicado
 
-const TELAS = [
-  { id: 'regional', rotulo: 'Regional', desenhar: telaRegional },
-  { id: 'compradores', rotulo: 'Compradores', desenhar: telaCompradores },
-  { id: 'saving', rotulo: 'Saving', desenhar: telaSaving },
-];
+// Ordem das abas da planilha antiga; Compradores (interna, não vai para o painel) depois da Regional.
+const TELAS = TELAS_PUBLICAS.flatMap((t) => (t.id === 'regional'
+  ? [t, { id: 'compradores', rotulo: 'Compradores', desenhar: telaCompradores }]
+  : [t]));
 
 const configSalva = lerConfig();
 const estado = {
@@ -46,7 +45,7 @@ const raiz = {
 const nav = criarNavegador({
   telas: TELAS,
   raiz,
-  abaInicial: lerPreferencia('aba'),
+  abaInicial: lerPreferencia('aba') ?? 'regional',
   aoTrocarAba: (id) => salvarPreferencia('aba', id),
   telaVazia: () => el('div', { class: 'boas-vindas' },
     el('h2', {}, 'Importe as bases do ME'),
@@ -61,6 +60,7 @@ const nav = criarNavegador({
 function definirBase(tipo, dados) {
   estado[tipo] = dados;
   if (tipo === 'base') nav.definirRegistros(dados.registros);
+  else nav.definirFollowUp(dados.registros);
 }
 
 async function importar(tipo, arquivo, aoAvancar) {
@@ -68,7 +68,7 @@ async function importar(tipo, arquivo, aoAvancar) {
   const resultado = await importarNoWorker(tipo, arquivo, { hoje, config: estado.config, aoAvancar });
   const dados = { registros: resultado.registros, brutos: brutosDe(tipo, resultado.registros), meta: resultado.meta, salvoEm: Date.now() };
   estado.hoje = hoje;
-  if (tipo === 'base') reiniciarRegional();
+  if (tipo === 'base' || tipo === 'followUp') reiniciarTelas();
   definirBase(tipo, dados);
   salvarImportacao(tipo, resultado.registros, resultado.meta);
   desenharTudo();
@@ -161,13 +161,16 @@ async function gerarEBaixarPainel() {
   const textoAntes = botaoPainel.textContent;
   botaoPainel.textContent = 'Gerando...';
   try {
-    const html = await gerarPainel({ registros: estado.base.registros, meta: estado.base.meta, hoje: estado.hoje });
+    const html = await gerarPainel({
+      registros: estado.base.registros, followUp: estado.followUp?.registros ?? null, meta: estado.base.meta, hoje: estado.hoje,
+    });
     baixar(NOME_DO_ARQUIVO, html, 'text/html;charset=utf-8');
     abrirDialogo({
       id: 'titulo-painel',
       titulo: 'Painel gerado',
       corpo: [
-        el('p', {}, `Baixado: ${NOME_DO_ARQUIVO} (${tamanho(new Blob([html]).size)}), com as telas Regional e Saving e os dados de hoje.`),
+        el('p', {}, `Baixado: ${NOME_DO_ARQUIVO} (${tamanho(new Blob([html]).size)}), com as telas ${TELAS_PUBLICAS.map((t) => t.rotulo).join(', ')} e os dados de hoje.`),
+        estado.followUp ? null : el('p', { class: 'texto-fraco' }, 'Sem a base Follow-Up: a tela Entrega do painel fica vazia. Importe o Follow-Up e gere de novo.'),
         el('ol', { class: 'lista-passos' },
           el('li', {}, 'Abra a pasta do painel no OneDrive/SharePoint.'),
           el('li', {}, `Envie o arquivo e escolha "Substituir" (mesmo nome, ${NOME_DO_ARQUIVO}).`),

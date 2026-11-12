@@ -10,7 +10,7 @@ import { criarConfig } from '../src/config/index.js';
 import { diasUteis, formatarSerie } from '../src/datas.js';
 import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
 import {
-  aplicarFiltros, savingPorFilial, scsPorCompradorStatus, prePedidosPorCompradorRegional, OUTROS,
+  aplicarFiltros, savingPorFilial, spendPorFilial, scsPorCompradorStatus, prePedidosPorCompradorRegional, OUTROS,
 } from '../src/analise.js';
 
 const caminho = process.argv[2] ?? 'DASHBOARD COMPRAS 2026.xlsm';
@@ -87,17 +87,9 @@ comparar('Follow-UP', fu.registros, [
 // ---- Tabelas dinâmicas ----
 const pasta = await abrirPasta(blob);
 
-const porFilial = new Map();
-for (const r of base.registros) {
-  const k = r.nomeFilial ?? '-';
-  const t = porFilial.get(k) ?? { total: 0, economia: 0 };
-  t.total += r.totalPedidoComImpostos ?? 0;
-  t.economia += r.savingReal;
-  porFilial.set(k, t);
-}
-
-// Spend: soma do pedido c/ impostos por filial (O5:P17).
+// Spend: soma do pedido c/ impostos por filial (O5:P17), com a função da tela Spend.
 {
+  const porFilial = new Map(spendPorFilial(base.registros).map((g) => [g.chave, { total: g.valor }]));
   const linhas = await lerAbaInteira(pasta, 'Spend');
   console.log('\n== Tabela dinâmica Spend (por filial)');
   for (const l of linhas.slice(5, 17)) {

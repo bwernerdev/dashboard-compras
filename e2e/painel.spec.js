@@ -3,8 +3,9 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
-import { arquivoBase, COMPRADOR } from './ajuda/bases.js';
+import { arquivoBase, arquivoFollowUp, COMPRADOR } from './ajuda/bases.js';
 
+const TELAS = ['Status', 'Entrega', 'Regional', 'Spend', 'Saving', 'Atendimento', 'Organograma'];
 const cartao = (raiz, rotulo) => raiz.locator('.cartao', { has: raiz.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
 
 async function gerarPainel(page, info) {
@@ -12,6 +13,10 @@ async function gerarPainel(page, info) {
   await expect(page.locator('#acao-painel')).toBeDisabled();
   await page.locator('input[data-tipo="base"]').setInputFiles(await arquivoBase());
   await expect(cartao(page, 'SCs em aberto')).toBeVisible();
+  await page.locator('#acao-importar').click();
+  await page.locator('dialog input[data-tipo="followUp"]').setInputFiles(await arquivoFollowUp());
+  await expect(page.locator('dialog .arquivo[data-tipo="followUp"] .arquivo-status')).toContainText('3 linhas');
+  await page.locator('dialog').getByRole('button', { name: 'Fechar' }).last().click();
   const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#acao-painel').click()]);
   expect(download.suggestedFilename()).toBe('painel-compras.html');
   await expect(page.getByRole('heading', { name: 'Painel gerado' })).toBeVisible();
@@ -21,7 +26,7 @@ async function gerarPainel(page, info) {
   return { caminho, html: await readFile(caminho, 'utf8') };
 }
 
-test('painel aberto como arquivo: só Regional e Saving, sem dados internos', async ({ page, context }, info) => {
+test('painel aberto como arquivo: telas públicas (sem Compradores), sem dados internos', async ({ page, context }, info) => {
   const { caminho, html } = await gerarPainel(page, info);
   expect(html).not.toContain('__DADOS_DO_PAINEL__');
 
@@ -29,7 +34,7 @@ test('painel aberto como arquivo: só Regional e Saving, sem dados internos', as
   const erros = [];
   painel.on('pageerror', (e) => erros.push(e.message));
   await painel.goto(pathToFileURL(caminho).href);
-  await expect(painel.getByRole('tab')).toHaveText(['Regional', 'Saving']);
+  await expect(painel.getByRole('tab')).toHaveText(TELAS);
   await expect(cartao(painel, 'SCs em aberto')).toHaveText('2');
   await expect(painel.locator('#periodo')).toContainText('dados de');
   await expect(painel.locator('#aviso-quadro')).toBeHidden();
@@ -39,6 +44,10 @@ test('painel aberto como arquivo: só Regional e Saving, sem dados internos', as
 
   await painel.getByRole('tab', { name: 'Saving' }).click();
   await expect(cartao(painel, '% Saving')).toHaveText('10,00%');
+  await painel.getByRole('tab', { name: 'Entrega' }).click();
+  await expect(cartao(painel, 'OFs não entregues')).toHaveText('1');
+  await painel.getByRole('tab', { name: 'Status' }).click();
+  await expect(cartao(painel, 'SCs no período')).toHaveText('3');
 
   // Dados embutidos: só campos públicos; nada de pré-pedido nem de-para.
   const dados = await painel.evaluate(async () => {
@@ -59,7 +68,7 @@ test('painel no quadro isolado do SharePoint: aviso, sem CSV e sem imprimir, tel
   await host.setContent('<iframe id="q" sandbox="allow-scripts" style="width:1200px;height:900px;border:0"></iframe>');
   await host.locator('#q').evaluate((f, h) => { f.srcdoc = h; }, html);
   const quadro = host.frameLocator('#q');
-  await expect(quadro.getByRole('tab')).toHaveText(['Regional', 'Saving']);
+  await expect(quadro.getByRole('tab')).toHaveText(TELAS);
   await expect(cartao(quadro, 'SCs em aberto')).toHaveText('2');
   await expect(quadro.locator('#aviso-quadro')).toBeVisible();
   await expect(quadro.locator('#acao-imprimir')).toBeHidden();
@@ -70,5 +79,7 @@ test('painel no quadro isolado do SharePoint: aviso, sem CSV e sem imprimir, tel
   await quadro.locator('#acao-tema').click();
   await quadro.getByRole('tab', { name: 'Saving' }).click();
   await expect(cartao(quadro, '% Saving')).toHaveText('10,00%');
+  await quadro.getByRole('tab', { name: 'Spend' }).click();
+  await expect(cartao(quadro, 'OFs')).toHaveText('1');
   expect(erros).toEqual([]);
 });

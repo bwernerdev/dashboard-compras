@@ -213,6 +213,62 @@ test('Compradores e Saving', async ({ page }) => {
   await expect(page.getByRole('table', { name: 'Saving por filial' }).locator('tbody tr').first()).toContainText(FILIAL_B.nome.trim());
 });
 
+test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', async ({ page }) => {
+  await importarBase(page);
+  await expect(page.getByRole('tab')).toHaveText(['Status', 'Entrega', 'Regional', 'Compradores', 'Spend', 'Saving', 'Atendimento', 'Organograma']);
+  await expect(page.getByRole('tab', { name: 'Regional' })).toHaveAttribute('aria-selected', 'true'); // aba inicial
+
+  await page.getByRole('tab', { name: 'Status' }).click();
+  await expect(valorDoCartao(page, 'SCs no período')).toHaveText('3'); // filial fora do de-para descartada
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
+  await expect(valorDoCartao(page, 'SCs em pedido')).toHaveText('1');
+  const lista = page.locator('.bloco', { hasText: 'Lista de SCs' });
+  await expect(lista.locator('.tabela-contagem')).toHaveText('3 SCs, 4 itens');
+  await page.getByRole('button', { name: /^Em Pedido: 1 SCs/ }).click(); // barra recorta a lista
+  await expect(lista.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
+  await expect(lista.locator('tbody tr').first()).toContainText('1000003');
+
+  await page.getByRole('tab', { name: 'Spend' }).click();
+  await expect(page.locator('[data-filtro="mes"]')).toBeVisible();
+  await expect(valorDoCartao(page, 'OFs')).toHaveText('1');
+  const spend = page.getByRole('table', { name: 'Spend por filial' });
+  await expect(spend.locator('tbody tr').first()).toContainText(FILIAL_B.nome.trim());
+  await expect(spend.locator('tbody tr').first()).toContainText('100%');
+
+  await page.getByRole('tab', { name: 'Atendimento' }).click();
+  await expect(valorDoCartao(page, 'Itens em aberto')).toHaveText('3');
+  await expect(valorDoCartao(page, 'Fora do prazo')).toHaveText('2');
+  await page.getByRole('button', { name: 'No prazo', exact: true }).click();
+  await expect(page.getByRole('table', { name: 'Itens em aberto' }).locator('tbody tr')).toHaveCount(1);
+
+  await page.getByRole('tab', { name: 'Organograma' }).click();
+  await expect(page.getByRole('heading', { name: "Organograma Suprimentos CD's" })).toBeVisible();
+  await expect(page.locator('.org-comprador')).toHaveCount(4);
+});
+
+test('Entrega: sem Follow-Up avisa; com Follow-Up mostra OFs por status', async ({ page }) => {
+  await importarBase(page);
+  await page.getByRole('tab', { name: 'Entrega' }).click();
+  await expect(page.locator('.estado-vazio')).toContainText('Sem a base Follow-Up');
+
+  await page.locator('#acao-importar').click();
+  await page.locator('dialog input[data-tipo="followUp"]').setInputFiles(await arquivoFollowUp());
+  await expect(page.locator('dialog .arquivo[data-tipo="followUp"] .arquivo-status')).toContainText('3 linhas');
+  await page.locator('dialog').getByRole('button', { name: 'Fechar' }).last().click();
+
+  await expect(valorDoCartao(page, /^OFs$/)).toHaveText('2');
+  await expect(valorDoCartao(page, 'OFs não entregues')).toHaveText('1');
+  await expect(valorDoCartao(page, 'OFs entregues em parte')).toHaveText('1');
+  const lista = page.locator('.bloco', { hasText: 'Lista de OFs' });
+  await expect(lista.locator('.tabela-contagem')).toHaveText('2 OFs, 3 itens');
+
+  // Filtro global vale para o Follow-Up também.
+  await page.locator('[data-filtro="regional"] .filtro-botao').click();
+  await page.getByRole('checkbox', { name: FILIAL_B.regional }).check();
+  await expect(valorDoCartao(page, /^OFs$/)).toHaveText('1');
+  await page.keyboard.press('Escape');
+});
+
 test('bases ficam salvas no navegador e a aba é lembrada', async ({ page }) => {
   await importarBase(page);
   await page.getByRole('tab', { name: 'Saving' }).click();

@@ -186,4 +186,14 @@ test('Follow-Up: SC, OF, filial e comprador com 30 caracteres', () => {
   assert.equal(r.compradorCompleto, 'Nome Muito Comprido de Comprad');
   assert.equal(r.compradorCompleto.length, 30);
   assert.equal(r.diasDaAprovacao, 10);
+  // Fora do de-para: comprador = nome da planilha; sem contrato.
+  assert.equal(r.comprador, 'Nome Muito Comprido de Comprad');
+  assert.equal(r.temContrato, 'não');
+});
+
+test('Follow-Up: comprador do de-para vira apelido; sem "Selecionado por" é Pendente', () => {
+  const r = calcularLinhaFollowUp({ solicitacao: 'FDS-1', selecionadoPor: 'FDS - Fulano de Tal', contrato: 'CT-9' }, cfg, HOJE);
+  assert.equal(r.comprador, 'Fulano');
+  assert.equal(r.temContrato, 'sim');
+  assert.equal(calcularLinhaFollowUp({ solicitacao: 'FDS-2' }, cfg, HOJE).comprador, 'Pendente');
 });

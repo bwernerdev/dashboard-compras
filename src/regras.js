@@ -148,16 +148,23 @@ export function calcularLinhaBase(r, cfg, hoje) {
   };
 }
 
-/** Linha do Follow-Up -> registro com as colunas calculadas da aba Follow-UP. */
+/**
+ * Linha do Follow-Up -> registro com as colunas calculadas da aba Follow-UP.
+ * Fora da planilha (para os filtros globais e a tela Entrega): `comprador` (apelido do de-para,
+ * pelo nome com 40 caracteres como na Base; sem apelido, o nome da planilha) e `temContrato`.
+ */
 export function calcularLinhaFollowUp(r, cfg, hoje) {
   const filial = dadosDaFilial(cfg, r.codigoFilial);
   const compradorCompleto = nomeComprador(r.selecionadoPor, 30);
+  const completo40 = nomeComprador(r.selecionadoPor, 40);
   return {
     ...r,
     sc: extrairNumero(r.solicitacao),
     of: extrairNumero(r.numeroPedido),
     ...filial,
     compradorCompleto: compradorCompleto === '' ? null : compradorCompleto,
+    comprador: cfg.apelidoComprador(completo40 === '' ? PENDENTE : completo40) ?? (compradorCompleto || PENDENTE),
+    temContrato: preenchida(r.contrato) ? 'sim' : 'não',
     diasDaAprovacao: dias(hoje, r.criacao),
   };
 }

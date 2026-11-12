@@ -1,5 +1,5 @@
 // Painel publicado (o arquivo painel-compras.html): só consulta. Lê os dados embutidos na página,
-// mostra as telas públicas (Regional e Saving) com os filtros globais e se adapta ao quadro isolado
+// mostra as telas públicas (as abas visíveis da planilha antiga, telas/publicas.js) com os filtros globais e se adapta ao quadro isolado
 // do SharePoint (PROJETO.md, seção 7): sem CSV e sem imprimir lá dentro; "Copiar tabela" funciona.
 // Os números ficam congelados na data em que o painel foi gerado.
 //
@@ -10,19 +10,13 @@ import '../styles/tokens.css';
 import '../styles/base.css';
 import '../styles/componentes.css';
 import '../styles/impressao.css';
-import { descompactar, registrosDoPainel } from './dados.js';
+import { descompactar, registrosDoPainel, followUpDoPainel } from './dados.js';
 import { criarNavegador, ligarTema, ligarImpressao } from '../ui/casca.js';
 import { definirExportacao } from '../ui/tabela.js';
 import { el, substituir } from '../ui/dom.js';
 import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
 import { formatarSerie } from '../datas.js';
-import { telaRegional } from '../telas/regional.js';
-import { telaSaving } from '../telas/saving.js';
-
-const TELAS = [
-  { id: 'regional', rotulo: 'Regional', desenhar: telaRegional },
-  { id: 'saving', rotulo: 'Saving', desenhar: telaSaving },
-];
+import { TELAS_PUBLICAS } from '../telas/publicas.js';
 
 /** Dentro de um quadro (pré-visualização do SharePoint): download, imprimir e janelas novas bloqueados. */
 const noQuadro = (() => {
@@ -62,13 +56,14 @@ async function iniciar() {
     return;
   }
   const nav = criarNavegador({
-    telas: TELAS,
+    telas: TELAS_PUBLICAS,
     raiz,
-    abaInicial: lerPreferencia('aba-painel'),
+    abaInicial: lerPreferencia('aba-painel') ?? 'regional',
     aoTrocarAba: (id) => salvarPreferencia('aba-painel', id),
     telaVazia: () => el('div', { class: 'estado-vazio' }, 'O painel não tem linhas.'),
   });
   nav.definirRegistros(registrosDoPainel(dados));
+  nav.definirFollowUp(followUpDoPainel(dados));
   mostrarPeriodo(dados);
   nav.desenhar();
 }

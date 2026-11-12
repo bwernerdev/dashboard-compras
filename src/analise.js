@@ -19,7 +19,7 @@ export function rotuloMes(chave) {
 
 /**
  * Filtros globais. telas: em quais telas o filtro vale (ausente = todas).
- * "Mês do pedido" só faz sentido onde há pedido (Saving).
+ * "Mês do pedido" só faz sentido onde há pedido (Saving e Spend).
  */
 export const FILTROS = [
   { id: 'regional', rotulo: 'Regional', valor: (r) => nomeOuTraco(r.regional) },
@@ -27,7 +27,7 @@ export const FILTROS = [
   { id: 'comprador', rotulo: 'Comprador', valor: (r) => nomeOuTraco(r.comprador) },
   { id: 'prioridade', rotulo: 'Prioridade', valor: (r) => nomeOuTraco(r.prioridade) },
   { id: 'contrato', rotulo: 'Contrato?', valor: (r) => nomeOuTraco(r.temContrato) },
-  { id: 'mes', rotulo: 'Mês do pedido', valor: (r) => chaveMes(r) ?? SEM_VALOR, rotuloValor: rotuloMes, telas: ['saving'] },
+  { id: 'mes', rotulo: 'Mês do pedido', valor: (r) => chaveMes(r) ?? SEM_VALOR, rotuloValor: rotuloMes, telas: ['saving', 'spend'] },
 ];
 
 export const filtroValeNaTela = (f, tela) => !f.telas || f.telas.includes(tela);
@@ -273,3 +273,69 @@ export const savingPorComprador = (registros) => savingPor(registros, (r) => nom
 /** Por mês do pedido, em ordem cronológica (só linhas com pedido). */
 export const savingPorMes = (registros) => savingPor(registros.filter((r) => chaveMes(r)), chaveMes)
   .sort((a, b) => a.chave.localeCompare(b.chave));
+
+/** SCs distintas e itens por status (tela Status), na mesma ordem de `itensPorStatus`. */
+export function scsPorStatus(registros) {
+  const scs = new Map();
+  for (const r of registros) {
+    const s = nomeOuTraco(r.status);
+    if (!scs.has(s)) scs.set(s, new Set());
+    scs.get(s).add(r.solicitacao);
+  }
+  return itensPorStatus(registros).map((g) => ({ ...g, scs: scs.get(g.status).size }));
+}
+
+// ---------- Spend (aba Spend) ----------
+
+/**
+ * Valor das OFs (pedido c/ impostos) por filial e % do total, do maior para o menor, como as
+ * tabelas dinâmicas da aba Spend (filial "-" fica de fora). Soma toda linha com valor, mesmo sem
+ * número de pedido (há linhas assim na base, e a planilha soma). ofs = pedidos distintos.
+ */
+export function spendPorFilial(registros) {
+  const grupos = new Map();
+  for (const r of registros) {
+    if (!r.nomeFilial || (!r.numeroPedido && !r.totalPedidoComImpostos)) continue;
+    const g = grupos.get(r.nomeFilial) ?? { chave: r.nomeFilial, valor: 0, pedidos: new Set() };
+    g.valor += r.totalPedidoComImpostos ?? 0;
+    if (r.numeroPedido) g.pedidos.add(r.numeroPedido);
+    grupos.set(r.nomeFilial, g);
+  }
+  const total = [...grupos.values()].reduce((s, g) => s + g.valor, 0);
+  return [...grupos.values()]
+    .map(({ chave, valor, pedidos }) => ({ chave, valor, ofs: pedidos.size, pct: total ? valor / total : null }))
+    .sort((a, b) => b.valor - a.valor || a.chave.localeCompare(b.chave, 'pt-BR'));
+}
+
+export function resumoSpend(registros) {
+  const filiais = spendPorFilial(registros);
+  const ofs = new Set(registros.filter((r) => r.nomeFilial && r.numeroPedido).map((r) => r.numeroPedido)).size;
+  // ofs: distintas no total (a mesma OF em duas filiais conta uma vez)
+  return { total: filiais.reduce((s, g) => s + g.valor, 0), ofs, filiais: filiais.length, maior: filiais[0] ?? null };
+}
+
+// ---------- Entrega (aba Entrega, base Follow-Up) ----------
+
+/** Status de entrega na ordem do acompanhamento: o que falta entregar primeiro. */
+export const STATUS_ENTREGA = ['NÃO ENTREGUE', 'ENTREGUE PARCIAL', 'ENTREGUE'];
+
+/** OFs distintas e itens por status de entrega (outros status no fim, em ordem alfabética). */
+export function entregasPorStatus(registros) {
+  const grupos = new Map();
+  for (const r of registros) {
+    const s = nomeOuTraco(r.statusEntrega);
+    const g = grupos.get(s) ?? { status: s, itens: 0, pedidos: new Set() };
+    g.itens++;
+    g.pedidos.add(r.numeroPedido);
+    grupos.set(s, g);
+  }
+  const posicao = (s) => { const i = STATUS_ENTREGA.indexOf(s.toUpperCase()); return i < 0 ? STATUS_ENTREGA.length : i; };
+  return [...grupos.values()].map(({ status, itens, pedidos }) => ({ status, itens, ofs: pedidos.size }))
+    .sort((a, b) => posicao(a.status) - posicao(b.status) || a.status.localeCompare(b.status, 'pt-BR'));
+}
+
+/** Recorta pelo valor de um campo. selecionados: Set (vazio/ausente = todos). */
+export function recortarPor(registros, campo, selecionados) {
+  if (!selecionados?.size) return registros;
+  return registros.filter((r) => selecionados.has(nomeOuTraco(r[campo])));
+}

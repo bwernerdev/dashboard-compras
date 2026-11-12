@@ -3,7 +3,7 @@
 | Arquivo / pasta | Conteúdo |
 |---|---|
 | `main.js` | App da equipe: estado (bases, config), período, ações do topo (Atualizar bases, Gerar painel, Configuração, Imprimir, tema). Abas, filtros e tela vêm de `ui/casca.js`. Recalcula ao mudar config ou virar o dia |
-| `analise.js` | Filtros globais (`FILTROS`, `aplicarFiltros`) e agregações puras das telas (SCs em aberto, faixas de dias, pendências e regularização (`ehPendencia`, `ehRegularizacao`), comprador x status, pré-pedidos, participação, saving). Sem DOM. Usado também pelo `scripts/conferir-xlsm.mjs` |
+| `analise.js` | Filtros globais (`FILTROS`, `aplicarFiltros`) e agregações puras das telas (SCs em aberto, faixas de dias, pendências e regularização (`ehPendencia`, `ehRegularizacao`), comprador x status, pré-pedidos, participação, saving, spend por filial, SCs por status, OFs por status de entrega). Sem DOM. Usado também pelo `scripts/conferir-xlsm.mjs` |
 | `memoria.js` | Memória local do app da equipe: última importação de cada base no IndexedDB (só colunas do ME; `recalcular` refaz os campos calculados) e configuração no localStorage |
 | `atendidas.js` | SCs marcadas como atendidas (olho/duplo clique na lista da Regional): `estaAtendida`, `marcarAtendida`. No localStorage deste navegador, por Solicitação; vence em 120 dias. Só o app da equipe liga (`ligarAtendidas`) |
 | `preferencias.js` | Aba, tema, tela cheia e larguras de coluna no localStorage, com try/catch (no quadro do SharePoint não há armazenamento). Usado pelo app e pelo painel |
@@ -27,4 +27,4 @@
 - Contagem de SC = distinta por "Solicitação de Compra"; contagem de itens = linhas.
 - Datas sempre em série do Excel (número). Para mostrar: `formatarSerie` ou `ui/formatos.js`.
 - Texto das bases entra no DOM só como texto (`ui/dom.js`, sem `innerHTML`).
-- Tudo o que `painel/painel.js` importa vai para dentro do painel público: `ui/`, `analise.js`, `datas.js`, `preferencias.js`, `telas/regional.js` e `telas/saving.js` não podem importar `config/`, `memoria.js` nem `importar.js`.
+- Tudo o que `painel/painel.js` importa vai para dentro do painel público: `ui/`, `analise.js`, `datas.js`, `preferencias.js`, `telas/publicas.js` e as telas que ele lista não podem importar `config/`, `memoria.js` nem `importar.js`.
