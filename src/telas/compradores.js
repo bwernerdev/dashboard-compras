@@ -78,6 +78,13 @@ export const corDoStatus = (s) => (s === OUTROS ? 'var(--serie-outros)' : corDoS
 
 const destacarPendente = (linha) => (linha.comprador === PENDENTE ? 'linha-destaque' : '');
 
+// Cor fixa por regional (a cor acompanha a regional, nunca a posição). Regional nova: cinza.
+const CORES_REGIONAL = ['Filiais Bruno', 'Filiais Thayane', 'Filiais Vitor', 'Central Compras - Itajaí', 'Seara Matriz'];
+const corDaRegional = (r) => {
+  const i = CORES_REGIONAL.indexOf(r);
+  return i >= 0 ? `var(--serie-${i + 1})` : 'var(--serie-outros)';
+};
+
 export function telaCompradores(ctx) {
   const barra = barraDePeriodo(ctx);
   const regs = recortarPeriodo(ctx.registros, periodo);
@@ -92,13 +99,15 @@ export function telaCompradores(ctx) {
   const pendente = porStatus.linhas.find((l) => l.comprador === PENDENTE);
   const aberto = resumoEmAberto(itensEmAberto(regs));
 
+  // Destaque igual à planilha (pedido da equipe, 12/11/2026): o topo da aba sc p Compr é a tabela
+  // "QTD Pré-Pedido" (pré-pedidos por comprador e regional); as SCs por status vêm depois.
   const cartoes = linhaDeCartoes(
+    cartao({ icone: 'pacote', rotulo: 'Pré-pedidos', valor: fmt.inteiro(pre.totalGeral), detalhe: 'Distintos, só compradores do de-para, como na planilha (SC sem pré-pedido conta 1)' }),
     cartao({ icone: 'documento', rotulo: 'SCs no período', valor: fmt.inteiro(porStatus.totalGeral), detalhe: `${descreverPeriodo() ? `Criadas ${descreverPeriodo()}. ` : ''}${fmt.inteiro(porStatus.linhas.length)} compradores (inclui "-" e Pendente)` }),
     cartao({
       icone: 'usuario', rotulo: 'SCs sem comprador (Pendente)', valor: fmt.inteiro(pendente?.total ?? 0), tom: pendente?.total ? 'alerta' : null,
       detalhe: 'Itens sem "Selecionado por" no ME',
     }),
-    cartao({ icone: 'pacote', rotulo: 'Pré-pedidos', valor: fmt.inteiro(pre.totalGeral), detalhe: 'Distintos, só compradores do de-para, como na planilha (SC sem pré-pedido conta 1)' }),
     cartao({
       icone: 'alerta', rotulo: 'Itens em aberto fora do prazo', valor: fmt.inteiro(aberto.fora), tom: aberto.fora ? 'critico' : null,
       detalhe: `${fmt.pct(aberto.pctNoPrazo)} dos itens em aberto no prazo`,
@@ -132,8 +141,13 @@ export function telaCompradores(ctx) {
   );
 
   const prePedidos = bloco(
-    { titulo: 'Pré-pedidos por comprador e regional', subtitulo: 'Números de pré-pedido distintos.',
-      ajuda: 'Como na planilha: só os compradores do de-para ("-" e Pendente ficam de fora) e as SCs sem pré-pedido contam como 1 em cada grupo.' },
+    { titulo: 'Pré-pedidos por comprador e regional', subtitulo: 'QTD Pré-Pedido da planilha: números de pré-pedido distintos.',
+      ajuda: 'Como na planilha: só os compradores do de-para ("-" e Pendente ficam de fora) e as SCs sem pré-pedido contam como 1 em cada grupo. O número ao lado da barra é o total do comprador: um pré-pedido em duas regionais conta uma vez.' },
+    pre.linhas.length ? barrasEmpilhadas({
+      series: pre.regionais.map((r) => ({ id: r, rotulo: r, cor: corDaRegional(r) })),
+      categorias: pre.linhas.map((l) => ({ rotulo: l.comprador, partes: l.porRegional, total: l.total })),
+      formato: fmt.inteiro,
+    }) : null,
     criarTabela({
       titulo: 'Pré-pedidos por comprador e regional',
       linhas: pre.linhas,
@@ -170,5 +184,5 @@ export function telaCompradores(ctx) {
     }).elemento,
   );
 
-  return el('div', { class: 'tela' }, barra, cartoes, grafico, el('div', { class: 'grade-2' }, prePedidos, participacao));
+  return el('div', { class: 'tela' }, barra, cartoes, prePedidos, grafico, participacao);
 }

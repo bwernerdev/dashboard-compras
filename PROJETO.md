@@ -261,6 +261,8 @@ As colunas da seção 2 (dias em aberto, Data, Serviço, SLA, tempos por etapa) 
   - Pré-pedidos (QTD Pré-Pedido): contagem distinta de "Número Pré-Pedido"; o vazio conta 1 em cada grupo (ex.: Thayane 1.354 = 1.353 pré-pedidos gerados + 1). A planilha mostra **só os compradores do de-para** (Thayane, Vitor, Bruno W.): "-" tinha 218 itens com pré-pedido e ficava de fora. **Corrigido no app**: "-" e Pendente saem da tabela e do cartão "Pré-pedidos" (antes o app mostrava "-" com 162).
   - % sc's atendidas: contagem de SC (itens) do comprador ÷ total dos compradores visíveis. A planilha foi salva filtrada só na Thayane (100%); o app com o filtro Comprador = Thayane dá 100%. Sem filtro, o app mostra todos.
   - `npm run conferir` passou a conferir também a linha Total Geral, comprador que só o app mostra e a % sc's atendidas.
+  - Destaque da aba igual à planilha (pedido da equipe): pré-pedidos por comprador e regional em primeiro (cartão, gráfico empilhado por regional e tabela), SCs por status depois.
+  - Planilha atualizada com a base de 12/11 (consultas apontando para a pasta `dashboard`): `npm run conferir` deu tudo igual. O app com a `base.xlsx` só difere pela filial 555, mantida por decisão da equipe (1.702 SCs: 1.489 em "-", 212 Pendente, 1 da Thayane).
 
 ### Base de 11/11/2026 na tela
 397 SCs em aberto (622 itens), 74,1% no prazo, 143 itens fora do prazo, 70 sem prazo (status sem SLA ou sem linha na tabela), média de 9,7 dias úteis, mais antiga com 42.
