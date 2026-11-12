@@ -102,7 +102,8 @@ export function definirExportacao({ csv }) { exportacao.csv = csv; }
  *         preenchidas e o resto vazio (como recolher a SC na tabela dinâmica); `nomeRecolhido`:
  *         ['atendida', 'atendidas'] entra na contagem.
  * Larguras: arrastar a borda direita do cabeçalho (ou setas com o foco nela) muda a largura da
- * coluna; texto que não cabe fica com reticências. Dois cliques na borda voltam ao automático.
+ * coluna; texto que não cabe fica com reticências. Dois cliques na borda: autoajuste (largura do
+ * maior conteúdo da página, como no Excel). "Larguras originais" volta todas ao automático.
  * Lembradas neste navegador por `nomeArquivo`.
  */
 export function criarTabela(opcoes) {
@@ -204,16 +205,36 @@ export function criarTabela(opcoes) {
 
   const guardarLarguras = () => salvarPreferencia(chaveLarguras, JSON.stringify(Object.fromEntries(larguras)));
 
-  /** Borda direita do cabeçalho: arrastar, setas (10 px; Shift = 50 px), dois cliques = automático. */
+  /** Largura que cabe o maior conteúdo da coluna na página atual (cabeçalho numa linha só). */
+  function larguraDoConteudo(c) {
+    const classe = `c-${indice.get(c)}`;
+    const faixa = document.createRange();
+    const medir = (no) => {
+      faixa.selectNodeContents(no);
+      const est = getComputedStyle(no);
+      return faixa.getBoundingClientRect().width + parseFloat(est.paddingLeft) + parseFloat(est.paddingRight);
+    };
+    let maior = 0;
+    for (const td of corpo.querySelectorAll(`td.${classe}`)) if (td.childNodes.length) maior = Math.max(maior, medir(td));
+    const botao = cabeca.querySelector(`th.${classe} .th-botao`);
+    if (botao) {
+      botao.style.whiteSpace = 'nowrap';
+      maior = Math.max(maior, medir(botao));
+      botao.style.whiteSpace = '';
+    }
+    return Math.ceil(maior) + 2; // borda e arredondamento: sem reticências por 1 px
+  }
+
+  /** Borda direita do cabeçalho: arrastar, setas (10 px; Shift = 50 px), dois cliques = autoajuste. */
   function alcaDeLargura(c) {
     const th = () => alca.parentElement;
     const atual = () => larguras.get(c.id) ?? th().getBoundingClientRect().width;
     const alca = el('span', {
       class: 'th-alca', role: 'separator', 'aria-orientation': 'vertical', tabindex: '0',
-      'aria-label': `Largura da coluna ${c.rotulo}: arraste ou use as setas; dois cliques volta ao automático`,
-      title: 'Arraste para mudar a largura. Dois cliques: largura automática.',
+      'aria-label': `Largura da coluna ${c.rotulo}: arraste ou use as setas; dois cliques ajustam ao conteúdo`,
+      title: 'Arraste para mudar a largura. Dois cliques: ajusta ao conteúdo.',
       onclick: (ev) => ev.stopPropagation(),
-      ondblclick: (ev) => { ev.stopPropagation(); mudarLargura(c, null); guardarLarguras(); },
+      ondblclick: (ev) => { ev.stopPropagation(); mudarLargura(c, larguraDoConteudo(c)); guardarLarguras(); },
       onkeydown: (ev) => {
         if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
         ev.preventDefault();

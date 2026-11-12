@@ -140,7 +140,7 @@ test('lista de SCs em tela cheia: botão, Esc (depois da lista de marcar) e lemb
   await expect(lista.getByRole('button', { name: 'Tela cheia' })).toBeVisible();
 });
 
-test('largura da coluna: arrastar, setas, dois cliques, lembrada e "Larguras originais"', async ({ page }) => {
+test('largura da coluna: arrastar, setas, autoajuste com dois cliques, lembrada e "Larguras originais"', async ({ page }) => {
   await importarBase(page);
   const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
   const th = lista.locator('thead th', { hasText: 'Produto' });
@@ -170,12 +170,16 @@ test('largura da coluna: arrastar, setas, dois cliques, lembrada e "Larguras ori
   expect(await largura()).toBe(antes);
   await expect(lista.getByRole('button', { name: 'Larguras originais' })).toBeHidden();
 
-  // Estreita com reticências; dois cliques na borda voltam ao automático.
+  // Estreita com reticências; dois cliques na borda ajustam ao conteúdo (nada cortado).
+  const cortadas = () => lista.locator('tbody td.c-6').evaluateAll((tds) => tds.filter((td) => td.scrollWidth > td.clientWidth + 1).length);
   await alca.focus();
   for (let i = 0; i < 4; i++) await page.keyboard.press('Shift+ArrowLeft');
-  expect(await largura()).toBe(Math.max(40, antes - 200));
+  expect(await largura()).toBe(40);
+  expect(await cortadas()).toBeGreaterThan(0);
   await alca.dblclick();
-  expect(await largura()).toBe(antes);
+  expect(await cortadas()).toBe(0);
+  expect(await largura()).toBeGreaterThan(40);
+  await expect(lista.locator('thead th', { hasText: 'Dias da aprovação' })).toHaveAttribute('aria-sort', 'descending');
 });
 
 test('filtro global pela lista; Esc fecha', async ({ page }) => {
