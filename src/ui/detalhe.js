@@ -34,7 +34,7 @@ export function abrirDetalhe(linhas) {
   const dias = Math.max(...linhas.map((r) => r.diasEmAberto ?? -1));
   const fora = linhas.some((r) => r.sla === 'Fora do Prazo');
   const regularizacao = /^regulariza/i.test(String(primeiro(linhas, 'categoria') ?? '').normalize('NFD').replace(/[̀-ͯ]/g, ''));
-  const fechar = el('button', { type: 'button', class: 'botao-link detalhe-fechar', 'aria-label': 'Fechar detalhe', onclick: fecharDetalhe }, '✕');
+  const fechar = el('button', { type: 'button', class: 'detalhe-fechar', 'aria-label': 'Fechar detalhe', title: 'Fechar (Esc)', onclick: fecharDetalhe }, '✕');
   const info = [
     ['Solicitante', primeiro(linhas, 'solicitante')],
     ['Comprador', primeiro(linhas, 'comprador') ?? '-'],
@@ -68,7 +68,8 @@ export function abrirDetalhe(linhas) {
       ].filter(Boolean).join(' · ') || ' ')))));
   p.setAttribute('aria-labelledby', 'detalhe-titulo');
   p.hidden = false;
-  fechar.focus();
+  // Foco no painel (sem anel), não no ✕: o anel azul no ✕ ao abrir parecia defeito. Tab chega no ✕.
+  p.focus({ preventScroll: true });
 }
 
 /**

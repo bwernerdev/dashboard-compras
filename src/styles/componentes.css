@@ -134,7 +134,13 @@ input[type="search"].campo { min-width: 220px; }
 .detalhe-cabecalho { display: flex; align-items: flex-start; gap: var(--s3); }
 .detalhe-cabecalho > div { flex: 1; min-width: 0; }
 .detalhe-cabecalho h2 { font-size: var(--fs-xl); font-weight: 700; color: var(--text-strong); }
-.detalhe-fechar { font-size: var(--fs-lg); padding: 2px var(--s2); }
+.detalhe-sc:focus { outline: none; }
+.detalhe-fechar {
+  flex: none; width: 32px; height: 32px; display: grid; place-items: center; padding: 0;
+  border: 0; border-radius: var(--r-md); background: transparent; color: var(--text-muted);
+  font: inherit; font-size: var(--fs-lg); line-height: 1; cursor: pointer;
+}
+.detalhe-fechar:hover { background: var(--surface-hover); color: var(--text-strong); }
 .detalhe-selos { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .detalhe-info { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s1) var(--s4); margin: 0; font-size: var(--fs-sm); }
 .detalhe-info dt { color: var(--text-muted); }
