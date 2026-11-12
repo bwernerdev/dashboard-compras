@@ -301,6 +301,10 @@ test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', asyn
 
   await page.getByRole('tab', { name: 'Atendimento' }).click();
   await expect(valorDoCartao(page, 'Itens em aberto')).toHaveText('3');
+  // Itens da mesma SC juntos: 2 SCs, 3 itens; a SC com 2 itens mostra o número só na 1ª linha.
+  const atendimento = page.locator('.bloco', { hasText: 'Itens agrupados por SC, da mais antiga' });
+  await expect(atendimento.locator('.tabela-contagem')).toHaveText('2 SCs, 3 itens');
+  await expect(atendimento.locator('tbody tr.grupo-inicio')).toHaveCount(2);
   await expect(valorDoCartao(page, 'Fora do prazo')).toHaveText('2');
   await page.getByRole('button', { name: 'No prazo', exact: true }).click();
   await expect(page.getByRole('table', { name: 'Itens em aberto' }).locator('tbody tr')).toHaveCount(1);

@@ -63,13 +63,15 @@ export function telaAtendimento(ctx) {
     linhas: recortar(),
     colunas: COLUNAS,
     ordem: { coluna: 'dias', desc: true },
+    // Itens da mesma SC juntos, dados da SC só na 1ª linha (como a Regional; pedido da equipe, 12/11/2026).
+    grupo: { chave: (r) => r.solicitacao, colunas: ['dias', 'sc', 'nomeFilial', 'regional', 'filial', 'solicitante'], nome: ['SC', 'SCs'] },
     classeLinha: (r) => (ehRegularizacao(r) ? 'linha-regularizacao' : ''),
     nomeArquivo: 'atendimento.csv',
     vazio: 'Nenhum item com esse recorte.',
   });
 
   return el('div', { class: 'tela' }, cartoes, bloco(
-    { titulo: 'Itens em aberto', subtitulo: 'Um item por linha, do mais antigo para o mais novo. Pesquise por SC, produto, solicitante ou filial.' },
+    { titulo: 'Itens em aberto', subtitulo: 'Itens agrupados por SC, da mais antiga para a mais nova. Pesquise por SC, produto, solicitante ou filial. CSV e "Copiar tabela" trazem um item por linha.' },
     alternar,
     tabela.elemento,
   ));
