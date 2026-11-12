@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { importar } from '../src/importar.js';
-import { criarConfig, CONFIG_PADRAO } from '../src/config/index.js';
+import { criarConfig } from '../src/config/index.js';
 import { BASE, FOLLOW_UP } from '../src/esquema.js';
 import { serie } from '../src/datas.js';
 import { criarXlsx } from './ajuda/xlsx-ficticio.js';
@@ -9,7 +9,6 @@ import { criarXlsx } from './ajuda/xlsx-ficticio.js';
 const cfg = criarConfig({
   filiais: [{ codigo: '30999', ajustada: '999', nome: 'Filial Teste', regional: 'Regional A' }],
   compradores: [{ nome: 'Fulano de Tal', apelido: 'Fulano' }],
-  sla: CONFIG_PADRAO.sla,
 });
 const HOJE = serie(2026, 11, 11);
 

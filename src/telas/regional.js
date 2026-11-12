@@ -1,5 +1,6 @@
 // Tela Regional: SCs em aberto (sem pedido e não canceladas), dias úteis em aberto e SLA.
 // Substitui a aba "Regional" (e cobre a "Atendimento") da planilha antiga, com os dias corrigidos.
+import { PRAZO_SLA_DIAS } from '../regras.js';
 import { el, icone } from '../ui/dom.js';
 import { estaAtendida, marcarAtendida } from '../atendidas.js';
 import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
@@ -99,7 +100,7 @@ export function telaRegional(ctx) {
     }),
     cartao({
       rotulo: 'Itens fora do prazo', valor: fmt.inteiro(resumo.fora), tom: resumo.fora ? 'critico' : null,
-      detalhe: resumo.semPrazo ? `${fmt.inteiro(resumo.semPrazo)} sem prazo definido` : 'Dias em aberto acima do prazo máximo do SLA',
+      detalhe: resumo.semPrazo ? `${fmt.inteiro(resumo.semPrazo)} sem prazo definido` : `Mais de ${PRAZO_SLA_DIAS} dias úteis em aberto`,
     }),
     cartao({ rotulo: 'Média de dias em aberto', valor: fmt.decimal(resumo.mediaDias), detalhe: `Mais antiga: ${fmt.inteiro(resumo.maxDias)} dias úteis` }),
   );

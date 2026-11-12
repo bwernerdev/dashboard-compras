@@ -1,5 +1,6 @@
 // Tela Atendimento: itens em aberto, do mais antigo para o mais novo, com o SLA de cada um.
 // Substitui a aba "Atendimento" da planilha antiga (Dias em aberto > SC > Filial > ... > Status).
+import { PRAZO_SLA_DIAS } from '../regras.js';
 import { el } from '../ui/dom.js';
 import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
 import { criarTabela } from '../ui/tabela.js';
@@ -29,8 +30,7 @@ const COLUNAS = [
   { id: 'regional', rotulo: 'Regional', valor: (r) => r.regional },
   { id: 'filial', rotulo: 'Filial', valor: (r) => r.filial },
   { id: 'solicitante', rotulo: 'Solicitante', valor: (r) => r.solicitante, classe: () => 'texto-medio' },
-  { id: 'sla', rotulo: 'SLA', valor: (r) => r.sla, exibir: (r) => seloSla(r.sla) },
-  { id: 'max', rotulo: 'Prazo máx.', num: true, centro: true, valor: (r) => r.slaMax, formato: fmt.inteiro, titulo: 'Dias úteis do SLA para o status e a prioridade' },
+  { id: 'sla', rotulo: 'SLA', valor: (r) => r.sla, exibir: (r) => seloSla(r.sla), titulo: `Fora do prazo: mais de ${PRAZO_SLA_DIAS} dias úteis em aberto` },
   { id: 'descricao', rotulo: 'Produto', valor: (r) => r.descricao, classe: () => 'texto-longo' },
   { id: 'status', rotulo: 'Status', valor: (r) => r.status, exibir: (r) => seloDoStatus(r.status) },
   { id: 'comprador', rotulo: 'Comprador', valor: (r) => r.comprador ?? '-' },
@@ -46,7 +46,7 @@ export function telaAtendimento(ctx) {
     cartao({ rotulo: 'No prazo', valor: fmt.inteiro(resumo.noPrazo), detalhe: `${fmt.pct(resumo.pctNoPrazo)} dos itens com prazo` }),
     cartao({
       rotulo: 'Fora do prazo', valor: fmt.inteiro(resumo.fora), tom: resumo.fora ? 'critico' : null,
-      detalhe: resumo.semPrazo ? `${fmt.inteiro(resumo.semPrazo)} sem prazo definido` : 'Dias em aberto acima do prazo máximo',
+      detalhe: resumo.semPrazo ? `${fmt.inteiro(resumo.semPrazo)} sem prazo definido` : `Mais de ${PRAZO_SLA_DIAS} dias úteis em aberto`,
     }),
     cartao({ rotulo: 'Mais antigo', valor: `${fmt.inteiro(resumo.maxDias)} dias`, detalhe: `Média: ${fmt.decimal(resumo.mediaDias)} dias úteis` }),
   );

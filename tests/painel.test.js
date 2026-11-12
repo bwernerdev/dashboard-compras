@@ -10,7 +10,7 @@ const aberto = {
   solicitacao: 'SC-1', regional: 'Sul', nomeFilial: 'Filial A', comprador: 'Ana', prioridade: 'Normal',
   temContrato: false, status: 'Em aberto', diasEmAberto: 9, sla: 'No prazo', totalPedidoComImpostos: null,
   savingReal: null, anoPedido: null, mesPedido: null,
-  sc: 'SC-1', item: 1, data: 46000, diasDaAprovacao: 8, slaMax: 10, descricao: 'Parafuso', codigoProduto: 'P1',
+  sc: 'SC-1', item: 1, data: 46000, diasDaAprovacao: 8, descricao: 'Parafuso', codigoProduto: 'P1',
   qtdSolicitacao: 4, solicitante: 'Beto', filial: '101',
   // Campos que não podem ir para o painel:
   numeroPrePedido: 'PRE-9', descricaoFilial: 'Descrição interna', nomeCompletoComprador: 'Ana Interna', email: 'x@y',
@@ -33,16 +33,14 @@ test('montarDadosDoPainel leva só os campos públicos', () => {
   for (const valor of ['PRE-9', 'Descrição interna', 'Ana Interna', 'x@y']) assert.ok(!texto.includes(valor), valor);
 });
 
-test('produto e solicitante em toda linha (tela Status); dias da aprovação, código, qtd. e prazo só nas abertas', () => {
+test('produto e solicitante em toda linha (tela Status); dias da aprovação, código e qtd. só nas abertas', () => {
   const d = montarDadosDoPainel({ registros: [aberto, fechado], meta, hoje: 46001, geradoEm: 'x' });
   const [a, f] = registrosDoPainel(d);
   assert.equal(a.descricao, 'Parafuso');
-  assert.equal(a.slaMax, 10);
   assert.equal(a.codigoProduto, 'P1');
   assert.equal(f.descricao, 'Detalhe de pedido fechado');
   assert.equal(f.solicitante, 'Beto');
   assert.equal(f.codigoProduto, null);
-  assert.equal(f.slaMax, null);
   assert.equal(f.diasDaAprovacao, null);
   assert.equal(f.savingReal, 50.5); // saving continua
   assert.equal(f.comprador, 'Ana');

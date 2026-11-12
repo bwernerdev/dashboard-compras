@@ -5,8 +5,9 @@
 // em JSON, gzip, base64. Roda no navegador e no Node (testes).
 
 // 2: sem item e slaMax; 3: + categoria (linha vermelha de regularização);
-// 4: telas Status, Entrega, Spend, Atendimento (detalhe em toda linha, numeroPedido, slaMax, Follow-Up)
-export const VERSAO = 4;
+// 4: telas Status, Entrega, Spend, Atendimento (detalhe em toda linha, numeroPedido, slaMax, Follow-Up);
+// 5: sem slaMax (SLA com prazo único de 30 dias úteis, 12/11/2026)
+export const VERSAO = 5;
 
 /** Campos de toda linha: filtros, contagens, saving, spend e a lista da tela Status. */
 const CAMPOS_BASE = [
@@ -16,7 +17,7 @@ const CAMPOS_BASE = [
 ];
 
 /** Campos só das SCs em aberto (listas das telas Regional e Atendimento). */
-const CAMPOS_DETALHE = ['diasDaAprovacao', 'codigoProduto', 'qtdSolicitacao', 'slaMax'];
+const CAMPOS_DETALHE = ['diasDaAprovacao', 'codigoProduto', 'qtdSolicitacao'];
 
 export const CAMPOS_PUBLICOS = [...CAMPOS_BASE, ...CAMPOS_DETALHE];
 

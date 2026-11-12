@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { criarConfig, normalizarCodigoFilial, CONFIG_PADRAO } from '../src/config/index.js';
+import { criarConfig, normalizarCodigoFilial } from '../src/config/index.js';
 import {
-  calcularLinhaBase, calcularLinhaFollowUp, extrairNumero, savingReal, numeroExcel, ehServico, ERRO_ND,
+  calcularLinhaBase, calcularLinhaFollowUp, extrairNumero, savingReal, numeroExcel, ehServico, PRAZO_SLA_DIAS,
 } from '../src/regras.js';
-import { serie } from '../src/datas.js';
+import { serie, diasUteis } from '../src/datas.js';
 
 // Configuração fictícia.
 const cfg = criarConfig({
@@ -17,7 +17,6 @@ const cfg = criarConfig({
     { nome: 'Fulano de Tal', apelido: 'Fulano' },
     { nome: 'Pendente', apelido: 'Pendente' },
   ],
-  sla: CONFIG_PADRAO.sla,
 });
 
 const HOJE = serie(2026, 11, 11); // quarta-feira
@@ -83,35 +82,36 @@ test('SC em aberto: dias úteis desde a criação, horas = dias x 8,8, SLA no pr
   assert.ok(Math.abs(r.horasEmAberto - 61.6) < 1e-9);
   assert.equal(r.data, linha().criacao);
   assert.equal(r.servico, 'NÃO');
-  assert.deepEqual([r.slaMin, r.slaMax, r.sla], [7, 15, 'No Prazo']);
+  assert.equal(r.sla, 'No Prazo');
   assert.equal(r.diasDaAprovacao, 8);
 });
 
-test('SLA: urgente estoura o prazo; serviço usa a outra linha da tabela', () => {
-  assert.equal(calcularLinhaBase(linha({ prioridade: 'URGENTE' }), cfg, HOJE).sla, 'Fora do Prazo');
+test('SLA: só fica fora com mais de 30 dias úteis em aberto, qualquer prioridade', () => {
+  assert.equal(PRAZO_SLA_DIAS, 30);
+  // Criação com exatamente n dias úteis em aberto até HOJE (contando os dois extremos).
+  const criadaHa = (n) => { let d = HOJE; while (diasUteis(d, HOJE) < n) d--; return d + 0.4; };
+  for (const prioridade of ['NORMAL', 'URGENTE', 'EMERGENCIAL', 'XYZ']) {
+    const no30 = calcularLinhaBase(linha({ prioridade, criacao: criadaHa(30) }), cfg, HOJE);
+    const no31 = calcularLinhaBase(linha({ prioridade, criacao: criadaHa(31) }), cfg, HOJE);
+    assert.deepEqual([no30.diasEmAberto, no30.sla], [30, 'No Prazo'], prioridade);
+    assert.deepEqual([no31.diasEmAberto, no31.sla], [31, 'Fora do Prazo'], prioridade);
+  }
   const serv = calcularLinhaBase(linha({ prioridade: 'URGENTE', unidade: 'serv' }), cfg, HOJE);
-  assert.equal(serv.servico, 'SIM');
-  assert.deepEqual([serv.slaMax, serv.sla], [7, 'No Prazo']); // 7 dias <= máx. 7
+  assert.deepEqual([serv.servico, serv.sla], ['SIM', 'No Prazo']); // 7 dias: antes estourava o urgente
 });
 
 test('SLA: status Cancelado / Em Pedido / Em Pré-Pedido não conta', () => {
   for (const status of ['Cancelado', 'Em Pedido', 'Em Pré-Pedido']) {
-    const r = calcularLinhaBase(linha({ status }), cfg, HOJE);
-    assert.deepEqual([r.slaMin, r.slaMax, r.sla], [null, null, null], status);
+    assert.equal(calcularLinhaBase(linha({ status }), cfg, HOJE).sla, null, status);
   }
 });
 
-test('SLA: prioridade fora da tabela dá #N/D, como o PROCV', () => {
-  const r = calcularLinhaBase(linha({ prioridade: 'XYZ' }), cfg, HOJE);
-  assert.deepEqual([r.slaMin, r.slaMax, r.sla], [ERRO_ND, ERRO_ND, ERRO_ND]);
-});
-
-test('com pedido: sem dias em aberto; status que conta SLA fica Fora do Prazo (texto > número no Excel)', () => {
+test('com pedido: sem dias em aberto e sem SLA', () => {
   const r = calcularLinhaBase(linha({ numeroPedido: 'FDS-7000001', dataPedido: serie(2026, 11, 6) }), cfg, HOJE);
   assert.equal(r.diasEmAberto, null);
   assert.equal(r.horasEmAberto, null);
   assert.equal(r.data, serie(2026, 11, 6));
-  assert.equal(r.sla, 'Fora do Prazo');
+  assert.equal(r.sla, null);
   assert.deepEqual([r.anoPedido, r.mesPedido], [2026, 11]);
 });
 

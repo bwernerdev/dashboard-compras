@@ -44,22 +44,19 @@ export function ehServico(unidade) {
   return ['UR', 'SER', 'SERV'].some((u) => igual(unidade, u)) ? 'SIM' : 'NÃO';
 }
 
+/**
+ * SLA (pedido da equipe, 12/11/2026; substitui a tabela por prioridade e serviço da aba `sla`):
+ * item em aberto só fica "Fora do Prazo" com mais de 30 dias úteis em aberto, qualquer prioridade.
+ */
+export const PRAZO_SLA_DIAS = 30;
+
 const STATUS_SEM_SLA = ['Cancelado', 'Em Pedido', 'Em Pré-Pedido'];
 
-/** Prazos mín./máx. do SLA; null quando o status não conta SLA; ERRO_ND sem linha na tabela. */
-export function prazoSla(cfg, status, prioridade, servico) {
-  if (STATUS_SEM_SLA.some((s) => igual(status, s))) return { min: null, max: null };
-  const p = cfg.prazoSla(prioridade, servico);
-  return p ? { min: p.min, max: p.max } : { min: ERRO_ND, max: ERRO_ND };
-}
-
-/** SE(OU(min="";max="");"";SE(diasEmAberto<=max;"No Prazo";"Fora do Prazo")). */
-export function situacaoSla(diasEmAberto, min, max) {
-  if (min === ERRO_ND || max === ERRO_ND) return ERRO_ND;
-  if (min === null || max === null) return null;
-  // Sem dias em aberto a célula é "" (texto), e texto > número no Excel.
-  if (diasEmAberto === null) return 'Fora do Prazo';
-  return diasEmAberto <= max ? 'No Prazo' : 'Fora do Prazo';
+/** "No Prazo" / "Fora do Prazo"; null se o item não está em aberto ou o status não conta SLA. */
+export function situacaoSla(status, diasEmAberto) {
+  if (diasEmAberto === null || diasEmAberto === undefined) return null;
+  if (STATUS_SEM_SLA.some((s) => igual(status, s))) return null;
+  return diasEmAberto > PRAZO_SLA_DIAS ? 'Fora do Prazo' : 'No Prazo';
 }
 
 /**
@@ -124,8 +121,6 @@ export function calcularLinhaBase(r, cfg, hoje) {
   const diasEmAberto = emAberto ? diasUteis(dataRef, hoje) : null;
   const horasEmAberto = emAberto ? diasUteis(r.criacao, hoje) * 8.8 : null;
 
-  const servico = ehServico(r.unidade);
-  const { min, max } = prazoSla(cfg, r.status, r.prioridade, servico);
 
   return {
     ...r,
@@ -138,10 +133,8 @@ export function calcularLinhaBase(r, cfg, hoje) {
     diasEmAberto,
     data: dataRef === 0 ? null : dataRef,
     temContrato: preenchida(r.contrato) ? 'sim' : 'não',
-    servico,
-    slaMin: min,
-    slaMax: max,
-    sla: situacaoSla(diasEmAberto, min, max),
+    servico: ehServico(r.unidade),
+    sla: situacaoSla(r.status, diasEmAberto),
     savingReal: savingReal(r.saving, r.qtdSolicitacao),
     ...anoMesPedido(r.numeroPedido, r.dataPedido),
     ...temposPorEtapa(r, hoje),

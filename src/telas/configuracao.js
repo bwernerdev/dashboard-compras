@@ -1,4 +1,5 @@
-// Diálogo "Configuração": de-para de filiais, apelidos de compradores e prazos de SLA.
+// Diálogo "Configuração": de-para de filiais e apelidos de compradores. O prazo do SLA é fixo
+// (30 dias úteis, `PRAZO_SLA_DIAS` em regras.js).
 // Fica salvo neste navegador (localStorage). A ordem das linhas importa: vale a primeira
 // que bate, como o PROCV da planilha antiga.
 import { el, substituir } from '../ui/dom.js';
@@ -24,17 +25,6 @@ const SECOES = [
     ],
     nova: () => ({ nome: '', apelido: '' }),
   },
-  {
-    id: 'sla', titulo: 'SLA (dias úteis)', ajuda: 'Prazo por prioridade e tipo de compra. Serviço = SIM quando a unidade é UR, SER ou SERV.',
-    campos: [
-      { id: 'prioridade', rotulo: 'Prioridade', largura: '9em' },
-      { id: 'servico', rotulo: 'Serviço', largura: '5em' },
-      { id: 'tipo', rotulo: 'Tipo', largura: '12em' },
-      { id: 'min', rotulo: 'Mín.', largura: '4em', numero: true },
-      { id: 'max', rotulo: 'Máx.', largura: '4em', numero: true },
-    ],
-    nova: () => ({ prioridade: '', servico: 'NÃO', tipo: '', min: 0, max: 0 }),
-  },
 ];
 
 const copiar = (config) => JSON.parse(JSON.stringify(config));
@@ -51,11 +41,6 @@ export function validarConfig(config) {
   if (repetidos.length) erros.push(`Filiais: código repetido (${repetidos.join(', ')}).`);
   config.compradores.forEach((c, i) => {
     if (!String(c.nome ?? '').trim() || !String(c.apelido ?? '').trim()) erros.push(`Compradores, linha ${i + 1}: preencha nome e apelido.`);
-  });
-  config.sla.forEach((s, i) => {
-    if (!String(s.prioridade ?? '').trim()) erros.push(`SLA, linha ${i + 1}: falta a prioridade.`);
-    if (!Number.isFinite(s.min) || !Number.isFinite(s.max)) erros.push(`SLA, linha ${i + 1}: mínimo e máximo devem ser números.`);
-    else if (s.min > s.max) erros.push(`SLA, linha ${i + 1}: mínimo maior que o máximo.`);
   });
   return erros;
 }

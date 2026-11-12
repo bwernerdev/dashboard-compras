@@ -82,15 +82,14 @@ Chave do item: `Requisição ME` + `Item`. `SC` = 7 caracteres a partir da posi�
 | Horas em aberto | Dias em aberto × 8,8 |
 | Dias da aprovação | Dias corridos da criação até hoje |
 | Serviço | `Unidade` ∈ {UR, SER, SERV} |
-| SLA mín/máx | Tabela `sla` por prioridade × serviço; vazio se status Cancelado, Em Pedido ou Em Pré-Pedido |
-| SLA atendimento | Dias em aberto ≤ máx → No Prazo; senão Fora do Prazo |
+| SLA atendimento | **Mudou em 12/11/2026 (pedido da equipe):** item em aberto com mais de 30 dias úteis em aberto → Fora do Prazo; até 30 → No Prazo, qualquer prioridade e tipo (`PRAZO_SLA_DIAS` em `src/regras.js`). Vazio se o item não está em aberto ou o status é Cancelado, Em Pedido ou Em Pré-Pedido. Antes: tabela `sla` abaixo, com `#N/D` para prioridade fora dela e "Fora do Prazo" em item com pedido (texto > número) |
 | Contrato? | `Nº Contrato` preenchido |
 | Spend / Total comprado | Soma de `Preço Total do item Pedido c/ Impostos` |
 | Saving Real | `Saving` × `Quantidade do item Solicitação` (mantido como hoje, decisão de 11/11/2026). O ME manda o Saving como texto pt-BR (`"268,93"`); o Excel converte na conta, o app também. Texto vazio vira 0 |
 | % Saving | Economia ÷ (Total comprado + Economia) |
 | Tempo por etapa | Pré-pedido = criação pré-pedido − criação SC; Pedido = pedido − pré-pedido; Cotação = pré-pedido − cotação (ou hoje − cotação se ainda em cotação); Pendência de compra = cotação − criação SC (ou hoje − criação se ainda pendente); Pendência de contrato e Cancelado análogos |
 
-### Tabela SLA (dias)
+### Tabela SLA da planilha antiga (dias; não usada desde 12/11/2026)
 | Prioridade | Material (mín–máx) | Serviço (mín–máx) |
 |---|---|---|
 | Normal | 7–15 | 8–30 |
@@ -250,7 +249,7 @@ As colunas da seção 2 (dias em aberto, Data, Serviço, SLA, tempos por etapa) 
 - **Saving:** total comprado, economia, % saving (2 casas), por filial, por mês do pedido e por comprador.
 - **Toda tabela** ordena, pesquisa (lista de SCs), pagina e exporta CSV para o Excel pt-BR. "Imprimir" sai em A4 deitado com os filtros ativos escritos no topo.
 - **Memória local:** a última importação fica no navegador (IndexedDB). Ao abrir, dias em aberto e SLA são recalculados para hoje. Nada sai do computador.
-- **Configuração** editável na tela (filiais, compradores, SLA), salva no navegador, com "Restaurar padrão". Filial nova no de-para pede reimportar a Base.
+- **Configuração** editável na tela (filiais, compradores; o SLA saiu em 12/11/2026, prazo fixo de 30 dias úteis), salva no navegador, com "Restaurar padrão". Filial nova no de-para pede reimportar a Base.
 
 ### Conferência (`npm run conferir`, usando `src/analise.js`, as mesmas funções das telas)
 - **Spend** e **Saving** por filial: batem ao centavo.
@@ -344,12 +343,13 @@ Pedido da equipe: tudo o que as abas visíveis da planilha mostram precisa estar
 - **Status** (aba Status): todas as SCs do período, SCs distintas por status (barra recorta a lista), lista agrupada por SC com recorte por Status e pesquisa (no lugar da segmentação Solicitante).
 - **Entrega** (aba Entrega, base Follow-Up): OFs distintas por status de entrega e por filial, lista agrupada por SC e OF com fornecedor e CNPJ. Os filtros globais valem para o Follow-Up (`comprador` e `temContrato` passaram a ser calculados também no Follow-Up, `src/regras.js`). Sem Follow-Up importado, a tela avisa.
 - **Spend** (aba Spend): pedido c/ impostos por filial com % do total e OFs distintas; por mês do pedido. A pizza virou barras ordenadas. Soma toda linha com valor, mesmo sem nº de pedido, como a planilha.
-- **Atendimento** (aba Atendimento): itens em aberto um por linha, do mais antigo, com SLA e prazo máximo; recorte Todos / Fora do prazo / No prazo.
+- **Atendimento** (aba Atendimento): itens em aberto um por linha, do mais antigo, com SLA (a coluna "Prazo máx." saiu com o prazo único de 30 dias); recorte Todos / Fora do prazo / No prazo.
 - **Organograma**: texto e fotos da aba (cargos e filiais de cada comprador; fotos recortadas em 96 px dentro de `src/telas/organograma-fotos.js`, entram no painel). Erico não tem foto na planilha: iniciais. Corrigidos "Bruno Wener" e "Acessoria". Sem contagem de SCs (pedido da equipe). Mudou a equipe: editar `src/telas/organograma.js` e as fotos.
-- **Painel** (`src/painel/dados.js`, `VERSAO` 4): produto, solicitante, data e filial em toda linha (tela Status), `numeroPedido` (Spend) e `slaMax` (Atendimento); bloco `followUp` só com os campos da Entrega. Continuam fora: Compradores, pré-pedidos, configuração.
+- **Painel** (`src/painel/dados.js`, `VERSAO` 4; 5 desde o SLA único): produto, solicitante, data e filial em toda linha (tela Status), `numeroPedido` (Spend) e `slaMax` (Atendimento); bloco `followUp` só com os campos da Entrega. Continuam fora: Compradores, pré-pedidos, configuração.
 
 - **Tabelas na altura da janela:** a área rolável vai até o fim da janela (desconta a faixa de filtros fixa, medida em `ui/casca.js`) e encolhe com poucas linhas. Corrigido o espaço vazio embaixo das páginas com lista de SCs: textos só para leitor de tela (`.so-leitor`) escapavam da área rolável e esticavam a página.
 - **Organograma em árvore**, como na planilha: líderes em cadeia, equipe embaixo com as filiais; fotos de Bruno e Vitor recortadas dentro do círculo.
+- **SLA com prazo único (pedido da equipe):** fora do prazo só com mais de 30 dias úteis em aberto, qualquer prioridade. Saiu a tabela de SLA da Configuração e a coluna "Prazo máx." do Atendimento; painel `VERSAO` 5 (sem `slaMax`). Bases de 11/11/2026: itens fora do prazo de 149 para 43.
 - **Topo e identidade visual:** emblema da Controladoria Administrativa CDs (recortado do logo do `giro-estoque`, sem o texto) à esquerda, ocupando as duas linhas do topo; também é o ícone da aba. Topo em duas linhas fixas: título e ações em cima, abas embaixo (antes as ações quebravam sozinhas para uma segunda linha). Ações do topo, seletores de filtro e "Filtros" no mesmo tamanho (13 px, 28 px de altura); abas 14 px. Nada específico para celular (pedido da equipe).
 - **Fontes padronizadas:** uma família (Segoe UI); todos os tamanhos na escala de tokens (setas de 9/10 px, iniciais do organograma e texto de impressão estavam fora); peso 650 virou 700 (a Segoe UI desenhava 700 de qualquer jeito); título do topo subiu para 20 px, acima dos títulos de bloco (16 px).
 - **Listas de marcar como o filtro do Excel** (filtros globais e recortes de status): sem filtro, "Todos" e todas as opções aparecem marcados; desmarcar uma opção tira só ela; desmarcar "Todos" limpa a lista para marcar só o que interessa; marcar "Todos" volta a todas. Antes "Todos" era um botão que só limpava a seleção e ficava desativado sem filtro (parecia não funcionar).

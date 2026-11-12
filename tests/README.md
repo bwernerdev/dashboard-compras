@@ -5,7 +5,7 @@
 | Arquivo | Cobre |
 |---|---|
 | `datas.test.js` | Série do Excel, dia da semana, DIAS, DIATRABALHOTOTAL (inclusive o 33098 da planilha antiga) |
-| `regras.test.js` | Cada regra de `src/regras.js`: filial, comprador, dias em aberto, SLA (inclusive `#N/D` e texto > número), Saving Real em texto pt-BR, tempos por etapa, Follow-Up |
+| `regras.test.js` | Cada regra de `src/regras.js`: filial, comprador, dias em aberto, SLA (fora só com mais de 30 dias úteis, qualquer prioridade), Saving Real em texto pt-BR, tempos por etapa, Follow-Up |
 | `leitor.test.js` | Leitor de xlsx: tipos de célula, XML picado em pedaços, filtro de colunas, xlsx completo, mensagens de erro |
 | `importar.test.js` | Importação ponta a ponta com xlsx fictício: filtro de filial, conversão de tipos, Dados Gerais, coluna faltando, cancelamento |
 | `analise.test.js` | Agregações e filtros das telas (`src/analise.js`, inclusive `ehPendencia`, `ehRegularizacao`, spend, status e entregas), memória (`brutosDe`, `recalcular`), `validarConfig` e CSV |

@@ -307,20 +307,22 @@ test('exporta CSV para o Excel pt-BR', async ({ page }) => {
   expect(texto.trim().split('\r\n')).toHaveLength(4); // cabeçalho + 3 itens
 });
 
-test('configuração: editar SLA recalcula; restaurar padrão volta', async ({ page }) => {
+test('configuração: editar o de-para recalcula; restaurar padrão volta', async ({ page }) => {
   await importarBase(page);
   page.on('dialog', (d) => d.accept());
+  const conteudo = page.locator('#conteudo');
   await page.getByRole('button', { name: 'Configuração' }).click();
-  await page.getByLabel('SLA (dias úteis), linha 2, Máx.').fill('500');
+  await expect(page.getByRole('dialog').getByLabel(/SLA/)).toHaveCount(0); // prazo do SLA é fixo (30 dias úteis)
+  await page.getByLabel('Filiais, linha 1, Regional').fill('Regional Editada');
   await page.getByRole('button', { name: 'Salvar' }).click();
-  await expect(valorDoCartao(page, 'Itens fora do prazo')).toHaveText('0');
+  await expect(conteudo.getByText('Regional Editada').first()).toBeVisible();
 
   await page.reload();
-  await expect(valorDoCartao(page, 'Itens fora do prazo')).toHaveText('0'); // config salva
+  await expect(conteudo.getByText('Regional Editada').first()).toBeVisible(); // config salva
 
   await page.getByRole('button', { name: 'Configuração' }).click();
   await page.getByRole('button', { name: 'Restaurar padrão' }).click();
-  await expect(valorDoCartao(page, 'Itens fora do prazo')).toHaveText('2');
+  await expect(conteudo.getByText('Regional Editada')).toHaveCount(0);
 });
 
 test('tema escuro alterna e fica salvo', async ({ page }) => {

@@ -18,7 +18,7 @@
 | `telas/` | As telas e os diálogos (importação, configuração) |
 | `ui/` | Componentes sem regra de negócio: DOM, formatos, tabela, gráficos, filtros, cartões, dica |
 | `leitor/` | Leitor de `.xlsx` por fluxo (zip + XML) |
-| `config/` | De-para de filiais, apelidos de compradores e tabela de SLA (padrão) |
+| `config/` | De-para de filiais e apelidos de compradores (padrão) |
 | `styles/` | CSS em camadas |
 
 ## Convenções

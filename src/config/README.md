@@ -2,7 +2,7 @@
 
 | Arquivo | Conteúdo |
 |---|---|
-| `padrao.js` | `CONFIG_PADRAO`: filiais (código → filial ajustada, nome, regional), compradores (nome → apelido) e SLA (prioridade × serviço → mín/máx). Copiado das abas `Base Analitico` e `sla` do `.xlsm` em 11/11/2026 |
+| `padrao.js` | `CONFIG_PADRAO`: filiais (código → filial ajustada, nome, regional), compradores (nome → apelido). Copiado da aba `Base Analitico` do `.xlsm` em 11/11/2026 |
 | `index.js` | `criarConfig(config)`: monta as buscas no estilo PROCV (primeira ocorrência, sem diferenciar maiúsculas); `normalizarCodigoFilial` |
 
 - Mudou o de-para na planilha antiga ou entrou filial/comprador novo: editar `padrao.js` (ordem importa) e rodar `npm run conferir`.

@@ -1,4 +1,4 @@
-// Configuração padrão, copiada das abas `Base Analitico` e `sla` do
+// Configuração padrão, copiada da aba `Base Analitico` do
 // DASHBOARD COMPRAS 2026.xlsm em 11/11/2026. Dados internos, publicados com o repositório (público desde 12/11/2026, decisão do usuário).
 // A ordem importa: as buscas reproduzem o PROCV do Excel (primeira ocorrência vence).
 
@@ -41,15 +41,5 @@ export const CONFIG_PADRAO = {
     { nome: 'Matheus Alexandre Fortunato Petuco', apelido: 'Matheus' },
     { nome: 'Thayane da Silva Afonso Morlus', apelido: 'Thayane' },
     { nome: 'Pendente', apelido: 'Pendente' },
-  ],
-
-  // Prazo (dias) por prioridade x serviço. servico: 'SIM' = compra de serviço.
-  sla: [
-    { prioridade: 'NORMAL', servico: 'NÃO', tipo: 'Compra de Material', min: 7, max: 15 },
-    { prioridade: 'URGENTE', servico: 'NÃO', tipo: 'Compra de Material', min: 4, max: 6 },
-    { prioridade: 'EMERGENCIAL', servico: 'NÃO', tipo: 'Compra de Material', min: 1, max: 3 },
-    { prioridade: 'NORMAL', servico: 'SIM', tipo: 'Compra de Serviço', min: 8, max: 30 },
-    { prioridade: 'URGENTE', servico: 'SIM', tipo: 'Compra de Serviço', min: 4, max: 7 },
-    { prioridade: 'EMERGENCIAL', servico: 'SIM', tipo: 'Compra de Serviço', min: 1, max: 3 },
   ],
 };

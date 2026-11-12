@@ -27,7 +27,6 @@ export function criarConfig(config = CONFIG_PADRAO) {
   const porCodigo = primeiraOcorrencia(filiais, (f) => normalizarCodigoFilial(f.codigo));
   const porAjustada = primeiraOcorrencia(filiais, (f) => chave(f.ajustada));
   const compradores = primeiraOcorrencia(config.compradores ?? [], (c) => chave(c.nome));
-  const sla = primeiraOcorrencia(config.sla ?? [], (s) => chave(s.prioridade) + chave(s.servico));
 
   return {
     original: config,
@@ -47,11 +46,6 @@ export function criarConfig(config = CONFIG_PADRAO) {
     apelidoComprador(nome) {
       const c = compradores.get(chave(nome));
       return c ? c.apelido : null;
-    },
-    /** PROCV(prioridade & serviço; sla!A:F) -> { min, max }, ou null. */
-    prazoSla(prioridade, servico) {
-      const s = sla.get(chave(prioridade) + chave(servico));
-      return s ? { min: s.min, max: s.max } : null;
     },
   };
 }

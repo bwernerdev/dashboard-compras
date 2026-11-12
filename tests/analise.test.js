@@ -196,12 +196,9 @@ test('validarConfig: aceita o padrão e aponta problemas', () => {
   c.filiais.push({ codigo: '', ajustada: '' });
   c.filiais.push({ ...c.filiais[0] });
   c.compradores.push({ nome: 'X', apelido: '' });
-  c.sla[0].min = 20;
-  c.sla[1].max = NaN;
   const erros = validarConfig(c);
-  assert.equal(erros.length, 6, erros.join('\n'));
+  assert.equal(erros.length, 4, erros.join('\n'));
   assert.ok(erros.some((e) => e.includes('código repetido')));
-  assert.ok(erros.some((e) => e.includes('mínimo maior que o máximo')));
 });
 
 test('gerarCsv: ";" como separador, vírgula decimal, aspas quando preciso, BOM', () => {
