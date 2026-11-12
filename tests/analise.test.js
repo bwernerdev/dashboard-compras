@@ -4,11 +4,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   aplicarFiltros, opcoesDosFiltros, chaveMes, rotuloMes, itensEmAberto, resumoEmAberto, porFaixaDeDias,
-  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorStatus, resumoStatus, resumoDoDia, periodosDePedido, spendPorFilial, resumoSpend, entregasPorStatus, recortarPor, scsPorCompradorStatus, prePedidosPorCompradorRegional,
+  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorStatus, resumoStatus, periodosDePedido, spendPorFilial, resumoSpend, entregasPorStatus, recortarPor, scsPorCompradorStatus, prePedidosPorCompradorRegional, aguardandoAprovacao,
   pctSaving, resumoSaving, savingPorFilial, savingPorComprador, savingPorMes,
 } from '../src/analise.js';
 import { brutosDe, recalcular, juntarAoHistorico } from '../src/memoria.js';
-import { validarConfig } from '../src/telas/configuracao.js';
+import { validarConfig, lerConfigExportada } from '../src/telas/configuracao.js';
 import { recortarPeriodo } from '../src/telas/compradores.js';
 import { gerarCsv } from '../src/ui/tabela.js';
 import { criarConfig, CONFIG_PADRAO } from '../src/config/index.js';
@@ -311,32 +311,6 @@ test('diasDesdeABase: dias úteis desde a execução do ME, sem contar o dia del
   assert.equal(diasDesdeABase(null, qua), 0);
 });
 
-test('resumoDoDia: viraram fora, vencendo, sem comprador e novas (com e sem base anterior)', () => {
-  const agora = [
-    reg({ solicitacao: 'S1', diasEmAberto: 31, sla: 'Fora do Prazo', comprador: 'Bruno W.' }),
-    reg({ solicitacao: 'S1', diasEmAberto: 31, sla: 'No Prazo', comprador: 'Bruno W.' }),
-    reg({ solicitacao: 'S2', diasEmAberto: 40, sla: 'Fora do Prazo', comprador: 'Vitor' }),
-    reg({ solicitacao: 'S3', diasEmAberto: 29, sla: 'No Prazo', comprador: 'Pendente' }),
-    reg({ solicitacao: 'S4', diasEmAberto: 1, sla: 'No Prazo', comprador: null }),
-    reg({ solicitacao: 'S5', diasEmAberto: 30, sla: null, comprador: 'Vitor' }), // sem SLA: não vence
-  ];
-  const ids = (l) => l.map((s) => s.solicitacao);
-  const sem = resumoDoDia(agora, null, 30);
-  assert.deepEqual(ids(sem.viraramFora), ['S1']); // 31 dias = 1º dia fora
-  assert.deepEqual(ids(sem.vencendo), ['S3']);
-  assert.deepEqual(ids(sem.semComprador), ['S3', 'S4']);
-  assert.deepEqual(ids(sem.novas), ['S4']);
-  assert.equal(sem.viraramFora[0].itens, 2);
-  const antes = [
-    reg({ solicitacao: 'S1', diasEmAberto: 30, sla: 'No Prazo' }),
-    reg({ solicitacao: 'S2', diasEmAberto: 39, sla: 'Fora do Prazo' }),
-    reg({ solicitacao: 'S3', diasEmAberto: 28, sla: 'No Prazo' }),
-  ];
-  const com = resumoDoDia(agora, antes, 30);
-  assert.deepEqual(ids(com.viraramFora), ['S1']);
-  assert.deepEqual(ids(com.novas), ['S5', 'S4']); // ordem: mais dias primeiro
-});
-
 test('periodosDePedido: mesmo trecho do mês/trimestre anterior, sem passar do fim', () => {
   const p = (sc, d) => reg({ solicitacao: sc, numeroPedido: `OF-${sc}`, dataPedido: d });
   const regs = [p('a', serie(2026, 11, 12)), p('b', serie(2026, 11, 2)), p('c', serie(2026, 10, 12)), p('d', serie(2026, 10, 13)), p('e', serie(2026, 9, 30)), reg({ solicitacao: 'x' })];
@@ -371,4 +345,24 @@ test('variacaoRelativa: % do anterior, ligação "x", sem base = null', () => {
   assert.equal(variacaoRelativa({ atual: 112, anterior: 100, rotulo: '01/10 a 12/10' }).texto, '+12% x 01/10 a 12/10');
   assert.equal(variacaoRelativa({ atual: 95, anterior: 100, rotulo: 'out', melhor: 'maior' }).tom, 'pior');
   assert.equal(variacaoRelativa({ atual: 5, anterior: 0, rotulo: 'out' }), null);
+});
+
+test('aguardando aprovação: Status Pré-Pedido traduzido começa com "Ag. aprovação"', () => {
+  const regs = [
+    { aprovacao: 'Ag. aprovação Beltrano' }, { aprovacao: 'Ag. aprovação Corporativo' }, { aprovacao: 'Ag. aprovação GA' },
+    { aprovacao: 'INCONSISTÊNCIA DE INTEGRAÇÃO' }, { aprovacao: null }, {},
+  ];
+  assert.deepEqual(regs.map(aguardandoAprovacao), [true, true, true, false, false, false]);
+});
+
+test('importar configuração: só campos conhecidos, como texto; arquivo inválido dá erro', () => {
+  const ok = lerConfigExportada(JSON.stringify({
+    filiais: [{ codigo: 30999, ajustada: '999', nome: 'Teste', regional: 'R', aprovadorGA: 'Beltrano', extra: 'x' }],
+    compradores: [{ nome: 'Fulano de Tal', apelido: 'Fulano' }],
+  }));
+  assert.deepEqual(ok.config.filiais, [{ codigo: '30999', ajustada: '999', nome: 'Teste', regional: 'R', descricao: '', aprovadorGA: 'Beltrano' }]);
+  assert.deepEqual(ok.config.compradores, [{ nome: 'Fulano de Tal', apelido: 'Fulano' }]);
+  assert.ok(lerConfigExportada('não é json').erros.length);
+  assert.ok(lerConfigExportada('{"filiais": []}').erros.length);
+  assert.ok(lerConfigExportada('{"filiais": [{"codigo": ""}], "compradores": []}').erros.length);
 });

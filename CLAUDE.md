@@ -1,6 +1,6 @@
 # dashboard — mapa rápido
 
-App web (Vite, JS puro, sem framework) que substitui o `DASHBOARD COMPRAS 2026.xlsm`: lê `base.xlsx` e `Follow-Up.xlsx` exportados do ME (favorito do navegador baixa as duas), aplica as regras de Compras no navegador e mostra as telas Hoje (só no app), Status, Entrega, Regional, SCs por Comprador, Spend, Saving, Atendimento e Organograma para a equipe de Suprimentos. "Gerar painel" baixa `painel-compras.html` (as mesmas telas sem Compradores, só dados públicos) para o SharePoint, com link na Intranet.
+App web (Vite, JS puro, sem framework) que substitui o `DASHBOARD COMPRAS 2026.xlsm`: lê `base.xlsx` e `Follow-Up.xlsx` exportados do ME (favorito do navegador baixa as duas), aplica as regras de Compras no navegador e mostra as telas Status, Entrega, Regional, SCs por Comprador, Spend, Saving, Atendimento e Organograma para a equipe de Suprimentos. "Gerar painel" baixa `painel-compras.html` (as mesmas telas sem Compradores, só dados públicos) para o SharePoint, com link na Intranet.
 
 Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configuração, e2e), 3 (painel publicado) e 4 (demais telas públicas) concluídas; fase 5 (favorito abre o app) é opcional. Decisões, regras de negócio e fases: `PROJETO.md`.
 

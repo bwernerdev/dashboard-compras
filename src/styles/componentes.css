@@ -33,6 +33,7 @@ input[type="search"].campo { min-width: 220px; }
 }
 
 .alternador { display: inline-flex; padding: 2px; border-radius: var(--r-sm); background: var(--button-bg); margin-bottom: var(--s3); }
+.linha-alternadores { display: flex; flex-wrap: wrap; gap: var(--s3); }
 .alternador-opcao {
   height: var(--h-control-sm); padding: 0 var(--s3); border: 0; border-radius: 5px;
   background: transparent; color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600;

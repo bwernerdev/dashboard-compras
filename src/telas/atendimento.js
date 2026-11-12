@@ -7,14 +7,21 @@ import { criarTabela } from '../ui/tabela.js';
 import { cliqueDeDetalhe } from '../ui/detalhe.js';
 import * as fmt from '../ui/formatos.js';
 import { seloDoStatus } from '../ui/cores-planilha.js';
-import { itensEmAberto, resumoEmAberto, ehRegularizacao } from '../analise.js';
+import { itensEmAberto, resumoEmAberto, ehRegularizacao, aguardandoAprovacao } from '../analise.js';
 
-const local = { sla: 'todos' };
+const local = { sla: 'todos', pre: 'todos' };
 
 const RECORTES = [
   ['todos', 'Todos'],
   ['Fora do Prazo', 'Fora do prazo'],
   ['No Prazo', 'No prazo'],
+];
+
+// Recorte pelo Status Pré-Pedido (pedido da equipe): itens aguardando aprovação ou os demais.
+const RECORTES_PRE = [
+  ['todos', 'Todos', () => true],
+  ['aprovacao', 'Ag. aprovação', aguardandoAprovacao],
+  ['outros', 'Outros', (r) => !aguardandoAprovacao(r)],
 ];
 
 /** SLA com marca de cor e texto (nunca só a cor). */
@@ -57,12 +64,17 @@ export function telaAtendimento(ctx) {
     cartao({ icone: 'relogio', rotulo: 'Mais antigo', valor: `${fmt.inteiro(resumo.maxDias)} dias`, detalhe: `Média: ${fmt.decimal(resumo.mediaDias)} dias úteis`, variacao: vs('maxDias', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.maxDias, resumo.maxDias) }),
   );
 
-  const recortar = () => (local.sla === 'todos' ? abertos : abertos.filter((r) => r.sla === local.sla));
-  const alternar = el('div', { class: 'alternador', role: 'group', 'aria-label': 'SLA' },
-    RECORTES.map(([id, rotulo]) => el('button', {
-      type: 'button', class: 'alternador-opcao', 'aria-pressed': String(local.sla === id),
-      onclick: () => { local.sla = id; ctx.redesenhar(); },
+  const doPre = (id) => RECORTES_PRE.find((p) => p[0] === id)?.[2] ?? (() => true);
+  const recortar = () => abertos.filter((r) => (local.sla === 'todos' || r.sla === local.sla) && doPre(local.pre)(r));
+  const alternador = (rotuloGrupo, opcoes, chave) => el('div', { class: 'alternador', role: 'group', 'aria-label': rotuloGrupo },
+    opcoes.map(([id, rotulo]) => el('button', {
+      type: 'button', class: 'alternador-opcao', 'aria-pressed': String(local[chave] === id),
+      onclick: () => { local[chave] = id; ctx.redesenhar(); },
     }, rotulo)));
+  const qtdAprovacao = abertos.filter(aguardandoAprovacao).length;
+  const alternar = el('div', { class: 'linha-alternadores' },
+    alternador('SLA', RECORTES, 'sla'),
+    alternador('Status Pré-Pedido', RECORTES_PRE.map(([id, rotulo]) => [id, id === 'aprovacao' ? `${rotulo} (${fmt.inteiro(qtdAprovacao)})` : rotulo]), 'pre'));
 
   const tabela = criarTabela({
     titulo: 'Itens em aberto',
@@ -86,4 +98,4 @@ export function telaAtendimento(ctx) {
 }
 
 /** Zera o recorte local (ao trocar de bases). */
-export function reiniciarAtendimento() { local.sla = 'todos'; }
+export function reiniciarAtendimento() { local.sla = 'todos'; local.pre = 'todos'; }

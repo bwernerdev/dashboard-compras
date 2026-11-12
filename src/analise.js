@@ -70,46 +70,9 @@ export const faixaDe = (dias) => FAIXAS_DIAS.find((f) => dias <= f.ate).id;
 
 const distintas = (linhas) => new Set(linhas.map((r) => r.solicitacao)).size;
 
-// ---------- Hoje (o que pede ação; só no app da equipe) ----------
-
-/** SCs em aberto (uma por Solicitação): dados da 1ª linha, maior número de dias e SLA da SC. */
-export function scsEmAberto(abertos) {
-  const grupos = new Map();
-  for (const r of abertos) {
-    if (!grupos.has(r.solicitacao)) grupos.set(r.solicitacao, []);
-    grupos.get(r.solicitacao).push(r);
-  }
-  return [...grupos].map(([solicitacao, linhas]) => {
-    const r = linhas[0];
-    const fora = linhas.some((x) => x.sla === 'Fora do Prazo');
-    return {
-      solicitacao, sc: r.sc, nomeFilial: r.nomeFilial, filial: r.filial, regional: r.regional,
-      comprador: linhas.find((x) => x.comprador)?.comprador ?? null, prioridade: r.prioridade,
-      dias: Math.max(...linhas.map((x) => x.diasEmAberto ?? 0)),
-      sla: fora ? 'Fora do Prazo' : (linhas.some((x) => x.sla === 'No Prazo') ? 'No Prazo' : null),
-      itens: linhas.length,
-    };
-  }).sort((a, b) => b.dias - a.dias || String(a.sc).localeCompare(String(b.sc), 'pt-BR', { numeric: true }));
-}
-
-/**
- * Aba Hoje (pedido da equipe, 12/11/2026). abertos: itens em aberto de agora; anteriores: itens em
- * aberto da base anterior (outro dia do ME) ou null.
- * - viraramFora: SCs fora do prazo que não estavam fora na base anterior (sem anterior: no 1º dia fora, prazo + 1).
- * - vencendo: SCs ainda no prazo a até 2 dias úteis do limite (prazo - 1 ou prazo).
- * - semComprador: SCs sem comprador ou em "Pendente" (pendências de compra e contrato no ME).
- * - novas: SCs que não estavam em aberto na base anterior (sem anterior: com até 1 dia útil).
- */
-export function resumoDoDia(abertos, anteriores, prazo) {
-  const scs = scsEmAberto(abertos);
-  const antes = anteriores ? new Map(scsEmAberto(anteriores).map((s) => [s.solicitacao, s])) : null;
-  return {
-    viraramFora: scs.filter((s) => s.sla === 'Fora do Prazo'
-      && (antes ? antes.get(s.solicitacao)?.sla !== 'Fora do Prazo' : s.dias === prazo + 1)),
-    vencendo: scs.filter((s) => s.sla === 'No Prazo' && s.dias >= prazo - 1 && s.dias <= prazo),
-    semComprador: scs.filter((s) => !s.comprador || mesmoTexto(s.comprador, '-') || mesmoTexto(s.comprador, 'Pendente')),
-    novas: scs.filter((s) => (antes ? !antes.has(s.solicitacao) : s.dias <= 1)),
-  };
+/** Item aguardando aprovação do pré-pedido (Status Pré-Pedido traduzido: "Ag. aprovação ..."). */
+export function aguardandoAprovacao(r) {
+  return typeof r.aprovacao === 'string' && r.aprovacao.startsWith('Ag. aprovação');
 }
 
 /** Cartões da tela Status: SCs distintas no período, em aberto, em pedido e canceladas. */

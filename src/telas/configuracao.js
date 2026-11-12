@@ -4,6 +4,9 @@
 // que bate, como o PROCV da planilha antiga.
 import { el, substituir } from '../ui/dom.js';
 import { CONFIG_PADRAO, normalizarCodigoFilial } from '../config/index.js';
+import { baixar } from '../ui/tabela.js';
+
+export const NOME_ARQUIVO_CONFIG = 'configuracao-compras.json';
 
 const SECOES = [
   {
@@ -29,6 +32,23 @@ const SECOES = [
 ];
 
 const copiar = (config) => JSON.parse(JSON.stringify(config));
+
+/**
+ * Lê o arquivo exportado por "Exportar" (JSON). Só aproveita os campos conhecidos, como texto.
+ * Retorna { config } ou { erros } (lista de problemas).
+ */
+export function lerConfigExportada(textoJson) {
+  let dados;
+  try { dados = JSON.parse(textoJson); } catch { return { erros: ['O arquivo não é uma configuração (JSON inválido).'] }; }
+  if (!dados || !Array.isArray(dados.filiais) || !Array.isArray(dados.compradores)) {
+    return { erros: ['O arquivo não é uma configuração: faltam as listas de filiais e compradores.'] };
+  }
+  const limpar = (item, secao) => Object.fromEntries(SECOES.find((x) => x.id === secao).campos
+    .map((c) => [c.id, item && item[c.id] !== null && item[c.id] !== undefined ? String(item[c.id]) : '']));
+  const config = { filiais: dados.filiais.map((f) => limpar(f, 'filiais')), compradores: dados.compradores.map((c) => limpar(c, 'compradores')) };
+  const erros = validarConfig(config);
+  return erros.length ? { erros } : { config };
+}
 
 /** Confere a configuração editada. Retorna lista de problemas (vazia = ok). */
 export function validarConfig(config) {
@@ -84,6 +104,24 @@ export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar
   const avisos = el('div', { class: 'config-avisos', role: 'alert' });
   const dialogo = el('dialog', { class: 'dialogo dialogo-largo', 'aria-labelledby': 'titulo-config' });
 
+  const corpo = el('div', { class: 'dialogo-corpo' });
+  const desenharCorpo = () => substituir(corpo, SECOES.map((s) => editorDeLista(s, rascunho[s.id])));
+  desenharCorpo();
+  const arquivo = el('input', {
+    type: 'file', accept: '.json,application/json', hidden: true, 'aria-label': 'Arquivo de configuração',
+    onchange: async (ev) => {
+      const f = ev.target.files?.[0];
+      ev.target.value = '';
+      if (!f) return;
+      const lido = lerConfigExportada(await f.text());
+      if (lido.erros) { substituir(avisos, el('p', {}, `Não importado ("${f.name}"):`), el('ul', {}, lido.erros.map((e) => el('li', {}, e)))); return; }
+      rascunho.filiais = lido.config.filiais;
+      rascunho.compradores = lido.config.compradores;
+      desenharCorpo();
+      substituir(avisos, el('p', {}, `Importado de "${f.name}". Confira e clique em Salvar para usar.`));
+    },
+  });
+
   const fechar = () => { dialogo.close(); dialogo.remove(); };
   const salvar = () => {
     const erros = validarConfig(rascunho);
@@ -105,7 +143,7 @@ export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar
       personalizada ? 'Usando configuração editada neste navegador. ' : 'Usando a configuração padrão (copiada da planilha antiga). ',
       'Vale a primeira linha que bate, como o PROCV. Fica salva só neste navegador.'),
     avisos,
-    el('div', { class: 'dialogo-corpo' }, SECOES.map((s) => editorDeLista(s, rascunho[s.id]))),
+    corpo,
     el('footer', { class: 'dialogo-rodape' },
       el('button', {
         type: 'button', class: 'botao botao-sec',
@@ -116,6 +154,12 @@ export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar
           if (aviso) window.alert(aviso);
         },
       }, 'Restaurar padrão'),
+      el('button', {
+        type: 'button', class: 'botao botao-sec', title: 'Baixa a configuração da tela (com as edições ainda não salvas) para passar à equipe',
+        onclick: () => baixar(NOME_ARQUIVO_CONFIG, JSON.stringify(rascunho, null, 2), 'application/json;charset=utf-8'),
+      }, 'Exportar'),
+      el('button', { type: 'button', class: 'botao botao-sec', title: 'Carrega um arquivo exportado; confira e clique em Salvar', onclick: () => arquivo.click() }, 'Importar'),
+      arquivo,
       el('span', { class: 'espaco' }),
       el('button', { type: 'button', class: 'botao botao-sec', onclick: fechar }, 'Cancelar'),
       el('button', { type: 'button', class: 'botao', onclick: salvar }, 'Salvar')));

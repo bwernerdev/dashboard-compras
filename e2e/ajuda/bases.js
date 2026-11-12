@@ -39,12 +39,15 @@ const linha = (x) => ({
 
 /**
  * Base: 3 SCs, 4 itens nas filiais do de-para + 1 linha de outra filial (descartada).
- * Em aberto: SC 1000001 (NORMAL, REGULARIZAÇÃO, 1 dia: no prazo) e SC 1000002 (URGENTE, 2 itens, ~70 dias: fora;
+ * Em aberto: SC 1000001 (NORMAL, REGULARIZAÇÃO, 1 dia: no prazo; pré-pedido em APROVAÇÃO NÍVEL 1) e SC 1000002 (URGENTE, 2 itens, ~70 dias: fora;
  * item 2 em pendência de compra).
  * Com pedido: SC 1000003 (total 900, saving 10 x 10 = 100, pré-pedido PP-1).
  */
 export const LINHAS_BASE = [
-  linha({ solicitacao: 'FDS-1000001', codigoFilial: FILIAL_A.codigo, criacao: HOJE - 1, prioridade: 'NORMAL', status: 'Em Cotação', categoria: 'REGULARIZAÇÃO' }),
+  linha({
+    solicitacao: 'FDS-1000001', codigoFilial: FILIAL_A.codigo, criacao: HOJE - 1, prioridade: 'NORMAL', status: 'Em Cotação', categoria: 'REGULARIZAÇÃO',
+    statusPrePedido: 'APROVAÇÃO NÍVEL 1', dataPrePedido: HOJE - 1,
+  }),
   linha({ solicitacao: 'FDS-1000002', codigoFilial: FILIAL_A.codigo, criacao: HOJE - 100, prioridade: 'URGENTE', status: 'Em Cotação' }),
   linha({ solicitacao: 'FDS-1000002', item: 2, codigoFilial: FILIAL_A.codigo, criacao: HOJE - 100, prioridade: 'URGENTE', status: 'Em pendências de compra' }),
   linha({

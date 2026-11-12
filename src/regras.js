@@ -39,6 +39,12 @@ export function dadosDaFilial(cfg, codigoFilial) {
   return { filial: ajustada, nomeFilial: dados?.nome ?? null, regional: dados?.regional ?? null };
 }
 
+/** Nível de aprovação do Status Pré-Pedido ("APROVAÇÃO NÍVEL 2" -> '2', sem acento/maiúscula), ou null. */
+export function nivelDeAprovacao(status) {
+  const norm = texto(status).trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ');
+  return norm.match(/^APROVACAO NIVEL (\d+)$/)?.[1] ?? null;
+}
+
 /**
  * Status Pré-Pedido (coluna AI da base) com os níveis de aprovação traduzidos (pedido da equipe):
  * "APROVAÇÃO NÍVEL 1" -> "Ag. aprovação GA"; NÍVEL 2 e 3 -> "Ag. aprovação Corporativo".
@@ -48,8 +54,7 @@ export function dadosDaFilial(cfg, codigoFilial) {
 export function aprovacaoPrePedido(status, aprovadorGA = null) {
   const t = texto(status).trim();
   if (t === '' || t === '-') return null;
-  const norm = t.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ');
-  const nivel = norm.match(/^APROVACAO NIVEL (\d+)$/)?.[1];
+  const nivel = nivelDeAprovacao(t);
   const nome = texto(aprovadorGA).trim();
   if (nivel === '1') return `Ag. aprovação ${nome || 'GA'}`;
   if (nivel === '2' || nivel === '3') return 'Ag. aprovação Corporativo';

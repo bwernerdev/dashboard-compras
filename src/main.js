@@ -20,14 +20,13 @@ import { abrirConfiguracao } from './telas/configuracao.js';
 import { TELAS_PUBLICAS, reiniciarTelas } from './telas/publicas.js';
 import { ligarAtendidas } from './telas/regional.js';
 import { telaCompradores } from './telas/compradores.js';
-import { telaHoje } from './telas/hoje.js';
 import { gerarPainel, NOME_DO_ARQUIVO } from './painel/gerar.js';
 
 ligarAtendidas(); // olho "atendida" na lista de SCs: só no app da equipe, não no painel publicado
 
-// Ordem das abas da planilha antiga; Hoje (interna) primeiro e SCs por Comprador (interna) depois da
-// Regional. As internas não vão para o painel.
-const TELAS = [{ id: 'hoje', rotulo: 'Hoje', desenhar: telaHoje }, ...TELAS_PUBLICAS.flatMap((t) => (t.id === 'regional'
+// Ordem das abas da planilha antiga; SCs por Comprador (interna) depois da Regional. As internas
+// não vão para o painel. A aba Hoje saiu em 12/11/2026 (pedido da equipe).
+const TELAS = [...TELAS_PUBLICAS.flatMap((t) => (t.id === 'regional'
   ? [t, { id: 'compradores', rotulo: 'SCs por Comprador', desenhar: telaCompradores }]
   : [t]))];
 
@@ -55,7 +54,8 @@ const raiz = {
 const nav = criarNavegador({
   telas: TELAS,
   raiz,
-  abaInicial: lerPreferencia('aba') ?? 'regional',
+  // Aba salva que não existe mais (ex.: Hoje) volta para a Regional.
+  abaInicial: TELAS.some((t) => t.id === lerPreferencia('aba')) ? lerPreferencia('aba') : 'regional',
   aoTrocarAba: (id) => salvarPreferencia('aba', id),
   chaveFiltros: 'filtros',
   telaVazia: () => (estado.carregando ? esqueleto('Abrindo as bases salvas...') : el('div', { class: 'boas-vindas' },

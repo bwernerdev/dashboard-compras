@@ -29,12 +29,8 @@ test('cartões mostram a variação desde a base de outro dia (e lembram ao reca
   await expect(variacao('SCs em aberto')).toHaveText('▼ −1 desde 10/11');
 });
 
-test('Hoje, detalhe da SC ao clicar, densidade compacta e comparação de períodos', async ({ page }) => {
+test('detalhe da SC ao clicar, densidade compacta e comparação de períodos', async ({ page }) => {
   await importarBase(page);
-  await page.getByRole('tab', { name: 'Hoje' }).click();
-  await expect(valorDoCartao(page, 'Viraram fora do prazo')).toHaveText('0'); // sem base anterior: só no 1º dia fora
-  await expect(page.getByRole('heading', { name: /^Vencem em até 2 dias úteis/ })).toBeVisible();
-
   await page.getByRole('tab', { name: 'Regional' }).click();
   const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
   await lista.locator('tbody tr', { hasText: '1000002' }).first().getByText('Em Cotação').click();
@@ -335,7 +331,7 @@ test('SCs por Comprador (com período De/Até) e Saving', async ({ page }) => {
 
 test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', async ({ page }) => {
   await importarBase(page);
-  await expect(page.getByRole('tab')).toHaveText(['Hoje', 'Status', 'Entrega', 'Regional', 'SCs por Comprador', 'Spend', 'Saving', 'Atendimento', 'Organograma']);
+  await expect(page.getByRole('tab')).toHaveText(['Status', 'Entrega', 'Regional', 'SCs por Comprador', 'Spend', 'Saving', 'Atendimento', 'Organograma']);
   await expect(page.getByRole('tab', { name: 'Regional' })).toHaveAttribute('aria-selected', 'true'); // aba inicial
 
   await page.getByRole('tab', { name: 'Status' }).click();
@@ -370,6 +366,13 @@ test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', asyn
   await expect(valorDoCartao(page, 'SCs no prazo')).toHaveText('1');
   await page.getByRole('button', { name: 'No prazo', exact: true }).click();
   await expect(page.getByRole('table', { name: 'Itens em aberto' }).locator('tbody tr')).toHaveCount(1);
+  // Status Pré-Pedido: nível 1 com o aprovador GA da filial (padrão); recorte "Ag. aprovação".
+  await page.getByRole('group', { name: 'SLA' }).getByRole('button', { name: 'Todos' }).click();
+  await expect(atendimento.getByText(`Ag. aprovação ${FILIAL_A.aprovadorGA}`)).toBeVisible();
+  await page.getByRole('button', { name: 'Ag. aprovação (1)' }).click();
+  await expect(atendimento.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
+  await page.getByRole('button', { name: 'Outros', exact: true }).click();
+  await expect(atendimento.locator('.tabela-contagem')).toHaveText('1 SC, 2 itens');
 
   await page.getByRole('tab', { name: 'Organograma' }).click();
   await expect(page.getByRole('heading', { name: "Organograma Suprimentos CD's" })).toBeVisible();
@@ -437,6 +440,27 @@ test('configuração: editar o de-para recalcula; restaurar padrão volta', asyn
   await page.getByRole('button', { name: 'Configuração' }).click();
   await page.getByRole('button', { name: 'Restaurar padrão' }).click();
   await expect(conteudo.getByText('Regional Editada')).toHaveCount(0);
+});
+
+test('configuração: exportar e importar o arquivo da equipe', async ({ page }) => {
+  await importarBase(page);
+  const conteudo = page.locator('#conteudo');
+  await page.getByRole('button', { name: 'Configuração' }).click();
+  await page.getByLabel('Filiais, linha 1, Regional').fill('Regional Exportada');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('dialog').getByRole('button', { name: 'Exportar', exact: true }).click()]);
+  expect(download.suggestedFilename()).toBe('configuracao-compras.json');
+  const exportada = JSON.parse(await readFile(await download.path(), 'utf-8'));
+  expect(exportada.filiais[0].regional).toBe('Regional Exportada');
+  await page.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(conteudo.getByText('Regional Exportada')).toHaveCount(0); // exportar não salva
+
+  await page.getByRole('button', { name: 'Configuração' }).click();
+  await page.getByLabel('Arquivo de configuração').setInputFiles({ name: 'ruim.json', mimeType: 'application/json', buffer: Buffer.from('{"x":1}') });
+  await expect(page.getByRole('dialog').getByText(/Não importado/)).toBeVisible();
+  await page.getByLabel('Arquivo de configuração').setInputFiles({ name: 'configuracao-compras.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(exportada)) });
+  await expect(page.getByLabel('Filiais, linha 1, Regional')).toHaveValue('Regional Exportada');
+  await page.getByRole('button', { name: 'Salvar' }).click();
+  await expect(conteudo.getByText('Regional Exportada').first()).toBeVisible();
 });
 
 test('tema escuro alterna e fica salvo', async ({ page }) => {
