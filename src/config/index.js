@@ -42,6 +42,11 @@ export function criarConfig(config = CONFIG_PADRAO) {
       const f = porAjustada.get(chave(ajustada));
       return f ? { nome: f.nome, regional: f.regional } : null;
     },
+    /** Aprovador GA (nível 1 do pré-pedido) da filial pelo código do ME, ou null. Não existe na planilha. */
+    aprovadorGA(codigo) {
+      const nome = String(porCodigo.get(normalizarCodigoFilial(codigo))?.aprovadorGA ?? '').trim();
+      return nome || null;
+    },
     /** PROCV(nome completo; Base Analitico!N:O; 2) -> apelido, ou null. */
     apelidoComprador(nome) {
       const c = compradores.get(chave(nome));

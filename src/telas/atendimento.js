@@ -34,6 +34,7 @@ const COLUNAS = [
   { id: 'sla', rotulo: 'SLA', valor: (r) => r.sla, exibir: (r) => seloSla(r.sla), titulo: `Fora do prazo: mais de ${PRAZO_SLA_DIAS} dias úteis em aberto` },
   { id: 'descricao', rotulo: 'Produto', valor: (r) => r.descricao, classe: () => 'texto-longo' },
   { id: 'status', rotulo: 'Status', valor: (r) => r.status, exibir: (r) => seloDoStatus(r.status) },
+  { id: 'aprovacao', rotulo: 'Status Pré-Pedido', valor: (r) => r.aprovacao },
   { id: 'comprador', rotulo: 'Comprador', valor: (r) => r.comprador ?? '-' },
 ];
 

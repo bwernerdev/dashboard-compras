@@ -14,8 +14,9 @@ const SECOES = [
       { id: 'nome', rotulo: 'Nome', largura: '10em' },
       { id: 'regional', rotulo: 'Regional', largura: '14em' },
       { id: 'descricao', rotulo: 'Descrição', largura: '22em' },
+      { id: 'aprovadorGA', rotulo: 'Aprovador GA (nível 1)', largura: '12em' },
     ],
-    nova: () => ({ codigo: '', ajustada: '', nome: '', regional: '', descricao: '' }),
+    nova: () => ({ codigo: '', ajustada: '', nome: '', regional: '', descricao: '', aprovadorGA: '' }),
   },
   {
     id: 'compradores', titulo: 'Compradores', ajuda: 'Nome completo depois de "FDS - " no "Selecionado por". Quem não está aqui aparece como "-".',

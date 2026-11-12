@@ -8,7 +8,7 @@
 // 4: telas Status, Entrega, Spend, Atendimento (detalhe em toda linha, numeroPedido, slaMax, Follow-Up);
 // 5: sem slaMax (SLA com prazo único de 30 dias úteis, 12/11/2026); 6: + criacao (Data da Regional);
 // 7: + dataPedido (comparação de períodos em Spend e Saving)
-export const VERSAO = 7;
+export const VERSAO = 8;
 
 /** Campos de toda linha: filtros, contagens, saving, spend e a lista da tela Status. */
 const CAMPOS_BASE = [
@@ -18,7 +18,7 @@ const CAMPOS_BASE = [
 ];
 
 /** Campos só das SCs em aberto (listas das telas Regional e Atendimento). */
-const CAMPOS_DETALHE = ['diasDaAprovacao', 'codigoProduto', 'qtdSolicitacao', 'criacao'];
+const CAMPOS_DETALHE = ['diasDaAprovacao', 'codigoProduto', 'qtdSolicitacao', 'criacao', 'aprovacao'];
 
 export const CAMPOS_PUBLICOS = [...CAMPOS_BASE, ...CAMPOS_DETALHE];
 

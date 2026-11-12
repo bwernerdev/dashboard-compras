@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { criarConfig, normalizarCodigoFilial } from '../src/config/index.js';
 import {
-  calcularLinhaBase, calcularLinhaFollowUp, extrairNumero, savingReal, numeroExcel, ehServico, PRAZO_SLA_DIAS,
+  calcularLinhaBase, calcularLinhaFollowUp, extrairNumero, savingReal, numeroExcel, ehServico, PRAZO_SLA_DIAS, aprovacaoPrePedido,
 } from '../src/regras.js';
 import { serie, diasUteis } from '../src/datas.js';
 
@@ -10,7 +10,7 @@ import { serie, diasUteis } from '../src/datas.js';
 const cfg = criarConfig({
   filiais: [
     { codigo: '30999', ajustada: '999', nome: 'Filial Teste', regional: 'Regional A' },
-    { codigo: '30998', ajustada: '999', nome: 'Nome Repetido', regional: 'Regional B' },
+    { codigo: '30998', ajustada: '999', nome: 'Nome Repetido', regional: 'Regional B', aprovadorGA: ' Beltrano ' },
     { codigo: '178111', ajustada: '111', nome: 'Outra', regional: 'Regional B' },
   ],
   compradores: [
@@ -196,4 +196,23 @@ test('Follow-Up: comprador do de-para vira apelido; sem "Selecionado por" é Pen
   assert.equal(r.comprador, 'Fulano');
   assert.equal(r.temContrato, 'sim');
   assert.equal(calcularLinhaFollowUp({ solicitacao: 'FDS-2' }, cfg, HOJE).comprador, 'Pendente');
+});
+
+test('Status Pré-Pedido: níveis de aprovação traduzidos; outros como vêm; vazio é null', () => {
+  assert.equal(aprovacaoPrePedido('APROVAÇÃO NÍVEL 1'), 'Ag. aprovação GA');
+  assert.equal(aprovacaoPrePedido('aprovacao nivel 1'), 'Ag. aprovação GA');
+  assert.equal(aprovacaoPrePedido('APROVAÇÃO NÍVEL 2'), 'Ag. aprovação Corporativo');
+  assert.equal(aprovacaoPrePedido('APROVAÇÃO  NÍVEL 3 '), 'Ag. aprovação Corporativo');
+  assert.equal(aprovacaoPrePedido('AGUARDANDO GRAVAÇÃO NO ERP'), 'AGUARDANDO GRAVAÇÃO NO ERP');
+  assert.equal(aprovacaoPrePedido(null), null);
+  assert.equal(aprovacaoPrePedido(''), null);
+});
+
+test('Status Pré-Pedido nível 1: nome do aprovador GA da filial (Configuração), pelo código do ME', () => {
+  assert.equal(aprovacaoPrePedido('APROVAÇÃO NÍVEL 1', 'Beltrano'), 'Ag. aprovação Beltrano');
+  assert.equal(aprovacaoPrePedido('APROVAÇÃO NÍVEL 2', 'Beltrano'), 'Ag. aprovação Corporativo');
+  const nivel1 = { statusPrePedido: 'APROVAÇÃO NÍVEL 1' };
+  assert.equal(calcularLinhaBase(linha({ ...nivel1, codigoFilial: '30.998' }), cfg, HOJE).aprovacao, 'Ag. aprovação Beltrano');
+  assert.equal(calcularLinhaBase(linha(nivel1), cfg, HOJE).aprovacao, 'Ag. aprovação GA');
+  assert.equal(calcularLinhaBase(linha(), cfg, HOJE).aprovacao, null);
 });

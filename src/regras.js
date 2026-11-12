@@ -39,6 +39,23 @@ export function dadosDaFilial(cfg, codigoFilial) {
   return { filial: ajustada, nomeFilial: dados?.nome ?? null, regional: dados?.regional ?? null };
 }
 
+/**
+ * Status Pré-Pedido (coluna AI da base) com os níveis de aprovação traduzidos (pedido da equipe):
+ * "APROVAÇÃO NÍVEL 1" -> "Ag. aprovação GA"; NÍVEL 2 e 3 -> "Ag. aprovação Corporativo".
+ * Nível 1 com aprovador GA configurado para a filial (Configuração > Filiais): "Ag. aprovação <nome>".
+ * Outros status ficam como vêm do ME; vazio vira null. Não existe na planilha antiga.
+ */
+export function aprovacaoPrePedido(status, aprovadorGA = null) {
+  const t = texto(status).trim();
+  if (t === '' || t === '-') return null;
+  const norm = t.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ');
+  const nivel = norm.match(/^APROVACAO NIVEL (\d+)$/)?.[1];
+  const nome = texto(aprovadorGA).trim();
+  if (nivel === '1') return `Ag. aprovação ${nome || 'GA'}`;
+  if (nivel === '2' || nivel === '3') return 'Ag. aprovação Corporativo';
+  return t;
+}
+
 /** Serviço: Unidade UR, SER ou SERV. */
 export function ehServico(unidade) {
   return ['UR', 'SER', 'SERV'].some((u) => igual(unidade, u)) ? 'SIM' : 'NÃO';
@@ -135,6 +152,7 @@ export function calcularLinhaBase(r, cfg, hoje) {
     temContrato: preenchida(r.contrato) ? 'sim' : 'não',
     servico: ehServico(r.unidade),
     sla: situacaoSla(r.status, diasEmAberto),
+    aprovacao: aprovacaoPrePedido(r.statusPrePedido, cfg.aprovadorGA?.(r.codigoFilial)),
     savingReal: savingReal(r.saving, r.qtdSolicitacao),
     ...anoMesPedido(r.numeroPedido, r.dataPedido),
     ...temposPorEtapa(r, hoje),
