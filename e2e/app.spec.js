@@ -5,6 +5,16 @@ import { arquivoBase, arquivoFollowUp, FILIAL_A, FILIAL_B, COMPRADOR } from './a
 
 const valorDoCartao = (page, rotulo) => page.locator('.cartao', { has: page.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
 
+// A lista de SCs da Regional abre em tela cheia na 1ª vez (cobre abas e cartões). Nos demais
+// testes ela começa fora da tela cheia; o teste da tela cheia usa o padrão.
+test.beforeEach(async ({ page }) => {
+  if (test.info().title.startsWith('lista de SCs em tela cheia')) return;
+  await page.addInitScript(() => {
+    const chave = 'dashboard-compras:lista-tela-cheia-2';
+    if (localStorage.getItem(chave) === null) localStorage.setItem(chave, 'nao');
+  });
+});
+
 async function importarBase(page) {
   await page.goto('./');
   await page.locator('input[data-tipo="base"]').setInputFiles(await arquivoBase());
@@ -120,11 +130,10 @@ test('olho e duplo clique recolhem SC atendida numa linha; desfazer e expandir',
   expect((await readFile(await download.path(), 'utf8')).startsWith('﻿Dias da aprovação;')).toBe(true);
 });
 
-test('lista de SCs em tela cheia: botão, Esc (depois da lista de marcar) e lembrada', async ({ page }) => {
+test('lista de SCs em tela cheia: abre assim na 1ª vez, Esc (depois da lista de marcar), botão e lembrada', async ({ page }) => {
   await importarBase(page);
   const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
-  await lista.getByRole('button', { name: 'Tela cheia' }).click();
-  await expect(lista).toHaveClass(/tela-cheia/);
+  await expect(lista).toHaveClass(/tela-cheia/); // padrão do app da equipe
   const caixa = await lista.boundingBox();
   const janela = page.viewportSize();
   expect(Math.round(caixa.width)).toBe(janela.width);
@@ -140,12 +149,51 @@ test('lista de SCs em tela cheia: botão, Esc (depois da lista de marcar) e lemb
   await page.keyboard.press('Escape');
   await expect(lista.locator('[data-filtro="status"] .filtro-painel')).toBeHidden();
   await expect(lista).toHaveClass(/tela-cheia/);
-
-  await page.reload(); // lembrada neste navegador
-  await expect(lista).toHaveClass(/tela-cheia/);
   await page.keyboard.press('Escape');
   await expect(lista).not.toHaveClass(/tela-cheia/);
-  await expect(lista.getByRole('button', { name: 'Tela cheia' })).toBeVisible();
+
+  await page.reload(); // a escolha fica lembrada neste navegador
+  await expect(lista).not.toHaveClass(/tela-cheia/);
+  await lista.getByRole('button', { name: 'Tela cheia' }).click();
+  await expect(lista).toHaveClass(/tela-cheia/);
+  await page.reload();
+  await expect(lista).toHaveClass(/tela-cheia/);
+});
+
+test('lista de SCs: cabe na largura e oculta colunas (lembrado)', async ({ page }) => {
+  // Larguras salvas largas (como no navegador da equipe): a lista passaria da janela.
+  await page.addInitScript(() => localStorage.setItem('dashboard-compras:larguras:scs-em-aberto.csv',
+    JSON.stringify({ descricao: 600, solicitante: 400, nomeFilial: 300 })));
+  await importarBase(page);
+  const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
+  const rolagem = lista.locator('.tabela-rolagem');
+  const semRolarParaOLado = async () => rolagem.evaluate((r) => r.scrollWidth <= r.clientWidth + 1);
+  await expect.poll(semRolarParaOLado).toBe(true);
+
+  const coluna = lista.locator('thead th', { hasText: 'Solicitante' });
+  await expect(coluna).toBeVisible();
+  await lista.locator('[data-filtro="colunas"] .filtro-botao').click();
+  await lista.locator('[data-filtro="colunas"] label', { hasText: 'Solicitante' }).click();
+  await expect(coluna).toBeHidden();
+  await expect(lista.locator('[data-filtro="colunas"] .filtro-valor')).toHaveText('1 oculta');
+  await page.reload();
+  await expect(coluna).toBeHidden();
+  await expect(lista.locator('[data-filtro="colunas"] .filtro-valor')).toHaveText('1 oculta');
+});
+
+test('filtros globais ficam salvos no navegador', async ({ page }) => {
+  await importarBase(page);
+  const filtro = page.locator('[data-filtro="prioridade"]');
+  await filtro.locator('.filtro-botao').click();
+  await filtro.getByLabel('Todos').uncheck();
+  await filtro.getByLabel('URGENTE').check();
+  await page.keyboard.press('Escape');
+  await expect(filtro.locator('.filtro-valor')).toHaveText('URGENTE');
+  await page.reload();
+  await expect(filtro.locator('.filtro-valor')).toHaveText('URGENTE');
+  await page.getByRole('button', { name: 'Limpar filtros' }).click();
+  await page.reload();
+  await expect(filtro.locator('.filtro-valor')).toHaveText('Todos');
 });
 
 test('largura da coluna: arrastar, setas, autoajuste com dois cliques, lembrada e "Larguras originais"', async ({ page }) => {

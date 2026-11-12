@@ -8,6 +8,14 @@ import { arquivoBase, arquivoFollowUp, COMPRADOR } from './ajuda/bases.js';
 const TELAS = ['Status', 'Entrega', 'Regional', 'Spend', 'Saving', 'Atendimento', 'Organograma'];
 const cartao = (raiz, rotulo) => raiz.locator('.cartao', { has: raiz.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
 
+// No app, a lista de SCs da Regional abriria em tela cheia (cobre os botões do topo).
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    const chave = 'dashboard-compras:lista-tela-cheia-2';
+    if (localStorage.getItem(chave) === null) localStorage.setItem(chave, 'nao');
+  });
+});
+
 async function gerarPainel(page, info) {
   await page.goto('./');
   await expect(page.locator('#acao-painel')).toBeDisabled();

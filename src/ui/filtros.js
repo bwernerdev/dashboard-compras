@@ -15,29 +15,39 @@ function fecharAberto() {
   }
 }
 
-document.addEventListener('pointerdown', (ev) => {
-  if (abertoAtual && !abertoAtual.raiz.contains(ev.target)) fecharAberto();
-});
-document.addEventListener('keydown', (ev) => {
-  if (ev.key === 'Escape' && abertoAtual) {
-    const { botao } = abertoAtual;
-    fecharAberto();
-    botao.focus();
-  }
-});
+// Clique fora e Esc fecham a lista aberta. Ligado na 1ª lista criada (o módulo também é importado
+// no Node pelos testes de ui/tabela.js, onde não há document).
+let fechamentoLigado = false;
+function ligarFechamento() {
+  if (fechamentoLigado) return;
+  fechamentoLigado = true;
+  document.addEventListener('pointerdown', (ev) => {
+    if (abertoAtual && !abertoAtual.raiz.contains(ev.target)) fecharAberto();
+  });
+  document.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape' && abertoAtual) {
+      const { botao } = abertoAtual;
+      fecharAberto();
+      botao.focus();
+    }
+  });
+}
 
 /**
  * Botão + lista de marcar (seleção múltipla). Usado na barra de filtros e nos recortes das telas.
  * id: data-filtro; rotulo; valores: [valor]; rotuloValor?(v) -> texto da opção; resumoValor?(v) ->
  * texto no botão com 1 marcado (padrão: rotuloValor); selecionados: Set (alterado no lugar; vazio =
- * todos); aoMudar(novoSet) a cada marcação. Marcar não fecha a lista; Esc/clique fora fecha.
+ * todos); resumoVarios?(n) -> texto no botão com 2+ marcados; aoMudar(novoSet) a cada marcação. Marcar não fecha a lista; Esc/clique fora fecha.
  *
  * Como o filtro do Excel (pedido da equipe, 12/11/2026): sem filtro, "Todos" e todas as opções
  * aparecem marcados. Desmarcar uma opção tira só ela; desmarcar "Todos" desmarca tudo para marcar
  * só as que interessam (enquanto nada estiver marcado, o filtro não muda); marcar "Todos" volta a
  * todas. Marcar todas uma a uma também vira "Todos".
  */
-export function listaDeMarcar({ id, rotulo, valores, rotuloValor = (v) => v, resumoValor = rotuloValor, selecionados, aoMudar }) {
+export function listaDeMarcar({
+  id, rotulo, valores, rotuloValor = (v) => v, resumoValor = rotuloValor, resumoVarios = (n) => `${n} selecionados`, selecionados, aoMudar,
+}) {
+  ligarFechamento();
   const idPainel = novoId('filtro');
   const valorBotao = el('span', { class: 'filtro-valor' });
   const botao = el('button', {
@@ -54,7 +64,7 @@ export function listaDeMarcar({ id, rotulo, valores, rotuloValor = (v) => v, res
     if (nenhum) return 'Marque uma opção';
     if (!selecionados.size) return 'Todos';
     if (selecionados.size === 1) return resumoValor([...selecionados][0]);
-    return `${selecionados.size} selecionados`;
+    return resumoVarios(selecionados.size);
   };
   const mostrar = () => {
     valorBotao.textContent = resumo();

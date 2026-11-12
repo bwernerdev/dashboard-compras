@@ -62,6 +62,7 @@ async function iniciar() {
     raiz,
     abaInicial: lerPreferencia('aba-painel') ?? 'regional',
     aoTrocarAba: (id) => salvarPreferencia('aba-painel', id),
+    chaveFiltros: 'filtros-painel',
     telaVazia: () => el('div', { class: 'estado-vazio' }, 'O painel não tem linhas.'),
   });
   nav.definirRegistros(registrosDoPainel(dados));

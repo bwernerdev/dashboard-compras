@@ -19,7 +19,14 @@ import { listaDeMarcar } from '../ui/filtros.js';
 const local = { faixa: null, status: new Set(), agrupar: 'regional' };
 
 // Lista de SCs em tela cheia (cobre a janela; Esc ou o botão volta). Lembrada neste navegador.
-let telaCheia = lerPreferencia('lista-tela-cheia') === 'sim';
+// No app da equipe a lista abre em tela cheia enquanto a pessoa não escolher (pedido da equipe,
+// 12/11/2026; o painel publicado não). A escolha ("Tela cheia"/"Sair"/Esc) fica lembrada.
+// Chave nova: a antiga guardava "nao" para todo mundo.
+const CHAVE_TELA_CHEIA = 'lista-tela-cheia-2';
+let telaCheia = lerPreferencia(CHAVE_TELA_CHEIA) === 'sim';
+export function abrirListaEmTelaCheia() {
+  if (lerPreferencia(CHAVE_TELA_CHEIA) === null) telaCheia = true;
+}
 let sairDaTelaCheia = null;
 document.addEventListener('keydown', (ev) => {
   // Esc fecha antes uma lista de marcar aberta (Status, filtros); só depois sai da tela cheia.
@@ -209,6 +216,10 @@ export function telaRegional(ctx) {
       recolhido: atendidasLigadas ? estaAtendida : null, colunasRecolhido: ['olho', 'aprov', 'sc'], nomeRecolhido: ['atendida', 'atendidas'],
     },
     nomeArquivo: 'scs-em-aberto.csv',
+    // Pedido da equipe (12/11/2026): mais SCs por página, colunas cabem na largura e dá para ocultar colunas.
+    porPagina: 200,
+    caberNaLargura: true,
+    escolherColunas: true,
     vazio,
     classeLinha: (r) => (ehRegularizacao(r) ? 'linha-regularizacao' : ''),
     aoDuploClique: atendidasLigadas ? (r) => alternarAtendida(r, !estaAtendida(r.solicitacao)) : null,
@@ -228,7 +239,7 @@ export function telaRegional(ctx) {
 
   const aplicarTelaCheia = (ligar) => {
     telaCheia = ligar;
-    salvarPreferencia('lista-tela-cheia', ligar ? 'sim' : 'nao');
+    salvarPreferencia(CHAVE_TELA_CHEIA, ligar ? 'sim' : 'nao');
     blocoLista.classList.toggle('tela-cheia', ligar);
     botaoTelaCheia.textContent = ligar ? 'Sair da tela cheia' : 'Tela cheia';
     botaoTelaCheia.setAttribute('aria-pressed', String(ligar));

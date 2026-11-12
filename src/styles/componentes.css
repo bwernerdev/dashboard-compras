@@ -118,6 +118,8 @@ input[type="search"].campo { min-width: 220px; }
   width: max-content; min-width: 220px; max-width: 320px; padding: var(--s2);
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-3);
 }
+/* Lista de marcar na barra da tabela ("Colunas"): abre para a esquerda, a barra fica à direita. */
+.tabela-barra .filtro-painel { left: auto; right: 0; }
 .filtro-lista { max-height: 300px; overflow: auto; display: flex; flex-direction: column; }
 .filtro-opcao {
   display: flex; align-items: center; gap: var(--s2); padding: 5px var(--s2);

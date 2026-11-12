@@ -5,7 +5,7 @@ import { el, substituir } from './dom.js';
 import { esconderDica } from './dica.js';
 import { barraDeFiltros } from './filtros.js';
 import { aplicarFiltros, opcoesDosFiltros, FILTROS, filtroValeNaTela } from '../analise.js';
-import { salvarPreferencia } from '../preferencias.js';
+import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
 
 /** Filtros ativos em texto (linha que sai na impressão). */
 export function descreverFiltros(selecao, tela) {
@@ -18,13 +18,15 @@ export function descreverFiltros(selecao, tela) {
  * Controla abas, filtros e tela.
  * telas: [{ id, rotulo, desenhar(ctx) }]; raiz: { abas, filtros, conteudo, filtrosImpressao };
  * telaVazia(): conteúdo quando não há registros; aoTrocarAba(id) opcional.
+ * chaveFiltros: preferência onde a seleção dos filtros globais fica salva neste navegador (volta na
+ * próxima vez que abrir; pedido da equipe, 12/11/2026). Sem ela, os filtros começam vazios.
  * ctx de cada tela: { registros, followUp (null sem a base Follow-Up), redesenhar, filtrar }.
  * Os filtros globais valem para as duas bases; as opções vêm só da base principal.
  */
-export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba }) {
+export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba, chaveFiltros }) {
   const estado = {
     aba: telas.some((t) => t.id === abaInicial) ? abaInicial : telas[0].id,
-    selecao: {},
+    selecao: chaveFiltros ? lerSelecao(chaveFiltros) : {},
     registros: null,
     followUp: null,
     opcoes: null,
@@ -45,6 +47,13 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     for (const [id, valores] of Object.entries(estado.selecao)) {
       estado.selecao[id] = new Set([...valores].filter((v) => estado.opcoes?.[id]?.includes(v)));
     }
+  }
+
+  /** Só filtros com algo marcado; Set vira lista. */
+  function guardarSelecao() {
+    if (!chaveFiltros) return;
+    const ativos = Object.entries(estado.selecao).filter(([, v]) => v?.size).map(([id, v]) => [id, [...v]]);
+    salvarPreferencia(chaveFiltros, JSON.stringify(Object.fromEntries(ativos)));
   }
 
   function definirFollowUp(registros) {
@@ -87,8 +96,8 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
       tela: estado.aba,
       selecao: estado.selecao,
       opcoes: estado.opcoes,
-      aoMudar: (id, valores) => { estado.selecao[id] = valores; agendarTela(); },
-      aoLimpar: () => { estado.selecao = {}; desenharFiltros(); desenharTela(); },
+      aoMudar: (id, valores) => { estado.selecao[id] = valores; guardarSelecao(); agendarTela(); },
+      aoLimpar: () => { estado.selecao = {}; guardarSelecao(); desenharFiltros(); desenharTela(); },
     }));
   }
 
@@ -112,6 +121,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
         const atual = estado.selecao[idFiltro];
         const jaEra = atual?.size === 1 && atual.has(valor);
         estado.selecao[idFiltro] = jaEra ? new Set() : new Set([valor]);
+        guardarSelecao();
         desenharFiltros();
         desenharTela();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -156,4 +166,13 @@ export function ligarImpressao(botao) {
     if (temaAntes) document.documentElement.dataset.theme = temaAntes;
     temaAntes = null;
   });
+}
+
+/** Seleção salva ({ idFiltro: [valores] }) -> { idFiltro: Set }; só filtros conhecidos. Estragada = nenhuma. */
+function lerSelecao(chave) {
+  try {
+    const salvo = JSON.parse(lerPreferencia(chave, '{}')) ?? {};
+    return Object.fromEntries(FILTROS.filter((f) => Array.isArray(salvo[f.id]) && salvo[f.id].length)
+      .map((f) => [f.id, new Set(salvo[f.id])]));
+  } catch { return {}; }
 }
