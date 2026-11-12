@@ -14,7 +14,7 @@ import {
 import { listaDeMarcar } from '../ui/filtros.js';
 
 // Seleções locais da tela (não são filtros globais: só recortam a lista de SCs).
-const local = { faixa: null, sla: 'todos', status: new Set(), agrupar: 'regional', mostrarAtendidas: false };
+const local = { faixa: null, sla: 'todos', status: new Set(), agrupar: 'regional' };
 
 // "Atendida" (olho / duplo clique tira a SC da lista): só no app da equipe. O painel publicado
 // não chama ligarAtendidas e mostra a lista inteira.
@@ -31,7 +31,7 @@ const SLA_OPCOES = [
 // Sem "Dias em aberto", "SLA", "Prazo máx." e "Item" (pedido da equipe, 11/11/2026): o recorte
 // de SLA acima da lista continua valendo.
 const COLUNAS_SCS = [
-  { id: 'aprov', rotulo: 'Dias da aprovação', num: true, centro: true, valor: (r) => r.diasDaAprovacao, formato: fmt.inteiro, titulo: 'Dias corridos desde a criação' },
+  { id: 'aprov', rotulo: 'Dias da aprovação', num: true, centro: true, valor: (r) => r.diasDaAprovacao, formato: fmt.inteiro, titulo: 'Dias corridos desde a criação', classe: () => 'col-dias' },
   // Regularização: linha toda em vermelho (classeLinha); o texto escondido diz o mesmo ao leitor de tela.
   // semDuploClique: a equipe dá dois cliques no número para copiar; ali não oculta a SC.
   { id: 'sc', rotulo: 'SC', semDuploClique: true, valor: (r) => r.sc, exibir: (r) => (ehRegularizacao(r) ? [r.sc, el('span', { class: 'so-leitor' }, ' (regularização)')] : r.sc) },
@@ -134,7 +134,6 @@ export function telaRegional(ctx) {
 
   const recortar = () => {
     let lista = recortarPorStatus(abertos, local.status);
-    if (atendidasLigadas && !local.mostrarAtendidas) lista = lista.filter((r) => !estaAtendida(r.solicitacao));
     if (local.faixa) lista = lista.filter((r) => faixaDe(r.diasEmAberto) === local.faixa);
     if (local.sla === 'sem') lista = lista.filter((r) => r.sla !== 'No Prazo' && r.sla !== 'Fora do Prazo');
     else if (local.sla !== 'todos') lista = lista.filter((r) => r.sla === local.sla);
@@ -163,18 +162,9 @@ export function telaRegional(ctx) {
     aoMudar: () => { tabela.atualizar(recortar()); atalho.hidden = !statusPendencia.length || soPendencias(); },
   });
 
-  // Atendidas: o olho (ou duplo clique na linha) tira a SC da lista; "Mostrar atendidas" traz
-  // de volta, apagadas, com o olho riscado para desfazer. Cartões e gráficos não mudam.
-  const scsAbertas = [...new Set(abertos.map((r) => r.solicitacao))];
-  const botaoAtendidas = el('button', {
-    type: 'button', class: 'botao botao-sec botao-pequeno', 'aria-pressed': String(local.mostrarAtendidas),
-    onclick: () => {
-      local.mostrarAtendidas = !local.mostrarAtendidas;
-      botaoAtendidas.setAttribute('aria-pressed', String(local.mostrarAtendidas));
-      aviso.replaceChildren();
-      atualizarLista();
-    },
-  });
+  // Atendidas: o olho (ou duplo clique na linha) recolhe a SC numa linha só (Dias da aprovação
+  // e SC), como recolher na tabela dinâmica da planilha. Olho riscado (ou duplo clique) expande.
+  // Cartões e gráficos não mudam.
   const aviso = el('span', { class: 'aviso-atendida', role: 'status' });
   let ultimaMarcada = null;
   const botaoDesfazer = el('button', {
@@ -182,20 +172,15 @@ export function telaRegional(ctx) {
     onclick: () => { if (ultimaMarcada) alternarAtendida(ultimaMarcada, false); },
   }, 'Desfazer');
 
-  function atualizarLista() {
-    const n = scsAbertas.filter(estaAtendida).length;
-    botaoAtendidas.textContent = local.mostrarAtendidas ? `Ocultar atendidas (${fmt.inteiro(n)})` : `Mostrar atendidas (${fmt.inteiro(n)})`;
-    botaoAtendidas.hidden = !n && !local.mostrarAtendidas;
-    tabela?.atualizar(recortar(), { manterPagina: true });
-  }
+  const atualizarLista = () => tabela?.atualizar(recortar(), { manterPagina: true });
 
   /** r: um item da SC (a marca vale para a SC inteira, chave `solicitacao`). */
   function alternarAtendida(r, atendida) {
     marcarAtendida(r.solicitacao, atendida);
     ultimaMarcada = atendida ? r : null;
     aviso.replaceChildren(...(atendida
-      ? [`SC ${r.sc} marcada como atendida${local.mostrarAtendidas ? '' : ' e oculta'}. `, botaoDesfazer]
-      : [`SC ${r.sc} voltou para a lista.`]));
+      ? [`SC ${r.sc} marcada como atendida e recolhida. `, botaoDesfazer]
+      : [`SC ${r.sc} expandida de novo.`]));
     atualizarLista();
   }
 
@@ -203,7 +188,7 @@ export function telaRegional(ctx) {
     id: 'olho', rotulo: 'Atendida', controle: true, valor: (r) => r.solicitacao,
     exibir: (r) => {
       const atendida = estaAtendida(r.solicitacao);
-      const rotulo = atendida ? `Voltar a SC ${r.sc} para a lista` : `Marcar SC ${r.sc} como atendida (ocultar)`;
+      const rotulo = atendida ? `Expandir SC ${r.sc} (desmarcar atendida)` : `Marcar SC ${r.sc} como atendida (recolher)`;
       return el('button', {
         type: 'button', class: 'olho', 'aria-label': rotulo, title: rotulo,
         onclick: (e) => { e.stopPropagation(); alternarAtendida(r, !atendida); },
@@ -214,7 +199,6 @@ export function telaRegional(ctx) {
   const recortes = el('div', { class: 'recortes' },
     filtroStatus,
     atalho,
-    atendidasLigadas ? botaoAtendidas : null,
     el('label', { class: 'recorte' }, 'SLA ',
       el('select', {
         class: 'campo', onchange: (ev) => { local.sla = ev.target.value; ctx.redesenhar(); },
@@ -230,21 +214,21 @@ export function telaRegional(ctx) {
     colunas,
     ordem: { coluna: 'aprov', desc: true },
     // Como a tabela dinâmica da aba Regional: dados da SC só na 1ª linha, itens embaixo.
-    grupo: { chave: (r) => r.solicitacao, colunas: ['olho', 'aprov', 'sc', 'data', 'prioridade'], nome: ['SC', 'SCs'] },
+    // Atendida: recolhida numa linha só com Dias da aprovação e SC, como na planilha.
+    grupo: {
+      chave: (r) => r.solicitacao, colunas: ['olho', 'aprov', 'sc', 'data', 'prioridade'], nome: ['SC', 'SCs'],
+      recolhido: atendidasLigadas ? estaAtendida : null, colunasRecolhido: ['olho', 'aprov', 'sc'], nomeRecolhido: ['atendida', 'atendidas'],
+    },
     nomeArquivo: 'scs-em-aberto.csv',
     vazio,
-    classeLinha: (r) => [
-      ehRegularizacao(r) ? 'linha-regularizacao' : '',
-      atendidasLigadas && estaAtendida(r.solicitacao) ? 'linha-atendida' : '',
-    ].join(' ').trim(),
+    classeLinha: (r) => (ehRegularizacao(r) ? 'linha-regularizacao' : ''),
     aoDuploClique: atendidasLigadas ? (r) => alternarAtendida(r, !estaAtendida(r.solicitacao)) : null,
   });
-  if (atendidasLigadas) atualizarLista();
   const blocoLista = bloco(
     {
       titulo: 'SCs em aberto',
       subtitulo: atendidasLigadas
-        ? 'Itens agrupados por SC, da mais antiga para a mais nova. Já atendeu? Clique no olho ou dê dois cliques na linha (fora do número da SC) para tirar a SC da lista (fica salvo neste navegador). CSV e "Copiar tabela" trazem um item por linha.'
+        ? 'Itens agrupados por SC, da mais antiga para a mais nova. Já atendeu? Clique no olho ou dê dois cliques na linha (fora do número da SC) para recolher a SC numa linha só (fica salvo neste navegador). CSV e "Copiar tabela" trazem um item por linha.'
         : 'Itens agrupados por SC, da mais antiga para a mais nova. CSV e "Copiar tabela" trazem um item por linha.',
     },
     recortes,
@@ -270,5 +254,4 @@ export function reiniciarRegional() {
   local.faixa = null;
   local.sla = 'todos';
   local.status = new Set();
-  local.mostrarAtendidas = false;
 }

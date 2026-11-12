@@ -69,42 +69,48 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   await expect(page.locator('[data-filtro="regional"] .filtro-valor')).toHaveText('Todos');
 });
 
-test('olho e duplo clique ocultam SC atendida; mostrar e desfazer', async ({ page }) => {
+test('olho e duplo clique recolhem SC atendida numa linha; desfazer e expandir', async ({ page }) => {
   await importarBase(page);
   const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
   const contagem = lista.locator('.tabela-contagem');
+  const linhas = lista.locator('tbody tr');
   await expect(contagem).toHaveText('2 SCs, 3 itens');
-  await expect(lista.getByRole('button', { name: /^Mostrar atendidas/ })).toBeHidden();
+  await expect(linhas).toHaveCount(3);
 
-  // Olho: some a SC inteira (os 2 itens), cartões não mudam.
-  await lista.getByRole('button', { name: 'Marcar SC 1000002 como atendida (ocultar)' }).click();
-  await expect(contagem).toHaveText('1 SC, 1 item');
-  await expect(lista.getByRole('status')).toContainText('SC 1000002 marcada como atendida e oculta');
+  // Olho: a SC 1000002 (2 itens) vira uma linha só com Dias da aprovação e SC, como na planilha.
+  await lista.getByRole('button', { name: 'Marcar SC 1000002 como atendida (recolher)' }).click();
+  await expect(contagem).toHaveText('2 SCs (1 atendida), 3 itens');
+  await expect(linhas).toHaveCount(2);
+  const recolhida = lista.locator('tbody tr.grupo-recolhido');
+  await expect(recolhida.locator('td').nth(2)).toHaveText('1000002');
+  await expect(recolhida.locator('td').nth(1)).not.toHaveText('');
+  await expect(recolhida.locator('td').nth(5)).toHaveText(''); // status e o resto vazios
+  await expect(lista.getByRole('status')).toContainText('SC 1000002 marcada como atendida e recolhida');
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
 
-  // Desfazer volta.
+  // Desfazer expande.
   await lista.getByRole('button', { name: 'Desfazer' }).click();
+  await expect(linhas).toHaveCount(3);
   await expect(contagem).toHaveText('2 SCs, 3 itens');
 
-  // Duplo clique em qualquer linha do item também oculta.
   // Dois cliques no número da SC só selecionam (para copiar): a SC fica.
   const linhaSc = lista.locator('tbody tr', { hasText: '1000001' });
   await linhaSc.locator('td').nth(2).dblclick();
   await expect(contagem).toHaveText('2 SCs, 3 itens');
   await expect(page.evaluate(() => getSelection().toString())).resolves.toContain('1000001');
+  // Dois cliques fora do número recolhem (a SC 1000001 tem 1 item: a linha fica, só com Dias e SC).
   await linhaSc.locator('td').nth(6).dblclick();
-  await expect(contagem).toHaveText('1 SC, 2 itens');
+  await expect(contagem).toHaveText('2 SCs (1 atendida), 3 itens');
+  await expect(lista.locator('tbody tr.grupo-recolhido')).toHaveCount(1);
 
   // Fica salvo no navegador.
   await page.reload();
-  await expect(contagem).toHaveText('1 SC, 2 itens');
+  await expect(contagem).toHaveText('2 SCs (1 atendida), 3 itens');
 
-  // "Mostrar atendidas": volta apagada, olho riscado desfaz.
-  await lista.getByRole('button', { name: 'Mostrar atendidas (1)' }).click();
+  // Olho riscado expande de novo.
+  await lista.getByRole('button', { name: 'Expandir SC 1000001 (desmarcar atendida)' }).click();
+  await expect(lista.locator('tbody tr.grupo-recolhido')).toHaveCount(0);
   await expect(contagem).toHaveText('2 SCs, 3 itens');
-  await expect(lista.locator('tbody tr.linha-atendida')).toHaveCount(1);
-  await lista.getByRole('button', { name: 'Voltar a SC 1000001 para a lista' }).click();
-  await expect(lista.locator('tbody tr.linha-atendida')).toHaveCount(0);
 
   // CSV não leva a coluna do olho.
   const [download] = await Promise.all([page.waitForEvent('download'), lista.getByRole('button', { name: 'Exportar CSV' }).click()]);

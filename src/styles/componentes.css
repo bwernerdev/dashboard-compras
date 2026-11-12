@@ -222,10 +222,14 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 }
 .olho:hover { color: var(--text); background: var(--surface-2); }
 .olho:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-.tabela tbody tr.linha-atendida td:not(.col-controle) { opacity: .5; }
 /* SC de regularização: linha toda em vermelho (menos o olho, fora da grade). Legenda acima da lista. */
 .tabela tbody tr.linha-regularizacao td:not(.col-controle) { background: var(--linha-reg-bg); color: var(--linha-reg-fg); }
 .tabela tbody tr.linha-regularizacao:hover td:not(.col-controle) { background: var(--linha-reg-hover); }
+/* SC atendida recolhida numa linha (como na tabela dinâmica): só Dias da aprovação (fundo cinza) e SC.
+   Neutra: vem depois e vence o vermelho de regularização. */
+.tabela tbody tr.grupo-recolhido td:not(.col-controle),
+.tabela tbody tr.grupo-recolhido:hover td:not(.col-controle) { background: none; color: var(--text); }
+.tabela tbody tr.grupo-recolhido td.col-dias:not(.col-controle) { background: var(--recolhida-bg); color: var(--text); }
 .legenda-lista { display: flex; align-items: center; gap: var(--s2); margin: 0 0 var(--s2); font-size: var(--fs-sm); color: var(--text-muted); }
 .legenda-regularizacao { width: 14px; height: 14px; border-radius: 3px; background: var(--linha-reg-bg); box-shadow: inset 0 0 0 1px var(--linha-reg-fg); }
 .aviso-atendida { display: block; min-height: 1.4em; margin: calc(-1 * var(--s2)) 0 var(--s2); font-size: var(--fs-sm); color: var(--text-muted); }

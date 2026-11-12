@@ -97,6 +97,9 @@ export function definirExportacao({ csv }) { exportacao.csv = csv; }
  *         grupo { chave(linha), colunas: [ids], nome: ['SC', 'SCs'] }: linhas da mesma chave ficam
  *         juntas (na ordem da 1ª que aparece), as colunas do grupo só na 1ª linha (como a tabela
  *         dinâmica da planilha) e a paginação conta grupos. CSV e "Copiar tabela" repetem tudo.
+ *         recolhido(chave) -> bool: grupo recolhido vira uma linha só, com as `colunasRecolhido`
+ *         preenchidas e o resto vazio (como recolher a SC na tabela dinâmica); `nomeRecolhido`:
+ *         ['atendida', 'atendidas'] entra na contagem.
  */
 export function criarTabela(opcoes) {
   const {
@@ -212,11 +215,21 @@ export function criarTabela(opcoes) {
     const inicio = estado.pagina * porPagina;
     const pagina = grupos.slice(inicio, inicio + porPagina);
 
-    substituir(corpo, pagina.length ? pagina.flatMap((g) => g.map((l, i) => el('tr', {
-      class: [aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '', grupo && i < g.length - 1 ? 'grupo-continua' : '', classeLinha?.(l) ?? ''].join(' ').trim() || null,
-      onclick: aoClicarLinha ? () => aoClicarLinha(l) : null,
-      ondblclick: aoDuploClique ? (e) => { if (!e.target.closest('button, a, input, [data-sem-duplo-clique]')) aoDuploClique(l); } : null,
-    }, colunas.map((c) => td(c, l, g[0]))))) : el('tr', {}, el('td', { colspan: colunas.length, class: 'tabela-vazia' }, typeof vazio === 'function' ? vazio() : vazio)));
+    const recolhido = (g) => !!grupo?.recolhido?.(grupo.chave(g[0]));
+    substituir(corpo, pagina.length ? pagina.flatMap((g) => {
+      const rec = recolhido(g);
+      const visiveis = rec ? [g[0]] : g;
+      return visiveis.map((l, i) => el('tr', {
+        class: [
+          aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '',
+          grupo && i < visiveis.length - 1 ? 'grupo-continua' : '', rec ? 'grupo-recolhido' : '', classeLinha?.(l) ?? '',
+        ].join(' ').trim() || null,
+        onclick: aoClicarLinha ? () => aoClicarLinha(l) : null,
+        ondblclick: aoDuploClique ? (e) => { if (!e.target.closest('button, a, input, [data-sem-duplo-clique]')) aoDuploClique(l); } : null,
+      }, colunas.map((c) => (rec && !(grupo.colunasRecolhido ?? grupo.colunas).includes(c.id)
+        ? el('td', { class: classeColuna(c) })
+        : td(c, l, g[0])))));
+    }) : el('tr', {}, el('td', { colspan: colunas.length, class: 'tabela-vazia' }, typeof vazio === 'function' ? vazio() : vazio)));
 
     if (rodape && linhas.length) {
       const totais = rodape(linhas);
@@ -226,7 +239,9 @@ export function criarTabela(opcoes) {
     const filtrado = linhas.length !== estado.linhas.length;
     if (grupo) {
       const total = filtrado ? ` (de ${plural(agrupar(estado.linhas).length, grupo.nome)})` : '';
-      contagem.textContent = `${plural(grupos.length, grupo.nome)}, ${plural(linhas.length, ['item', 'itens'])}${total}`;
+      const recolhidos = grupo.recolhido ? grupos.filter(recolhido).length : 0;
+      const textoRecolhidos = recolhidos && grupo.nomeRecolhido ? ` (${plural(recolhidos, grupo.nomeRecolhido)})` : '';
+      contagem.textContent = `${plural(grupos.length, grupo.nome)}${textoRecolhidos}, ${plural(linhas.length, ['item', 'itens'])}${total}`;
     } else {
       contagem.textContent = filtrado
         ? `${linhas.length} de ${plural(estado.linhas.length, NOME_LINHA)}`
