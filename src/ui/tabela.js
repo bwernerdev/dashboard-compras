@@ -200,8 +200,11 @@ export function criarTabela(opcoes) {
 
   function td(c, l, primeira) {
     const oculta = ocultaNoGrupo(c, l, primeira);
+    const classe = oculta ? '' : (c.classe?.(l) ?? '');
     return el('td', {
-      class: [classeColuna(c) ?? '', oculta ? '' : (c.classe?.(l) ?? '')].join(' ').trim() || null,
+      class: [classeColuna(c) ?? '', classe].join(' ').trim() || null,
+      // Célula cortada com reticências: o texto inteiro aparece ao passar o mouse.
+      title: /texto-(longo|medio)/.test(classe) ? textoDaCelula(c, l) || null : null,
       'data-sem-duplo-clique': c.semDuploClique || null,
     }, oculta ? '' : (c.exibir ? c.exibir(l) : (textoDaCelula(c, l) || '-')));
   }

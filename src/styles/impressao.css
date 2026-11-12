@@ -11,6 +11,8 @@
   .pagina { padding: 0; max-width: none; }
   .bloco, .cartao { box-shadow: none; break-inside: avoid; }
   .tabela-rolagem { max-height: none; overflow: visible; border: 0; }
+  .bloco.tela-cheia { position: static; padding: 0; overflow: visible; }
+  .bloco-acoes { display: none !important; }
   .tabela thead th, .tabela tfoot td { position: static; }
   .grade-2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

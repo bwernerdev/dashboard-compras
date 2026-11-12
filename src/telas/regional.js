@@ -2,6 +2,7 @@
 // Substitui a aba "Regional" (e cobre a "Atendimento") da planilha antiga, com os dias corrigidos.
 import { el, icone } from '../ui/dom.js';
 import { estaAtendida, marcarAtendida } from '../atendidas.js';
+import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
 import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
 import { barras, barraSegmentada } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
@@ -15,6 +16,15 @@ import { listaDeMarcar } from '../ui/filtros.js';
 
 // Seleções locais da tela (não são filtros globais: só recortam a lista de SCs).
 const local = { faixa: null, sla: 'todos', status: new Set(), agrupar: 'regional' };
+
+// Lista de SCs em tela cheia (cobre a janela; Esc ou o botão volta). Lembrada neste navegador.
+let telaCheia = lerPreferencia('lista-tela-cheia') === 'sim';
+let sairDaTelaCheia = null;
+document.addEventListener('keydown', (ev) => {
+  // Esc fecha antes uma lista de marcar aberta (Status, filtros); só depois sai da tela cheia.
+  if (ev.key !== 'Escape' || !sairDaTelaCheia || document.querySelector('.filtro-painel:not([hidden])')) return;
+  sairDaTelaCheia();
+}, true); // captura: roda antes do Esc da lista de marcar, que fecharia a lista primeiro
 
 // "Atendida" (olho / duplo clique tira a SC da lista): só no app da equipe. O painel publicado
 // não chama ligarAtendidas e mostra a lista inteira.
@@ -41,9 +51,9 @@ const COLUNAS_SCS = [
   { id: 'descricao', rotulo: 'Produto', valor: (r) => r.descricao, classe: () => 'texto-longo' },
   { id: 'codigo', rotulo: 'Código', valor: (r) => r.codigoProduto },
   { id: 'qtd', rotulo: 'Qtd.', num: true, centro: true, valor: (r) => r.qtdSolicitacao, formato: fmt.inteiro },
-  { id: 'solicitante', rotulo: 'Solicitante', valor: (r) => r.solicitante },
+  { id: 'solicitante', rotulo: 'Solicitante', valor: (r) => r.solicitante, classe: () => 'texto-medio' },
   { id: 'filial', rotulo: 'Filial', valor: (r) => r.filial },
-  { id: 'nomeFilial', rotulo: 'Nome da filial', valor: (r) => r.nomeFilial },
+  { id: 'nomeFilial', rotulo: 'Nome da filial', valor: (r) => r.nomeFilial, classe: () => 'texto-medio' },
   { id: 'comprador', rotulo: 'Comprador', valor: (r) => r.comprador ?? '-' },
   { id: 'regional', rotulo: 'Regional', valor: (r) => r.regional },
 ];
@@ -83,6 +93,7 @@ export function telaRegional(ctx) {
   const abertos = itensEmAberto(ctx.registros);
   const resumo = resumoEmAberto(abertos);
 
+  sairDaTelaCheia = null; // a tela é refeita a cada desenho
   if (!abertos.length) {
     return el('div', { class: 'estado-vazio' }, 'Nenhuma SC em aberto com os filtros atuais.');
   }
@@ -224,9 +235,11 @@ export function telaRegional(ctx) {
     classeLinha: (r) => (ehRegularizacao(r) ? 'linha-regularizacao' : ''),
     aoDuploClique: atendidasLigadas ? (r) => alternarAtendida(r, !estaAtendida(r.solicitacao)) : null,
   });
+  const botaoTelaCheia = el('button', { type: 'button', class: 'botao botao-sec botao-pequeno' });
   const blocoLista = bloco(
     {
       titulo: 'SCs em aberto',
+      acoes: botaoTelaCheia,
       subtitulo: atendidasLigadas
         ? 'Itens agrupados por SC, da mais antiga para a mais nova. Já atendeu? Clique no olho ou dê dois cliques na linha (fora do número da SC) para recolher a SC numa linha só (fica salvo neste navegador). CSV e "Copiar tabela" trazem um item por linha.'
         : 'Itens agrupados por SC, da mais antiga para a mais nova. CSV e "Copiar tabela" trazem um item por linha.',
@@ -236,6 +249,19 @@ export function telaRegional(ctx) {
     atendidasLigadas ? aviso : null,
     tabela.elemento,
   );
+
+  const aplicarTelaCheia = (ligar) => {
+    telaCheia = ligar;
+    salvarPreferencia('lista-tela-cheia', ligar ? 'sim' : 'nao');
+    blocoLista.classList.toggle('tela-cheia', ligar);
+    botaoTelaCheia.textContent = ligar ? 'Sair da tela cheia' : 'Tela cheia';
+    botaoTelaCheia.setAttribute('aria-pressed', String(ligar));
+    botaoTelaCheia.title = ligar ? 'Voltar ao painel (Esc)' : 'Mostrar só a lista, na janela inteira';
+    // Só vale com a lista na tela (outra aba aberta: Esc não mexe na preferência).
+    sairDaTelaCheia = ligar ? () => { if (blocoLista.isConnected) { aplicarTelaCheia(false); botaoTelaCheia.focus(); } } : null;
+  };
+  botaoTelaCheia.onclick = () => aplicarTelaCheia(!telaCheia);
+  aplicarTelaCheia(telaCheia);
 
   return el('div', { class: 'tela' }, cartoes, el('div', { class: 'grade-2 grade-2-3' }, graficoFaixas, blocoGrupos), blocoLista);
 }

@@ -68,8 +68,9 @@ button:disabled { cursor: default; }
 }
 .lista-passos { margin: 0; padding-left: var(--s5); display: flex; flex-direction: column; gap: var(--s1); }
 
-.pagina { padding: var(--s5); max-width: 1500px; margin: 0 auto; }
+.pagina { padding: var(--s5); max-width: 1920px; margin: 0 auto; }
 .pagina:focus { outline: none; }
+@media (max-width: 1500px) { .pagina { padding: var(--s4); } }
 
 .tela { display: flex; flex-direction: column; gap: var(--s4); }
 .grade-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); align-items: start; }

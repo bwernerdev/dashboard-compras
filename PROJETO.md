@@ -284,6 +284,10 @@ Status do acompanhamento diário. No ME esses itens **nunca** têm "Selecionado 
 ### Lista de SCs em aberto agrupada por SC (11/11/2026)
 Pedido da equipe: igual à tabela dinâmica da aba Regional, cada SC aparece uma vez (Dias da aprovação, SC, Data, Prioridade na 1ª linha) com os itens embaixo (Status, Produto, Código, Qtd., Solicitante, Filial, Nome da filial, Comprador, Regional). A equipe pediu para tirar as colunas Dias em aberto, SLA, Prazo máx. e Item; os recortes de SLA e de faixa de dias continuam. Ordem: Dias da aprovação, do maior para o menor. Dias da aprovação e Qtd. centralizados. O painel publicado deixou de levar `item` e `slaMax` (dados versão 2). Contagem "397 SCs, 622 itens"; paginação por SC. CSV e "Copiar tabela" continuam com um item por linha, tudo preenchido (melhor para filtrar no Excel). Conferido com a SC 7715098: 3 itens, como na planilha.
 
+### Lista de SCs em tela cheia (12/11/2026)
+Pedido da equipe: a lista "SCs em aberto" ocupar a tela toda, em desktop (não há uso em celular). Botão **"Tela cheia"** no título do bloco: a lista cobre a janela e a tabela usa toda a altura que sobra (cabeçalho fixo, rolagem só dentro dela). **Esc** ou "Sair da tela cheia" volta; com a lista de Status aberta, o Esc fecha a lista primeiro. Lembrada neste navegador (`lista-tela-cheia`). Vale também no painel publicado (dentro do quadro do SharePoint).
+- Sem rolagem para o lado de 1366 a 1920 px, nos dois modos: Produto, Solicitante e Nome da filial encolhem com a janela (reticências; texto inteiro ao passar o mouse), cabeçalhos quebram em 2 linhas quando falta espaço, células e margens mais justas abaixo de 1500 px e página até 1920 px de largura (antes 1500).
+
 ### SCs de regularização em vermelho (12/11/2026)
 Pedido da equipe: SC com "Categoria solicitação" = **REGULARIZAÇÃO** (compra já feita, SC aberta depois) fica com a **linha toda em vermelho** na lista de SCs em aberto da Regional. A planilha antiga não tinha essa cor: regra nova.
 - Categoria vale para a SC inteira (nenhuma SC mistura categorias na base de 11/11/2026): todos os itens ficam vermelhos. Base de 11/11/2026: 51 SCs em aberto (57 itens) de 397.

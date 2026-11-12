@@ -117,6 +117,29 @@ test('olho e duplo clique recolhem SC atendida numa linha; desfazer e expandir',
   expect((await readFile(await download.path(), 'utf8')).startsWith('﻿Dias da aprovação;')).toBe(true);
 });
 
+test('lista de SCs em tela cheia: botão, Esc (depois da lista de marcar) e lembrada', async ({ page }) => {
+  await importarBase(page);
+  const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
+  await lista.getByRole('button', { name: 'Tela cheia' }).click();
+  await expect(lista).toHaveClass(/tela-cheia/);
+  const caixa = await lista.boundingBox();
+  const janela = page.viewportSize();
+  expect(Math.round(caixa.width)).toBe(janela.width);
+  expect(Math.round(caixa.height)).toBe(janela.height);
+
+  // Esc com a lista de Status aberta fecha só a lista; o próximo Esc sai da tela cheia.
+  await lista.locator('[data-filtro="status"] .filtro-botao').click();
+  await page.keyboard.press('Escape');
+  await expect(lista.locator('[data-filtro="status"] .filtro-painel')).toBeHidden();
+  await expect(lista).toHaveClass(/tela-cheia/);
+
+  await page.reload(); // lembrada neste navegador
+  await expect(lista).toHaveClass(/tela-cheia/);
+  await page.keyboard.press('Escape');
+  await expect(lista).not.toHaveClass(/tela-cheia/);
+  await expect(lista.getByRole('button', { name: 'Tela cheia' })).toBeVisible();
+});
+
 test('filtro global pela lista; Esc fecha', async ({ page }) => {
   await importarBase(page);
   await page.locator('[data-filtro="prioridade"] .filtro-botao').click();

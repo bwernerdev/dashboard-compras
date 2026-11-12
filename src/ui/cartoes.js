@@ -11,11 +11,13 @@ export function cartao({ rotulo, valor, detalhe = null, tom = null }) {
 
 export const linhaDeCartoes = (...cartoes) => el('div', { class: 'cartoes' }, cartoes);
 
-/** Bloco com título, subtítulo opcional e conteúdo (gráfico ou tabela). */
-export function bloco({ titulo, subtitulo = null, classe = '' }, ...conteudo) {
+/** Bloco com título, subtítulo opcional, ações à direita do título (botões) e conteúdo. */
+export function bloco({ titulo, subtitulo = null, classe = '', acoes = null }, ...conteudo) {
   return el('section', { class: `bloco ${classe}`.trim() },
     el('header', { class: 'bloco-cabecalho' },
-      el('h2', {}, titulo),
-      subtitulo ? el('p', { class: 'bloco-subtitulo' }, subtitulo) : null),
+      el('div', { class: 'bloco-titulos' },
+        el('h2', {}, titulo),
+        subtitulo ? el('p', { class: 'bloco-subtitulo' }, subtitulo) : null),
+      acoes ? el('div', { class: 'bloco-acoes' }, acoes) : null),
     conteudo);
 }

@@ -59,7 +59,17 @@ input[type="search"].campo { min-width: 220px; }
   min-width: 0; padding: var(--s4);
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-1);
 }
-.bloco-cabecalho { margin-bottom: var(--s3); }
+.bloco-cabecalho { display: flex; align-items: flex-start; gap: var(--s3); margin-bottom: var(--s3); }
+.bloco-titulos { flex: 1; min-width: 0; }
+.bloco-acoes { display: flex; gap: var(--s2); flex: none; }
+
+/* Bloco em tela cheia (lista de SCs em aberto): cobre a janela, a tabela ocupa a altura que sobra. */
+.bloco.tela-cheia {
+  position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column;
+  padding: var(--s4) var(--s5); border: 0; border-radius: 0; box-shadow: none; overflow: hidden;
+}
+.bloco.tela-cheia > .tabela-bloco { flex: 1; min-height: 0; }
+.bloco.tela-cheia .tabela-rolagem { flex: 1; min-height: 0; max-height: none; overscroll-behavior: contain; }
 .bloco-cabecalho h2 { font-size: var(--fs-lg); font-weight: 650; color: var(--text-strong); }
 .bloco-subtitulo { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-sm); }
 .bloco > * + .tabela-bloco { margin-top: var(--s4); }
@@ -174,6 +184,8 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .tabela { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
 .tabela th, .tabela td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
 .tabela thead th { position: sticky; top: 0; z-index: 1; background: var(--surface-2); padding: 0; font-weight: 600; }
+/* Cabeçalho quebra em 2 linhas quando falta largura (ex.: "Dias da aprovação"), em vez de rolar para o lado. */
+.tabela thead th { white-space: normal; }
 .tabela tfoot td { position: sticky; bottom: 0; background: var(--surface-2); font-weight: 700; border-top: 1px solid var(--line-strong); }
 .tabela .num { text-align: right; font-variant-numeric: tabular-nums; }
 .tabela tbody tr:hover { background: var(--surface-hover); }
@@ -209,7 +221,14 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .centro .th-botao { justify-content: center; }
 .th-seta { font-size: 9px; color: var(--accent-text); }
 .tabela-vazia { text-align: center !important; color: var(--text-muted); padding: var(--s5) !important; }
-.texto-longo { max-width: 360px; overflow: hidden; text-overflow: ellipsis; }
+/* Texto longo encolhe com a janela (reticências; texto inteiro no title da célula). */
+.texto-longo { max-width: clamp(140px, 13vw, 420px); overflow: hidden; text-overflow: ellipsis; }
+.texto-medio { max-width: clamp(90px, 7.5vw, 240px); overflow: hidden; text-overflow: ellipsis; }
+/* Telas até 1500 px: células mais justas para a lista caber sem rolar para o lado. */
+@media (max-width: 1500px) {
+  .tabela th, .tabela td { padding-left: 7px; padding-right: 7px; }
+  .th-botao { padding-left: 7px; padding-right: 7px; }
+}
 .linha-destaque { background: var(--warning-bg); color: var(--warning-fg); font-weight: 600; }
 .paginacao { display: flex; align-items: center; justify-content: flex-end; gap: var(--s2); font-size: var(--fs-sm); color: var(--text-muted); }
 .paginacao:empty { display: none; }
