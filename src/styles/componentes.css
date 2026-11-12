@@ -188,8 +188,12 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .tabela-bloco { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; }
 .tabela-barra { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
 .tabela-contagem { color: var(--text-muted); font-size: var(--fs-sm); margin-right: auto; }
+/* Área rolável da tabela: no máximo a janela menos a faixa de filtros fixa (--topo-fixo, medida em
+   ui/casca.js) e o que fica em volta (barra da tabela, paginação, margens: 116 px). Com poucas
+   linhas encolhe sozinha. position: relative prende aqui dentro os textos só para leitor de tela
+   (.so-leitor, absolutos): sem isso eles escapavam do recorte e esticavam a página para baixo. */
 .tabela-rolagem {
-  overflow: auto; max-height: 70vh;
+  position: relative; overflow: auto; max-height: max(240px, calc(100dvh - var(--topo-fixo, 0px) - 116px));
   border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface);
   scrollbar-width: thin;
 }
@@ -316,17 +320,41 @@ body:has(.th-alca.arrastando) { cursor: col-resize; user-select: none; }
 .sla-bom { background: var(--st-bom); }
 .sla-fora { background: var(--st-critico); }
 
-/* Organograma: liderança em cadeia, equipe em cartões com as filiais de cada comprador. */
-.org-cadeia { list-style: none; margin: 0 0 var(--s4); padding: 0; display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; }
-.org-cadeia > li { display: flex; align-items: center; gap: var(--s3); }
-.org-cadeia > li + li::before { content: '›'; color: var(--text-muted); font-size: 1.4em; }
-.org-pessoa { display: flex; gap: var(--s3); align-items: flex-start; }
-.org-avatar {
-  flex: none; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--button-bg); color: var(--text-strong); font-weight: 700; font-size: .9rem;
+/* Organograma: árvore de cima para baixo (listas aninhadas). Linhas: cada <li> desenha metade da
+   linha horizontal acima dele (::before à esquerda, ::after à direita, com a descida até o cartão);
+   cada <ul> de equipe desce uma linha do cartão do chefe. Primeiro e último filhos cortam a ponta. */
+.org-arvore { overflow-x: auto; padding-bottom: var(--s2); --org-linha: 2px solid var(--line-strong); --org-v: 20px; }
+.org-nivel { list-style: none; margin: 0; padding: var(--org-v) 0 0; display: flex; justify-content: center; position: relative; }
+.org-arvore > .org-nivel { padding-top: 0; }
+.org-ramo { position: relative; display: flex; flex-direction: column; align-items: center; padding: var(--org-v) var(--s2) 0; }
+.org-arvore > .org-nivel > .org-ramo { padding-top: 0; }
+.org-ramo::before, .org-ramo::after {
+  content: ''; position: absolute; top: 0; right: 50%; width: 50%; height: var(--org-v); border-top: var(--org-linha);
 }
+.org-ramo::after { right: auto; left: 50%; border-left: var(--org-linha); }
+.org-ramo:first-child::before, .org-ramo:last-child::after { border: 0; }
+.org-ramo:last-child::before { border-right: var(--org-linha); border-radius: 0 var(--r-md) 0 0; }
+.org-ramo:first-child::after { border-radius: var(--r-md) 0 0 0; }
+.org-ramo:only-child::before { display: none; }
+.org-ramo:only-child::after { border: 0; border-left: var(--org-linha); border-radius: 0; }
+.org-arvore > .org-nivel > .org-ramo::before, .org-arvore > .org-nivel > .org-ramo::after { display: none; }
+.org-ramo > .org-nivel::before { content: ''; position: absolute; top: 0; left: 50%; height: var(--org-v); border-left: var(--org-linha); }
+.org-no {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;
+  width: 220px; padding: var(--s3); background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md); box-shadow: var(--shadow-1);
+}
+.org-avatar {
+  width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; margin-bottom: var(--s2);
+  background: var(--button-bg); color: var(--text-strong); font-weight: 700; font-size: 1.1rem;
+}
+.org-foto { object-fit: cover; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--line-strong); }
 .org-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.org-equipe { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-.org-comprador { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s3); display: flex; flex-direction: column; gap: var(--s3); }
-.org-filiais { margin: 0; padding-left: 1.2em; font-size: .875rem; display: flex; flex-direction: column; gap: 2px; }
-.org-foto { object-fit: cover; box-shadow: 0 0 0 1px var(--line); }
+.org-no-lider { flex-direction: row; width: 280px; text-align: left; gap: var(--s3); padding: var(--s2) var(--s3); }
+.org-no-lider .org-avatar { width: 48px; height: 48px; margin: 0; flex: none; font-size: .95rem; }
+.org-nome { color: var(--text-strong); }
+.org-cargo { color: var(--text-muted); font-size: var(--fs-sm); }
+.org-filiais {
+  list-style: none; margin: var(--s2) 0 0; padding: var(--s2) 0 0; border-top: 1px solid var(--line);
+  width: 100%; text-align: left; font-size: var(--fs-xs, .78rem); color: var(--text); display: flex; flex-direction: column; gap: 2px;
+}

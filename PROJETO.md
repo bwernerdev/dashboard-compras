@@ -348,6 +348,8 @@ Pedido da equipe: tudo o que as abas visíveis da planilha mostram precisa estar
 - **Organograma**: texto e fotos da aba (cargos e filiais de cada comprador; fotos recortadas em 96 px dentro de `src/telas/organograma-fotos.js`, entram no painel). Erico não tem foto na planilha: iniciais. Corrigidos "Bruno Wener" e "Acessoria". Sem contagem de SCs (pedido da equipe). Mudou a equipe: editar `src/telas/organograma.js` e as fotos.
 - **Painel** (`src/painel/dados.js`, `VERSAO` 4): produto, solicitante, data e filial em toda linha (tela Status), `numeroPedido` (Spend) e `slaMax` (Atendimento); bloco `followUp` só com os campos da Entrega. Continuam fora: Compradores, pré-pedidos, configuração.
 
+- **Tabelas na altura da janela:** a área rolável vai até o fim da janela (desconta a faixa de filtros fixa, medida em `ui/casca.js`) e encolhe com poucas linhas. Corrigido o espaço vazio embaixo das páginas com lista de SCs: textos só para leitor de tela (`.so-leitor`) escapavam da área rolável e esticavam a página.
+- **Organograma em árvore**, como na planilha: líderes em cadeia, equipe embaixo com as filiais; fotos de Bruno e Vitor recortadas dentro do círculo.
 - **Listas de marcar como o filtro do Excel** (filtros globais e recortes de status): sem filtro, "Todos" e todas as opções aparecem marcados; desmarcar uma opção tira só ela; desmarcar "Todos" limpa a lista para marcar só o que interessa; marcar "Todos" volta a todas. Antes "Todos" era um botão que só limpava a seleção e ficava desativado sem filtro (parecia não funcionar).
 
 ### Bases de 11/11/2026

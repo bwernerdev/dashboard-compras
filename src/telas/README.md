@@ -14,7 +14,7 @@ Telas públicas (vão também para o painel) ficam em `publicas.js`, na ordem da
 | `spend.js` | Tela Spend (aba Spend): spend (pedido c/ impostos) por filial com % do total e OFs distintas (barras no lugar da pizza), por mês do pedido. Filtro "Mês do pedido" vale aqui |
 | `saving.js` | Tela Saving: total comprado, economia, % saving (2 casas), por filial, por mês do pedido e por comprador. Filtro "Mês do pedido" vale aqui |
 | `atendimento.js` | Tela Atendimento (aba Atendimento): itens em aberto um por linha, do mais antigo para o mais novo, com SLA (marca + texto) e prazo máximo; recorte Todos / Fora do prazo / No prazo |
-| `organograma.js` | Tela Organograma (aba Organograma): liderança e equipe com foto (ou iniciais, se não houver), filiais de cada comprador (texto da planilha, em `ESTRUTURA`/`COMPRADORES`). Só o organograma, sem contagem de SCs |
+| `organograma.js` | Tela Organograma (aba Organograma): árvore de cima para baixo com linhas (listas aninhadas `org-nivel`/`org-ramo`), líderes em cartão baixo, equipe com as filiais de cada comprador; foto (ou iniciais). Dados em `ARVORE`. Só o organograma, sem contagem de SCs |
 | `organograma-fotos.js` | `FOTOS`: fotos da aba Organograma da planilha, 96 x 96 px JPEG em data URI (entram no painel), por nome |
 | `importacao.js` | Caixas "Base" e "Follow-Up" (escolher/arrastar, progresso, erro). Na tela vazia e no diálogo "Atualizar bases". Os `input[data-tipo]` são usados pelo e2e |
 | `configuracao.js` | Diálogo "Configuração": edita filiais, compradores e SLA; `validarConfig`; "Restaurar padrão". Salva no navegador |

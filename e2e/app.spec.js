@@ -259,7 +259,8 @@ test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', asyn
 
   await page.getByRole('tab', { name: 'Organograma' }).click();
   await expect(page.getByRole('heading', { name: "Organograma Suprimentos CD's" })).toBeVisible();
-  await expect(page.locator('.org-comprador')).toHaveCount(4);
+  await expect(page.locator('.org-no')).toHaveCount(8); // árvore: 4 líderes + 3 compradores + assessoria
+  await expect(page.locator('.org-filiais')).toHaveCount(3);
   await expect(page.locator('img.org-foto')).toHaveCount(7); // fotos da planilha; Erico sem foto lá: iniciais
   await expect(page.locator('#conteudo')).not.toContainText('SCs em aberto'); // só o organograma
 });

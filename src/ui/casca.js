@@ -31,6 +31,13 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
   };
   let pedido = 0;
 
+  // Altura da faixa de filtros (fixa no topo ao rolar): as tabelas descontam dela para caber na janela.
+  // Mede ao desenhar os filtros, ao mudar a janela e quando a faixa muda de altura (quebra de linha).
+  const medirTopo = () => document.documentElement.style.setProperty('--topo-fixo', `${raiz.filtros.offsetHeight}px`);
+  window.addEventListener('resize', medirTopo);
+  const observador = typeof ResizeObserver === 'function' ? new ResizeObserver(medirTopo) : null;
+  observador?.observe(raiz.filtros);
+
   function definirRegistros(registros) {
     estado.registros = registros;
     estado.opcoes = registros ? opcoesDosFiltros(registros) : null;
@@ -73,8 +80,9 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
   });
 
   function desenharFiltros() {
-    if (!estado.registros) { substituir(raiz.filtros); raiz.filtros.hidden = true; return; }
+    if (!estado.registros) { substituir(raiz.filtros); raiz.filtros.hidden = true; medirTopo(); return; }
     raiz.filtros.hidden = false;
+    queueMicrotask(medirTopo);
     substituir(raiz.filtros, barraDeFiltros({
       tela: estado.aba,
       selecao: estado.selecao,
@@ -117,7 +125,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     desenharTela();
   }
 
-  return { estado, definirRegistros, definirFollowUp, desenhar, desenharTela };
+  return { estado, definirRegistros, definirFollowUp, desenhar, desenharTela, observador };
 }
 
 /** Botão de tema claro/escuro (html[data-theme]); a escolha fica no navegador quando dá. */
