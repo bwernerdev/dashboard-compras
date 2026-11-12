@@ -6,10 +6,14 @@ import { cartao, linhaDeCartoes, bloco, estadoVazio } from '../ui/cartoes.js';
 import { barras, barrasEmpilhadas } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import { listaDeMarcar } from '../ui/filtros.js';
+import { lerConjunto, salvarConjunto } from '../preferencias.js';
 import * as fmt from '../ui/formatos.js';
 import { entregasPorStatus, recortarPor } from '../analise.js';
 
-const local = { status: new Set() };
+// Recorte de Status salvo neste navegador (pedido da equipe, 12/11/2026), inclusive ao importar outra base.
+const CHAVE_STATUS = 'entrega-status';
+const local = { status: lerConjunto(CHAVE_STATUS) };
+const guardarStatus = () => salvarConjunto(CHAVE_STATUS, local.status);
 
 /** Cor fixa por status de entrega (estado: falta, parcial, entregue), sempre com o texto ao lado. */
 const COR = new Map([
@@ -88,7 +92,7 @@ export function telaEntrega(ctx) {
       formato: fmt.inteiro,
       rotuloSerie: 'OFs',
       selecionado: local.status.size === 1 ? [...local.status][0] : null,
-      aoClicar: (s) => { local.status = local.status.size === 1 && local.status.has(s) ? new Set() : new Set([s]); ctx.redesenhar(); },
+      aoClicar: (s) => { local.status = local.status.size === 1 && local.status.has(s) ? new Set() : new Set([s]); guardarStatus(); ctx.redesenhar(); },
     }),
     criarTabela({
       titulo: 'OFs por status de entrega', linhas: porStatus, pesquisa: false, nomeArquivo: 'ofs-por-status-de-entrega.csv',
@@ -120,7 +124,7 @@ export function telaEntrega(ctx) {
     rotuloValor: (s) => `${s} (${fmt.inteiro(doStatus.get(s)?.ofs ?? 0)} OFs)`,
     resumoValor: (s) => s,
     selecionados: local.status,
-    aoMudar: () => tabela.atualizar(recortar()),
+    aoMudar: () => { guardarStatus(); tabela.atualizar(recortar()); },
   });
 
   tabela = criarTabela({
@@ -147,5 +151,5 @@ export function telaEntrega(ctx) {
   return el('div', { class: 'tela' }, cartoes, el('div', { class: 'grade-2' }, grafico, filiais), lista);
 }
 
-/** Zera o recorte local (ao trocar de bases). */
-export function reiniciarEntrega() { local.status = new Set(); }
+/** O recorte de Status fica salvo no navegador: não zera ao trocar de bases. */
+export function reiniciarEntrega() { /* nada a zerar */ }

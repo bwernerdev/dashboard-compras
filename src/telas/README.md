@@ -23,4 +23,4 @@ Telas públicas (vão também para o painel) ficam em `publicas.js`, na ordem da
 
 Cartões de Status, Regional e Atendimento mostram a variação desde a base anterior (`ctx.anteriores`, só no app) e o mini gráfico do histórico (`ctx.historico`, só no app, sem filtro). Clicar numa linha da lista de SCs (Regional, Atendimento, Status) abre o detalhe da SC (`ui/detalhe.js`). Subtítulo dos blocos em uma frase; detalhes no `ajuda` (botão "?").
 
-Seleções locais das telas (faixa, status, agrupar, SLA) ficam em cada módulo e zeram ao importar outra base (`reiniciarTelas`). Exceção: o recorte de Status da Regional fica salvo no navegador.
+Seleções locais das telas (faixa, status, agrupar, SLA) ficam em cada módulo e zeram ao importar outra base (`reiniciarTelas`). Exceção: o recorte de Status de Regional, Status e Entrega fica salvo no navegador (chaves `regional-status`, `status-status`, `entrega-status`; `lerConjunto`/`salvarConjunto` em `preferencias.js`) e não zera ao importar.

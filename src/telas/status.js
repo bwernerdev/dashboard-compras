@@ -6,12 +6,16 @@ import { barras } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import { cliqueDeDetalhe } from '../ui/detalhe.js';
 import { listaDeMarcar } from '../ui/filtros.js';
+import { lerConjunto, salvarConjunto } from '../preferencias.js';
 import * as fmt from '../ui/formatos.js';
 import { seloDoStatus, marcaDaPrioridade } from '../ui/cores-planilha.js';
 import { scsPorStatus, resumoStatus, recortarPorStatus, ehRegularizacao } from '../analise.js';
 
 // Recorte local (não é filtro global): status marcados na lista ou na barra do gráfico.
-const local = { status: new Set() };
+// Recorte de Status salvo neste navegador (pedido da equipe, 12/11/2026), inclusive ao importar outra base.
+const CHAVE_STATUS = 'status-status';
+const local = { status: lerConjunto(CHAVE_STATUS) };
+const guardarStatus = () => salvarConjunto(CHAVE_STATUS, local.status);
 
 const COLUNAS = [
   { id: 'sc', rotulo: 'SC', semDuploClique: true, valor: (r) => r.sc, exibir: (r) => (ehRegularizacao(r) ? [r.sc, el('span', { class: 'so-leitor' }, ' (regularização)')] : r.sc) },
@@ -55,7 +59,7 @@ export function telaStatus(ctx) {
       formato: fmt.inteiro,
       rotuloSerie: 'SCs',
       selecionado: local.status.size === 1 ? [...local.status][0] : null,
-      aoClicar: (s) => { local.status = local.status.size === 1 && local.status.has(s) ? new Set() : new Set([s]); ctx.redesenhar(); },
+      aoClicar: (s) => { local.status = local.status.size === 1 && local.status.has(s) ? new Set() : new Set([s]); guardarStatus(); ctx.redesenhar(); },
     }),
     criarTabela({
       titulo: 'SCs por status', linhas: porStatus, pesquisa: false, nomeArquivo: 'scs-por-status.csv',
@@ -75,7 +79,7 @@ export function telaStatus(ctx) {
     rotuloValor: (s) => `${s} (${fmt.inteiro(doStatus.get(s)?.scs ?? 0)} SCs)`,
     resumoValor: (s) => s,
     selecionados: local.status,
-    aoMudar: () => tabela.atualizar(recortar()),
+    aoMudar: () => { guardarStatus(); tabela.atualizar(recortar()); },
   });
 
   tabela = criarTabela({
@@ -99,5 +103,5 @@ export function telaStatus(ctx) {
   return el('div', { class: 'tela' }, cartoes, grafico, lista);
 }
 
-/** Zera o recorte local (ao trocar de bases). */
-export function reiniciarStatus() { local.status = new Set(); }
+/** O recorte de Status fica salvo no navegador: não zera ao trocar de bases. */
+export function reiniciarStatus() { /* nada a zerar */ }

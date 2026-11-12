@@ -347,6 +347,10 @@ test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', asyn
   await page.getByRole('button', { name: /^Em Pedido: 1 SCs/ }).click(); // barra recorta a lista
   await expect(lista.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
   await expect(lista.locator('tbody tr').first()).toContainText('1000003');
+  // O recorte de Status fica salvo neste navegador.
+  await page.reload();
+  await expect(lista.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
+  await expect(lista.locator('[data-filtro="status-sc"] .filtro-valor')).toHaveText('Em Pedido');
 
   await page.getByRole('tab', { name: 'Spend' }).click();
   await expect(page.locator('[data-filtro="mes"]')).toBeVisible();
