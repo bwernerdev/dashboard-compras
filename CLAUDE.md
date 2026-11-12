@@ -26,6 +26,7 @@ Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configura�
 | `src/styles/` | CSS em camadas: tokens (tema escuro, paleta dos gráficos), base, componentes, impressão |
 | `tests/`, `tests/ajuda/` | Testes unitários e gerador de xlsx fictício |
 | `e2e/`, `e2e/ajuda/` | Testes Playwright e bases fictícias |
+| `.github/workflows/` | `pages.yml`: build e publicação no GitHub Pages |
 | `scripts/` | `medir.mjs`, `conferir-xlsm.mjs`, `gerar-teste-intranet.mjs` |
 | `node_modules/`, `dist/`, `.npm-cache/`, `test-results/` | Gerados/ignorados: não ler nem editar |
 
@@ -42,7 +43,7 @@ Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configura�
 | `*.xlsx`, `*.xlsm` | Bases e planilha antiga: só locais, nunca versionar (`.gitignore`). Para olhar: `npm run medir`/`conferir` ou `openpyxl` com `read_only=True` |
 
 ## Repositório
-PRIVADO `github.com/bwernerdev/dashboard-compras` (branch `main`). Nunca tornar público: regras e nomes de filiais/compradores são internos. `gh` portátil: `../RPA/ferramentas/gh/bin/gh.exe` com `GH_CONFIG_DIR=../RPA/ferramentas/gh-config`.
+PÚBLICO `github.com/bwernerdev/dashboard-compras` (branch `main`), por decisão do usuário em 12/11/2026, para a equipe testar. Site: https://bwernerdev.github.io/dashboard-compras/ (GitHub Pages, `.github/workflows/pages.yml` publica `dist/` a cada push). Tudo o que entra no repositório fica visível na internet: planilhas e bases do ME continuam fora (`.gitignore`); nada de senha, token ou dado de SC. `gh` portátil: `../RPA/ferramentas/gh/bin/gh.exe` com `GH_CONFIG_DIR=../RPA/ferramentas/gh-config`.
 
 ## Convenções
 - Cada pasta tem um `README.md` com o mapa dos seus arquivos. Criou pasta: crie o README. Mudou arquivo: atualize o README da pasta.

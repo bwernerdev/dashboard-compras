@@ -7,4 +7,4 @@
 
 - Mudou o de-para na planilha antiga ou entrou filial/comprador novo: editar `padrao.js` (ordem importa) e rodar `npm run conferir`.
 - A edição pela interface (salva no navegador) entra na fase 2; ela passa o objeto editado para `criarConfig`.
-- Dados internos (nomes de filiais e compradores): o repositório é privado.
+- Dados internos (nomes de filiais e compradores): ficam visíveis, o repositório é público desde 12/11/2026 (decisão do usuário).

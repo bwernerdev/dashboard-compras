@@ -133,8 +133,8 @@ Sem histórico acumulado (decisão de 11/11/2026). O painel cobre a janela que o
 ### 4.5 Regras em um módulo só, com testes
 `src/regras.js` com uma função por regra da seção 3; `src/config/` com de-para de filiais, apelidos de compradores e tabela SLA, **editáveis pela interface** na fase 2 (hoje exigem mexer em aba oculta). Testes unitários com dados fictícios cobrindo cada regra, inclusive o caso corrigido da seção 2. Conferência com a planilha real por script local (`npm run conferir`), sem dados reais no git.
 
-### 4.6 Repositório próprio e **privado**
-Como o `giro-estoque`, mas privado: as regras e os nomes de filiais são internos. Planilhas (`*.xlsx`, `*.xlsm`) nunca entram no git (`.gitignore` já criado).
+### 4.6 Repositório próprio, **público** desde 12/11/2026
+Nasceu privado (regras e nomes de filiais são internos). Em 12/11/2026 o usuário decidiu torná-lo público, com tudo (histórico, regras, nomes e fotos do organograma), para a equipe testar pelo GitHub Pages: https://bwernerdev.github.io/dashboard-compras/. Planilhas (`*.xlsx`, `*.xlsm`) nunca entram no git (`.gitignore` já criado).
 
 ### 4.7 Quem vê o quê — **dois públicos** (11/11/2026)
 O `.xlsm` anexado na Intranet fica protegido por senha (estrutura + 4 abas); a equipe de Suprimentos tem a senha e acesso total. Protegida, a planilha mostra só 8 abas e esconde as outras 11 (e os botões da aba `Botão`):
@@ -187,7 +187,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | Dias úteis | Mesmo método atual: seg–sex, sem feriados |
 | Saving Real | Mantido como hoje (quantidade da solicitação) |
 | Período | O que vier nas bases; sem histórico acumulado |
-| Repositório | Próprio e privado: `github.com/bwernerdev/dashboard-compras` |
+| Repositório | Próprio, público desde 12/11/2026: `github.com/bwernerdev/dashboard-compras`; site no GitHub Pages |
 | Correção da seção 2 | Aprovada: o painel publica os valores corrigidos (dias em aberto, Data, Serviço, SLA, tempos por etapa) |
 | Públicos (seção 4.7) | Equipe de Suprimentos: app completo. Intranet: painel gerado só com as telas das 8 abas visíveis; Compradores fica de fora do arquivo |
 | Contagem distinta com vazio (fase 2) | Igual à planilha: nos pré-pedidos, SC sem pré-pedido conta como 1 em cada grupo (DISTINCTCOUNT do modelo de dados). Decidido em 11/11/2026 |

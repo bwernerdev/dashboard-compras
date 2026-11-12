@@ -1,5 +1,5 @@
 // Configuração padrão, copiada das abas `Base Analitico` e `sla` do
-// DASHBOARD COMPRAS 2026.xlsm em 11/11/2026. Dados internos: o repositório é privado.
+// DASHBOARD COMPRAS 2026.xlsm em 11/11/2026. Dados internos, publicados com o repositório (público desde 12/11/2026, decisão do usuário).
 // A ordem importa: as buscas reproduzem o PROCV do Excel (primeira ocorrência vence).
 
 export const CONFIG_PADRAO = {
