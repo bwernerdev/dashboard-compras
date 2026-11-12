@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { arquivoBase, arquivoBaseAnterior, arquivoFollowUp, FILIAL_A, FILIAL_B, COMPRADOR } from './ajuda/bases.js';
 
-const valorDoCartao = (page, rotulo) => page.locator('.cartao', { has: page.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
+const valorDoCartao = (page, rotulo) => page.locator('.tela > .cartoes > .cartao', { has: page.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
 
 async function importarBase(page) {
   await page.goto('./');
@@ -27,6 +27,33 @@ test('cartões mostram a variação desde a base de outro dia (e lembram ao reca
   await expect(variacao('SCs fora do prazo')).toHaveText('▼ −1 desde 10/11');
   await page.reload();
   await expect(variacao('SCs em aberto')).toHaveText('▼ −1 desde 10/11');
+});
+
+test('Hoje, detalhe da SC ao clicar, densidade compacta e comparação de períodos', async ({ page }) => {
+  await importarBase(page);
+  await page.getByRole('tab', { name: 'Hoje' }).click();
+  await expect(valorDoCartao(page, 'Viraram fora do prazo')).toHaveText('0'); // sem base anterior: só no 1º dia fora
+  await expect(page.getByRole('heading', { name: /^Vencem em até 2 dias úteis/ })).toBeVisible();
+
+  await page.getByRole('tab', { name: 'Regional' }).click();
+  const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
+  await lista.locator('tbody tr', { hasText: '1000002' }).first().getByText('Em Cotação').click();
+  const detalhe = page.locator('.detalhe-sc');
+  await expect(detalhe.locator('h2')).toHaveText('SC 1000002');
+  await expect(detalhe.locator('.detalhe-itens li')).toHaveCount(2);
+  await page.keyboard.press('Escape');
+  await expect(detalhe).toBeHidden();
+
+  await lista.getByRole('button', { name: 'Compacta' }).click();
+  await expect(page.locator('html')).toHaveClass(/densidade-compacta/);
+  await page.reload();
+  await expect(page.locator('html')).toHaveClass(/densidade-compacta/);
+
+  await page.getByRole('tab', { name: 'Spend' }).click();
+  const comparacao = page.locator('.bloco', { has: page.getByRole('heading', { name: 'Comparação de períodos' }) });
+  await expect(comparacao).toContainText(' x ');
+  await comparacao.getByRole('button', { name: 'Trimestre x anterior' }).click();
+  await expect(comparacao.getByRole('button', { name: 'Trimestre x anterior' })).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('sem bases mostra a importação; arquivo errado mostra o motivo', async ({ page }) => {
@@ -86,7 +113,7 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   await expect(lista.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
 
   // Clique na linha da regional filtra o painel inteiro.
-  await page.locator('tr.clicavel', { hasText: FILIAL_A.regional }).click();
+  await page.getByRole('table', { name: 'SCs em aberto por regional' }).locator('tr.clicavel', { hasText: FILIAL_A.regional }).click();
   await expect(page.locator('[data-filtro="regional"] .filtro-valor')).toHaveText(FILIAL_A.regional);
   await page.getByRole('button', { name: 'Limpar filtros' }).click();
   await expect(page.locator('[data-filtro="regional"] .filtro-valor')).toHaveText('Todos');
@@ -292,7 +319,7 @@ test('SCs por Comprador (com período De/Até) e Saving', async ({ page }) => {
 
   await page.getByRole('tab', { name: 'Saving' }).click();
   await expect(page.locator('[data-filtro="mes"]')).toBeVisible(); // filtro só desta tela
-  const economia = page.locator('.cartao', { has: page.locator('.cartao-rotulo', { hasText: /^Economia$/ }) });
+  const economia = page.locator('.tela > .cartoes > .cartao', { has: page.locator('.cartao-rotulo', { hasText: /^Economia$/ }) });
   await expect(economia.locator('.cartao-detalhe')).toHaveText(/R\$\s100,00/);
   await expect(valorDoCartao(page, '% Saving')).toHaveText('10,00%');
   await expect(page.getByRole('table', { name: 'Saving por filial' }).locator('tbody tr').first()).toContainText(FILIAL_B.nome.trim());
@@ -300,7 +327,7 @@ test('SCs por Comprador (com período De/Até) e Saving', async ({ page }) => {
 
 test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', async ({ page }) => {
   await importarBase(page);
-  await expect(page.getByRole('tab')).toHaveText(['Status', 'Entrega', 'Regional', 'SCs por Comprador', 'Spend', 'Saving', 'Atendimento', 'Organograma']);
+  await expect(page.getByRole('tab')).toHaveText(['Hoje', 'Status', 'Entrega', 'Regional', 'SCs por Comprador', 'Spend', 'Saving', 'Atendimento', 'Organograma']);
   await expect(page.getByRole('tab', { name: 'Regional' })).toHaveAttribute('aria-selected', 'true'); // aba inicial
 
   await page.getByRole('tab', { name: 'Status' }).click();

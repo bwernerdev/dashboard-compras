@@ -5,11 +5,14 @@
 import { importarNoWorker } from './importacao.js';
 import { criarConfig, CONFIG_PADRAO } from './config/index.js';
 import { hojeSerie, formatarSerie } from './datas.js';
-import { brutosDe, recalcular, salvarImportacao, salvarAnterior, lerImportacoes, lerConfig, salvarConfig, apagarConfig } from './memoria.js';
+import {
+  brutosDe, recalcular, salvarImportacao, salvarAnterior, salvarHistorico, juntarAoHistorico, lerImportacoes, lerConfig, salvarConfig, apagarConfig,
+} from './memoria.js';
+import { resumoStatus, resumoEmAberto, itensEmAberto } from './analise.js';
 import { lerPreferencia, salvarPreferencia } from './preferencias.js';
 import { el } from './ui/dom.js';
 import { esqueleto } from './ui/cartoes.js';
-import { criarNavegador, ligarTema, ligarImpressao, diasDesdeABase, BASE_ANTIGA_DIAS } from './ui/casca.js';
+import { criarNavegador, ligarTema, ligarImpressao, ligarTopoCompacto, diasDesdeABase, BASE_ANTIGA_DIAS } from './ui/casca.js';
 import { aplicarMarca } from './ui/marca.js';
 import { baixar } from './ui/tabela.js';
 import { caixasDeImportacao } from './telas/importacao.js';
@@ -17,14 +20,16 @@ import { abrirConfiguracao } from './telas/configuracao.js';
 import { TELAS_PUBLICAS, reiniciarTelas } from './telas/publicas.js';
 import { ligarAtendidas } from './telas/regional.js';
 import { telaCompradores } from './telas/compradores.js';
+import { telaHoje } from './telas/hoje.js';
 import { gerarPainel, NOME_DO_ARQUIVO } from './painel/gerar.js';
 
 ligarAtendidas(); // olho "atendida" na lista de SCs: só no app da equipe, não no painel publicado
 
-// Ordem das abas da planilha antiga; SCs por Comprador (interna, não vai para o painel) depois da Regional.
-const TELAS = TELAS_PUBLICAS.flatMap((t) => (t.id === 'regional'
+// Ordem das abas da planilha antiga; Hoje (interna) primeiro e SCs por Comprador (interna) depois da
+// Regional. As internas não vão para o painel.
+const TELAS = [{ id: 'hoje', rotulo: 'Hoje', desenhar: telaHoje }, ...TELAS_PUBLICAS.flatMap((t) => (t.id === 'regional'
   ? [t, { id: 'compradores', rotulo: 'SCs por Comprador', desenhar: telaCompradores }]
-  : [t]));
+  : [t]))];
 
 const configSalva = lerConfig();
 const estado = {
@@ -35,6 +40,7 @@ const estado = {
   base: null, // { registros, brutos, meta, salvoEm }
   followUp: null,
   anterior: null, // base de outro dia do ME { brutos, meta, salvoEm }: variação nos cartões
+  historico: [], // [{ dia, status, aberto }]: mini gráficos dos cartões (ver memoria.js)
   carregando: true, // lendo as bases salvas ao abrir: esqueleto no lugar da tela de importação
 };
 
@@ -82,6 +88,23 @@ function definirAnterior() {
   } : null);
 }
 
+// ---------- Histórico (mini gráficos) ----------
+
+/** Resumos da base inteira (sem filtros) do dia do ME: o que os mini gráficos mostram. */
+const pontoDe = (meta, registros) => ({ dia: diaDaBase(meta), status: resumoStatus(registros), aberto: resumoEmAberto(itensEmAberto(registros)) });
+
+/** As telas recebem só os dias antes da base atual; o valor atual vem da própria tela. */
+function definirHistorico() {
+  const hoje = estado.base ? diaDaBase(estado.base.meta) : Infinity;
+  nav.definirHistorico(estado.historico.filter((p) => p.dia < hoje));
+}
+
+function guardarPonto(meta, registros) {
+  estado.historico = juntarAoHistorico(estado.historico, pontoDe(meta, registros));
+  salvarHistorico(estado.historico);
+  definirHistorico();
+}
+
 async function importar(tipo, arquivo, aoAvancar) {
   const hoje = hojeSerie();
   const resultado = await importarNoWorker(tipo, arquivo, { hoje, config: estado.config, aoAvancar });
@@ -94,6 +117,7 @@ async function importar(tipo, arquivo, aoAvancar) {
   estado.hoje = hoje;
   if (tipo === 'base' || tipo === 'followUp') reiniciarTelas();
   definirBase(tipo, dados);
+  if (tipo === 'base') guardarPonto(dados.meta, dados.registros);
   salvarImportacao(tipo, resultado.registros, resultado.meta);
   desenharTudo();
   return dados;
@@ -120,6 +144,16 @@ async function restaurar() {
     estado.anterior = { brutos: a.brutos, meta: a.meta, salvoEm: a.salvoEm };
     definirAnterior();
   }
+  // Histórico: o salvo; sem ele (ou sem o dia da base atual), monta com a anterior e a atual.
+  estado.historico = salvas.historico?.pontos ?? [];
+  if (estado.base && !estado.historico.some((p) => p.dia === diaDaBase(estado.base.meta))) {
+    const a = estado.anterior;
+    if (a && !estado.historico.some((p) => p.dia === diaDaBase(a.meta))) {
+      estado.historico = juntarAoHistorico(estado.historico,
+        pontoDe(a.meta, recalcular('base', a.brutos, estado.cfg, a.meta?.hoje ?? diaDaBase(a.meta))));
+    }
+    guardarPonto(estado.base.meta, recalcular('base', estado.base.brutos, estado.cfg, estado.base.meta?.hoje ?? estado.hoje));
+  } else definirHistorico();
 }
 
 function aplicarConfig(config, personalizada) {
@@ -238,6 +272,7 @@ document.getElementById('acao-config').addEventListener('click', () => abrirConf
 }));
 ligarImpressao(document.getElementById('acao-imprimir'));
 aplicarMarca();
+ligarTopoCompacto();
 ligarTema(document.getElementById('acao-tema'));
 
 // Virou o dia com a página aberta: recalcula dias em aberto e SLA.

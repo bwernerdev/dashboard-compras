@@ -3,9 +3,10 @@
 import { PRAZO_SLA_DIAS } from '../regras.js';
 import { el, icone } from '../ui/dom.js';
 import { estaAtendida, marcarAtendida } from '../atendidas.js';
-import { cartao, linhaDeCartoes, bloco, comparar, pontos, estadoVazio } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, comparar, pontos, serieDe, estadoVazio } from '../ui/cartoes.js';
 import { barras, barraSegmentada } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
+import { cliqueDeDetalhe } from '../ui/detalhe.js';
 import * as fmt from '../ui/formatos.js';
 import { seloDoStatus, marcaDaPrioridade } from '../ui/cores-planilha.js';
 import {
@@ -97,19 +98,21 @@ export function telaRegional(ctx) {
 
   const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoEmAberto(itensEmAberto(ctx.anteriores.registros)) : null);
   const cartoes = linhaDeCartoes(
-    cartao({ icone: 'documento', rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens sem pedido e não cancelados`, variacao: vs('scs', fmt.inteiro, 'menor') }),
+    cartao({ icone: 'documento', rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens sem pedido e não cancelados`, variacao: vs('scs', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.scs, resumo.scs) }),
     // SLA conta SCs, como o Atendimento (SC fora = algum item fora).
     cartao({
       icone: 'check', rotulo: 'SLA no prazo', valor: fmt.pct(resumo.pctScsNoPrazo),
       detalhe: `${fmt.inteiro(resumo.scsNoPrazo)} SCs no prazo, ${fmt.inteiro(resumo.scsFora)} fora`,
       variacao: vs('pctScsNoPrazo', pontos, 'maior'),
+      serie: serieDe(ctx.historico, (p) => p.aberto.pctScsNoPrazo, resumo.pctScsNoPrazo),
     }),
     cartao({
       icone: 'alerta', rotulo: 'SCs fora do prazo', valor: fmt.inteiro(resumo.scsFora), tom: resumo.scsFora ? 'critico' : null,
       detalhe: `${fmt.inteiro(resumo.fora)} itens com mais de ${PRAZO_SLA_DIAS} dias úteis${resumo.scsSemPrazo ? `; ${fmt.inteiro(resumo.scsSemPrazo)} SCs sem prazo` : ''}`,
       variacao: vs('scsFora', fmt.inteiro, 'menor'),
+      serie: serieDe(ctx.historico, (p) => p.aberto.scsFora, resumo.scsFora),
     }),
-    cartao({ icone: 'relogio', rotulo: 'Média de dias em aberto', valor: fmt.decimal(resumo.mediaDias), detalhe: `Mais antiga: ${fmt.inteiro(resumo.maxDias)} dias úteis`, variacao: vs('mediaDias', fmt.decimal, 'menor') }),
+    cartao({ icone: 'relogio', rotulo: 'Média de dias em aberto', valor: fmt.decimal(resumo.mediaDias), detalhe: `Mais antiga: ${fmt.inteiro(resumo.maxDias)} dias úteis`, variacao: vs('mediaDias', fmt.decimal, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.mediaDias, resumo.mediaDias) }),
   );
 
   const faixas = porFaixaDeDias(abertos);
@@ -204,6 +207,8 @@ export function telaRegional(ctx) {
       'aria-label': `Remover recorte ${FAIXAS_DIAS.find((f) => f.id === local.faixa).rotulo}`,
     }, FAIXAS_DIAS.find((f) => f.id === local.faixa).rotulo, el('span', { 'aria-hidden': 'true' }, ' ✕')) : null);
 
+  // Clique na linha: painel lateral com a SC (espera um instante: dois cliques marcam atendida).
+  const detalhe = cliqueDeDetalhe((r) => ctx.registros.filter((x) => x.solicitacao === r.solicitacao), { esperar: atendidasLigadas });
   tabela = criarTabela({
     titulo: 'SCs em aberto',
     linhas: recortar(),
@@ -222,7 +227,8 @@ export function telaRegional(ctx) {
     escolherColunas: true,
     vazio,
     classeLinha: (r) => (ehRegularizacao(r) ? 'linha-regularizacao' : ''),
-    aoDuploClique: atendidasLigadas ? (r) => alternarAtendida(r, !estaAtendida(r.solicitacao)) : null,
+    aoClicarLinha: detalhe.aoClicarLinha,
+    aoDuploClique: atendidasLigadas ? (r) => { detalhe.cancelar(); alternarAtendida(r, !estaAtendida(r.solicitacao)); } : null,
   });
   const botaoTelaCheia = el('button', { type: 'button', class: 'botao botao-sec botao-pequeno' });
   const blocoLista = bloco(

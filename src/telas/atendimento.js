@@ -2,8 +2,9 @@
 // Substitui a aba "Atendimento" da planilha antiga (Dias em aberto > SC > Filial > ... > Status).
 import { PRAZO_SLA_DIAS } from '../regras.js';
 import { el } from '../ui/dom.js';
-import { cartao, linhaDeCartoes, bloco, comparar, estadoVazio } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, comparar, serieDe, estadoVazio } from '../ui/cartoes.js';
 import { criarTabela } from '../ui/tabela.js';
+import { cliqueDeDetalhe } from '../ui/detalhe.js';
 import * as fmt from '../ui/formatos.js';
 import { seloDoStatus } from '../ui/cores-planilha.js';
 import { itensEmAberto, resumoEmAberto, ehRegularizacao } from '../analise.js';
@@ -43,15 +44,16 @@ export function telaAtendimento(ctx) {
   const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoEmAberto(itensEmAberto(ctx.anteriores.registros)) : null);
 
   const cartoes = linhaDeCartoes(
-    cartao({ icone: 'lista', rotulo: 'Itens em aberto', valor: fmt.inteiro(resumo.itens), detalhe: `${fmt.inteiro(resumo.scs)} SCs`, variacao: vs('itens', fmt.inteiro, 'menor') }),
+    cartao({ icone: 'lista', rotulo: 'Itens em aberto', valor: fmt.inteiro(resumo.itens), detalhe: `${fmt.inteiro(resumo.scs)} SCs`, variacao: vs('itens', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.itens, resumo.itens) }),
     // No prazo e fora do prazo contam SCs (pedido da equipe, 12/11/2026): SC fora = algum item fora.
-    cartao({ icone: 'check', rotulo: 'SCs no prazo', valor: fmt.inteiro(resumo.scsNoPrazo), detalhe: `${fmt.pct(resumo.pctScsNoPrazo)} das SCs com prazo`, variacao: vs('scsNoPrazo', fmt.inteiro) }),
+    cartao({ icone: 'check', rotulo: 'SCs no prazo', valor: fmt.inteiro(resumo.scsNoPrazo), detalhe: `${fmt.pct(resumo.pctScsNoPrazo)} das SCs com prazo`, variacao: vs('scsNoPrazo', fmt.inteiro), serie: serieDe(ctx.historico, (p) => p.aberto.scsNoPrazo, resumo.scsNoPrazo) }),
     cartao({
       icone: 'alerta', rotulo: 'SCs fora do prazo', valor: fmt.inteiro(resumo.scsFora), tom: resumo.scsFora ? 'critico' : null,
       detalhe: resumo.scsSemPrazo ? `${fmt.inteiro(resumo.scsSemPrazo)} SCs sem prazo definido` : `Algum item com mais de ${PRAZO_SLA_DIAS} dias úteis em aberto`,
       variacao: vs('scsFora', fmt.inteiro, 'menor'),
+      serie: serieDe(ctx.historico, (p) => p.aberto.scsFora, resumo.scsFora),
     }),
-    cartao({ icone: 'relogio', rotulo: 'Mais antigo', valor: `${fmt.inteiro(resumo.maxDias)} dias`, detalhe: `Média: ${fmt.decimal(resumo.mediaDias)} dias úteis`, variacao: vs('maxDias', fmt.inteiro, 'menor') }),
+    cartao({ icone: 'relogio', rotulo: 'Mais antigo', valor: `${fmt.inteiro(resumo.maxDias)} dias`, detalhe: `Média: ${fmt.decimal(resumo.mediaDias)} dias úteis`, variacao: vs('maxDias', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.maxDias, resumo.maxDias) }),
   );
 
   const recortar = () => (local.sla === 'todos' ? abertos : abertos.filter((r) => r.sla === local.sla));
@@ -70,6 +72,7 @@ export function telaAtendimento(ctx) {
     grupo: { chave: (r) => r.solicitacao, colunas: ['dias', 'sc', 'nomeFilial', 'regional', 'filial', 'solicitante'], nome: ['SC', 'SCs'] },
     classeLinha: (r) => (ehRegularizacao(r) ? 'linha-regularizacao' : ''),
     nomeArquivo: 'atendimento.csv',
+    aoClicarLinha: cliqueDeDetalhe((r) => ctx.registros.filter((x) => x.solicitacao === r.solicitacao)).aoClicarLinha,
     vazio: 'Nenhum item com esse recorte.',
   });
 

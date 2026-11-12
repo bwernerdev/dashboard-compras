@@ -11,7 +11,7 @@ import '../styles/base.css';
 import '../styles/componentes.css';
 import '../styles/impressao.css';
 import { descompactar, registrosDoPainel, followUpDoPainel } from './dados.js';
-import { criarNavegador, ligarTema, ligarImpressao, diasDesdeABase, BASE_ANTIGA_DIAS } from '../ui/casca.js';
+import { criarNavegador, ligarTema, ligarImpressao, ligarTopoCompacto, diasDesdeABase, BASE_ANTIGA_DIAS } from '../ui/casca.js';
 import { aplicarMarca } from '../ui/marca.js';
 import { definirExportacao } from '../ui/tabela.js';
 import { el, substituir } from '../ui/dom.js';
@@ -39,6 +39,7 @@ const botaoImprimir = document.getElementById('acao-imprimir');
 if (noQuadro) botaoImprimir.hidden = true;
 else ligarImpressao(botaoImprimir);
 aplicarMarca();
+ligarTopoCompacto();
 ligarTema(document.getElementById('acao-tema'));
 
 function mostrarPeriodo(dados) {

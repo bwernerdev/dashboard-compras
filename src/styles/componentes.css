@@ -60,6 +60,10 @@ input[type="search"].campo { min-width: 220px; }
   color: var(--text-strong); font-variant-numeric: tabular-nums;
 }
 .cartao-detalhe { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-xs); }
+/* Mini gráfico das últimas bases (cartoes.js): traço de 2 px na cor do tom. */
+.cartao-serie { display: block; width: 100%; height: 24px; margin-top: var(--s1); overflow: visible; }
+.cartao-serie polyline { fill: none; stroke: var(--serie-unica); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.cartao-critico .cartao-serie polyline { stroke: var(--danger-fg); }
 /* Variação desde a base anterior: sinal no texto, cor só reforça. */
 .cartao-variacao { margin-top: 2px; font-size: var(--fs-xs); font-weight: 600; font-variant-numeric: tabular-nums; }
 .variacao-neutro { color: var(--text-muted); }
@@ -119,6 +123,28 @@ input[type="search"].campo { min-width: 220px; }
   background: var(--surface-selected); color: var(--accent-text);
 }
 
+/* Painel lateral com o detalhe da SC (ui/detalhe.js). */
+.detalhe-sc {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 45; width: min(420px, 100vw); overflow-y: auto;
+  padding: var(--s4) var(--s5); display: flex; flex-direction: column; gap: var(--s3);
+  background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow-3);
+  animation: deslizar .18s ease-out;
+}
+@keyframes deslizar { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.detalhe-cabecalho { display: flex; align-items: flex-start; gap: var(--s3); }
+.detalhe-cabecalho > div { flex: 1; min-width: 0; }
+.detalhe-cabecalho h2 { font-size: var(--fs-xl); font-weight: 700; color: var(--text-strong); }
+.detalhe-fechar { font-size: var(--fs-lg); padding: 2px var(--s2); }
+.detalhe-selos { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.detalhe-info { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s1) var(--s4); margin: 0; font-size: var(--fs-sm); }
+.detalhe-info dt { color: var(--text-muted); }
+.detalhe-info dd { margin: 0; overflow-wrap: anywhere; }
+.detalhe-subtitulo { font-size: var(--fs-md); font-weight: 700; color: var(--text-strong); padding-top: var(--s2); border-top: 1px solid var(--line); }
+.detalhe-itens { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.detalhe-itens li { padding: var(--s2) 0; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
+.detalhe-item-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s2); }
+.detalhe-produto { font-weight: 600; min-width: 0; }
+
 /* Esqueleto (bases salvas sendo lidas ao abrir): blocos cinza com brilho; sem animação se o sistema pedir. */
 .esqueleto { display: flex; flex-direction: column; gap: var(--s4); }
 .esqueleto-linha { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--s3); }
@@ -135,7 +161,7 @@ input[type="search"].campo { min-width: 220px; }
 .entrando { animation: entrar .18s ease-out; }
 @keyframes entrar { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
-  .esqueleto-peca, .entrando { animation: none; }
+  .esqueleto-peca, .entrando, .detalhe-sc { animation: none; }
 }
 .boas-vindas { text-align: left; max-width: 900px; margin: var(--s5) auto 0; border-style: solid; }
 .boas-vindas h2 { color: var(--text-strong); font-size: var(--fs-xl); margin-bottom: var(--s1); }
@@ -185,11 +211,15 @@ input[type="search"].campo { min-width: 220px; }
 button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover); }
 .gb-linha.apagada .gb-barra, .gb-linha.apagada .gb-pilha { opacity: .35; }
 .gb-linha.selecionada .gb-barra { background: var(--grafico-selecionado); }
+@media (prefers-reduced-motion: reduce) { .entrando .gb-barra, .entrando .gb-pilha { animation: none; } }
 .gb-linha.selecionada .gb-rotulo { font-weight: 700; }
 .gb-rotulo { font-size: var(--fs-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gb-trilho { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
 .gb-barra, .gb-pilha { height: 16px; border-radius: 0 4px 4px 0; min-width: 1px; }
-.gb-barra { background: var(--serie-unica); }
+/* Barra com gradiente leve (mais clara na base) e que cresce ao trocar de aba (.entrando, casca.js). */
+.gb-barra { background: linear-gradient(90deg, color-mix(in srgb, var(--serie-unica) 70%, var(--surface)), var(--serie-unica)); transform-origin: left center; }
+.entrando .gb-barra, .entrando .gb-pilha { animation: crescer .45s ease-out; transform-origin: left center; }
+@keyframes crescer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .gb-pilha { display: flex; gap: 2px; overflow: hidden; }
 .gb-segmento { min-width: 2px; height: 100%; }
 .gb-valor { font-size: var(--fs-sm); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text); }
@@ -245,6 +275,8 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 /* Cabeçalho quebra em 2 linhas quando falta largura (ex.: "Dias da aprovação"), em vez de rolar para o lado. */
 .tabela thead th { white-space: normal; }
 .tabela tfoot td { position: sticky; bottom: 0; background: var(--surface-2); font-weight: 700; border-top: 1px solid var(--line-strong); }
+.densidade-compacta .tabela td { padding-top: 2px; padding-bottom: 2px; font-size: var(--fs-xs); }
+.botao-densidade[aria-pressed="true"] { background: var(--surface-selected); color: var(--accent-text); border-color: var(--accent); }
 .tabela .num { text-align: right; font-variant-numeric: tabular-nums; }
 /* Faixa alternada: por linha nas tabelas simples, por SC/OF nas agrupadas (tabela.js marca `faixa`). */
 .tabela tbody tr.faixa { background: var(--zebra); }

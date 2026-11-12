@@ -83,7 +83,25 @@ export async function salvarAnterior(anterior) {
   }
 }
 
-/** { base?, followUp?, 'base-anterior'? } com { brutos, meta, salvoEm }; vazio se não houver nada ou o navegador bloquear. */
+/**
+ * Histórico curto para os mini gráficos dos cartões: [{ dia, status, aberto }] (resumos da base
+ * inteira, sem filtros), um ponto por dia do ME, no máximo 30. Tipo 'historico' na mesma loja.
+ */
+export async function salvarHistorico(pontos) {
+  try {
+    await transacao('readwrite', (loja) => loja.put({ tipo: 'historico', pontos }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Junta o ponto do dia (troca se já houver o mesmo dia), em ordem, e guarda só os últimos `max`. */
+export function juntarAoHistorico(pontos, ponto, max = 30) {
+  return [...(pontos ?? []).filter((p) => p.dia !== ponto.dia), ponto].sort((a, b) => a.dia - b.dia).slice(-max);
+}
+
+/** { base?, followUp?, 'base-anterior'?, historico? } com { brutos, meta, salvoEm }; vazio se não houver nada ou o navegador bloquear. */
 export async function lerImportacoes() {
   try {
     const todas = await transacao('readonly', (loja) => loja.getAll());

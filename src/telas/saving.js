@@ -1,7 +1,8 @@
 // Tela Saving: total comprado (pedido c/ impostos), economia (Saving Real) e % saving.
 // Substitui as abas "Saving" e "Spend". % Saving = economia ÷ (total + economia), como na planilha.
 import { el } from '../ui/dom.js';
-import { cartao, linhaDeCartoes, bloco, estadoVazio } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, estadoVazio, variacao, variacaoRelativa, pontos } from '../ui/cartoes.js';
+import { blocoComparacao } from './comparacao.js';
 import { barras } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
@@ -91,5 +92,15 @@ export function telaSaving(ctx) {
     }).elemento,
   );
 
-  return el('div', { class: 'tela' }, cartoes, el('div', { class: 'grade-2' }, filiais, el('div', { class: 'pilha' }, meses, compradores)));
+  const comparacao = blocoComparacao(ctx, (atuais, anteriores, rotulo) => {
+    const a = resumoSaving(atuais);
+    const b = resumoSaving(anteriores);
+    return [
+      cartao({ icone: 'carrinho', rotulo: 'Total comprado', valor: fmt.moedaCompacta(a.total), detalhe: `Antes: ${fmt.moedaCompacta(b.total)}`, variacao: variacaoRelativa({ atual: a.total, anterior: b.total, rotulo }) }),
+      cartao({ icone: 'moeda', rotulo: 'Economia', valor: fmt.moedaCompacta(a.economia), detalhe: `Antes: ${fmt.moedaCompacta(b.economia)}`, variacao: variacaoRelativa({ atual: a.economia, anterior: b.economia, rotulo, melhor: 'maior' }) }),
+      cartao({ icone: 'porcentagem', rotulo: '% Saving', valor: fmt.pctFino(a.pct), detalhe: `Antes: ${fmt.pctFino(b.pct)}`, variacao: variacao({ atual: a.pct, anterior: b.pct, rotulo, formato: pontos, melhor: 'maior', ligacao: 'x' }) }),
+    ];
+  });
+
+  return el('div', { class: 'tela' }, cartoes, comparacao, el('div', { class: 'grade-2' }, filiais, el('div', { class: 'pilha' }, meses, compradores)));
 }

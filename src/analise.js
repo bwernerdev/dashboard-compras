@@ -2,6 +2,8 @@
 // Contagens de SC são DISTINTAS por "Solicitação de Compra", como a contagem distinta
 // do modelo de dados da planilha antiga; contagem de itens = linhas.
 
+import { serie, partesDaSerie } from './datas.js';
+
 const SEM_VALOR = '-';
 const nomeOuTraco = (v) => (v === null || v === undefined || v === '' ? SEM_VALOR : String(v));
 
@@ -66,6 +68,48 @@ export const FAIXAS_DIAS = [
 export const faixaDe = (dias) => FAIXAS_DIAS.find((f) => dias <= f.ate).id;
 
 const distintas = (linhas) => new Set(linhas.map((r) => r.solicitacao)).size;
+
+// ---------- Hoje (o que pede ação; só no app da equipe) ----------
+
+/** SCs em aberto (uma por Solicitação): dados da 1ª linha, maior número de dias e SLA da SC. */
+export function scsEmAberto(abertos) {
+  const grupos = new Map();
+  for (const r of abertos) {
+    if (!grupos.has(r.solicitacao)) grupos.set(r.solicitacao, []);
+    grupos.get(r.solicitacao).push(r);
+  }
+  return [...grupos].map(([solicitacao, linhas]) => {
+    const r = linhas[0];
+    const fora = linhas.some((x) => x.sla === 'Fora do Prazo');
+    return {
+      solicitacao, sc: r.sc, nomeFilial: r.nomeFilial, filial: r.filial, regional: r.regional,
+      comprador: linhas.find((x) => x.comprador)?.comprador ?? null, prioridade: r.prioridade,
+      dias: Math.max(...linhas.map((x) => x.diasEmAberto ?? 0)),
+      sla: fora ? 'Fora do Prazo' : (linhas.some((x) => x.sla === 'No Prazo') ? 'No Prazo' : null),
+      itens: linhas.length,
+    };
+  }).sort((a, b) => b.dias - a.dias || String(a.sc).localeCompare(String(b.sc), 'pt-BR', { numeric: true }));
+}
+
+/**
+ * Aba Hoje (pedido da equipe, 12/11/2026). abertos: itens em aberto de agora; anteriores: itens em
+ * aberto da base anterior (outro dia do ME) ou null.
+ * - viraramFora: SCs fora do prazo que não estavam fora na base anterior (sem anterior: no 1º dia fora, prazo + 1).
+ * - vencendo: SCs ainda no prazo a até 2 dias úteis do limite (prazo - 1 ou prazo).
+ * - semComprador: SCs sem comprador ou em "Pendente" (pendências de compra e contrato no ME).
+ * - novas: SCs que não estavam em aberto na base anterior (sem anterior: com até 1 dia útil).
+ */
+export function resumoDoDia(abertos, anteriores, prazo) {
+  const scs = scsEmAberto(abertos);
+  const antes = anteriores ? new Map(scsEmAberto(anteriores).map((s) => [s.solicitacao, s])) : null;
+  return {
+    viraramFora: scs.filter((s) => s.sla === 'Fora do Prazo'
+      && (antes ? antes.get(s.solicitacao)?.sla !== 'Fora do Prazo' : s.dias === prazo + 1)),
+    vencendo: scs.filter((s) => s.sla === 'No Prazo' && s.dias >= prazo - 1 && s.dias <= prazo),
+    semComprador: scs.filter((s) => !s.comprador || mesmoTexto(s.comprador, '-') || mesmoTexto(s.comprador, 'Pendente')),
+    novas: scs.filter((s) => (antes ? !antes.has(s.solicitacao) : s.dias <= 1)),
+  };
+}
 
 /** Cartões da tela Status: SCs distintas no período, em aberto, em pedido e canceladas. */
 export function resumoStatus(registros) {
@@ -332,6 +376,30 @@ export function spendPorFilial(registros) {
   return [...grupos.values()]
     .map(({ chave, valor, pedidos }) => ({ chave, valor, ofs: pedidos.size, pct: total ? valor / total : null }))
     .sort((a, b) => b.valor - a.valor || a.chave.localeCompare(b.chave, 'pt-BR'));
+}
+
+/**
+ * Períodos para comparar em Spend e Saving (pedido da equipe, 12/11/2026), pela data do pedido.
+ * tipo 'mes' | 'tri'. Atual: do 1º dia do mês (ou trimestre) do último pedido até o dia dele.
+ * Anterior: o mesmo trecho do mês (ou trimestre) anterior, com o mesmo número de dias desde o
+ * início, sem passar do fim dele. Assim um mês pela metade não é comparado com um mês inteiro.
+ * Sem pedido com data: null.
+ */
+export function periodosDePedido(registros, tipo = 'mes') {
+  const comPedido = registros.filter((r) => r.numeroPedido && Number.isFinite(r.dataPedido) && r.dataPedido > 0);
+  if (!comPedido.length) return null;
+  const fim = Math.floor(Math.max(...comPedido.map((r) => r.dataPedido)));
+  const { ano, mes } = partesDaSerie(fim);
+  const meses = tipo === 'tri' ? 3 : 1;
+  const mesInicio = tipo === 'tri' ? Math.floor((mes - 1) / 3) * 3 + 1 : mes;
+  const inicio = serie(ano, mesInicio, 1);
+  const inicioAnt = serie(ano, mesInicio - meses, 1); // mês 0 ou negativo = ano anterior (Date.UTC)
+  const fimAnt = Math.min(inicioAnt + (fim - inicio), inicio - 1);
+  const entre = (a, b) => comPedido.filter((r) => Math.floor(r.dataPedido) >= a && Math.floor(r.dataPedido) <= b);
+  return {
+    atual: { inicio, fim, registros: entre(inicio, fim) },
+    anterior: { inicio: inicioAnt, fim: fimAnt, registros: entre(inicioAnt, fimAnt) },
+  };
 }
 
 export function resumoSpend(registros) {

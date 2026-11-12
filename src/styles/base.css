@@ -34,6 +34,7 @@ button:disabled { cursor: default; }
 /* Duas linhas: marca e ações em cima, abas embaixo (cabem 8 abas e 5 botões em qualquer largura).
    O emblema (ui/marca.js) fica à esquerda ocupando as duas linhas. */
 .topo {
+  position: sticky; top: 0; z-index: 25;
   display: grid; align-items: center; gap: var(--s2) var(--s4);
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas: "emblema marca acoes" "emblema abas abas";
@@ -59,6 +60,17 @@ button:disabled { cursor: default; }
   .topo { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "emblema marca" "emblema acoes" "emblema abas"; }
   .topo-acoes { justify-content: flex-start; }
 }
+/* Topo compacto ao rolar (casca.js, ligarTopoCompacto): uma faixa fina com emblema, título e abas.
+   As ações voltam ao subir até o começo da página. */
+html.topo-compacto .topo {
+  grid-template-columns: auto auto minmax(0, 1fr); grid-template-areas: "emblema marca abas";
+  padding-top: var(--s1); padding-bottom: var(--s1); row-gap: 0; box-shadow: var(--shadow-1);
+}
+html.topo-compacto .topo-emblema { height: 32px; }
+html.topo-compacto .topo h1 { font-size: var(--fs-md); }
+html.topo-compacto .topo-acoes, html.topo-compacto #periodo:not(.selo-alerta) { display: none; }
+html.topo-compacto .abas { margin-left: 0; flex-wrap: nowrap; overflow-x: auto; }
+html.topo-compacto .aba { height: var(--h-control-sm); }
 
 .abas { grid-area: abas; display: flex; flex-wrap: wrap; gap: var(--s1); margin-left: calc(-1 * var(--s3)); }
 .aba {
@@ -70,7 +82,7 @@ button:disabled { cursor: default; }
 
 /* Faixa de filtros: uma linha acima de tudo, fica visível ao rolar. */
 .faixa-filtros {
-  position: sticky; top: 0; z-index: 20;
+  position: sticky; top: var(--altura-topo, 0px); z-index: 20;
   padding: var(--s2) var(--s5);
   background: var(--surface-2);
   border-bottom: 1px solid var(--line);

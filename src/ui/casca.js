@@ -32,7 +32,7 @@ export function descreverFiltros(selecao, tela) {
  * chaveFiltros: preferência onde a seleção dos filtros globais fica salva neste navegador (volta na
  * próxima vez que abrir; pedido da equipe, 12/11/2026). Sem ela, os filtros começam vazios.
  * ctx de cada tela: { registros, followUp (null sem a base Follow-Up), anteriores, redesenhar, filtrar,
- * limparFiltros (null sem filtro ativo; botão dos estados vazios) }.
+ * limparFiltros (null sem filtro ativo; botão dos estados vazios), historico (pontos anteriores, null com filtro) }.
  * anteriores: { registros (base anterior, mesmos filtros), rotulo ('10/11') } ou null; só o app da
  * equipe guarda a base anterior (variação nos cartões), o painel não.
  * Os filtros globais valem para as duas bases; as opções vêm só da base principal.
@@ -44,6 +44,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     registros: null,
     followUp: null,
     anteriores: null,
+    historico: null,
     opcoes: null,
   };
   let pedido = 0;
@@ -51,10 +52,20 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
 
   // Altura da faixa de filtros (fixa no topo ao rolar): as tabelas descontam dela para caber na janela.
   // Mede ao desenhar os filtros, ao mudar a janela e quando a faixa muda de altura (quebra de linha).
-  const medirTopo = () => document.documentElement.style.setProperty('--topo-fixo', `${raiz.filtros.offsetHeight}px`);
+  // O topo também fica fixo (compacto ao rolar, ligarTopoCompacto): a faixa de filtros para logo abaixo
+  // dele (--altura-topo) e as tabelas descontam o topo compacto (~48 px) mais a faixa.
+  const topo = document.querySelector('.topo');
+  const medirTopo = () => {
+    const raizDoc = document.documentElement;
+    const alturaTopo = topo?.offsetHeight ?? 0;
+    raizDoc.style.setProperty('--altura-topo', `${alturaTopo}px`);
+    const topoCompacto = raizDoc.classList.contains('topo-compacto') ? alturaTopo : 48;
+    raizDoc.style.setProperty('--topo-fixo', `${raiz.filtros.offsetHeight + topoCompacto}px`);
+  };
   window.addEventListener('resize', medirTopo);
   const observador = typeof ResizeObserver === 'function' ? new ResizeObserver(medirTopo) : null;
   observador?.observe(raiz.filtros);
+  if (topo) observador?.observe(topo);
 
   function definirRegistros(registros) {
     estado.registros = registros;
@@ -74,6 +85,11 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
 
   function definirFollowUp(registros) {
     estado.followUp = registros ?? null;
+  }
+
+  /** historico: pontos de bases de dias anteriores ({ dia, status, aberto }), sem filtros. */
+  function definirHistorico(pontos) {
+    estado.historico = pontos?.length ? pontos : null;
   }
 
   /** anteriores: { registros, rotulo } ou null. */
@@ -149,7 +165,11 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
         ? { registros: aplicarFiltros(estado.anteriores.registros, estado.selecao, estado.aba), rotulo: estado.anteriores.rotulo }
         : null,
       redesenhar: desenharTela,
+      /** Registros com todos os filtros menos um (ex.: comparação de períodos ignora "Mês do pedido"). */
+      registrosSem: (idFiltro) => aplicarFiltros(estado.registros, { ...estado.selecao, [idFiltro]: new Set() }, estado.aba),
       limparFiltros: Object.values(estado.selecao).some((v) => v?.size) ? limparFiltros : null,
+      // Mini gráficos: o histórico guarda só os totais; com filtro que vale nesta tela, não aparece.
+      historico: FILTROS.some((f) => filtroValeNaTela(f, estado.aba) && estado.selecao[f.id]?.size) ? null : estado.historico,
       filtrar(idFiltro, valor) {
         const atual = estado.selecao[idFiltro];
         const jaEra = atual?.size === 1 && atual.has(valor);
@@ -172,7 +192,35 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     desenharTela();
   }
 
-  return { estado, definirRegistros, definirFollowUp, definirAnteriores, desenhar, desenharTela, observador };
+  return { estado, definirRegistros, definirFollowUp, definirAnteriores, definirHistorico, desenhar, desenharTela, observador };
+}
+
+/**
+ * Topo compacto ao rolar (pedido da equipe, 12/11/2026): passou de 140 px, o topo vira uma faixa fina
+ * (emblema pequeno, título, abas); volta inteiro perto do começo (< 40 px). Ao encolher, a rolagem
+ * desconta a altura que sumiu, para a página não pular.
+ */
+export function ligarTopoCompacto() {
+  const topo = document.querySelector('.topo');
+  if (!topo) return;
+  const raizDoc = document.documentElement;
+  let pendente = false;
+  const avaliar = () => {
+    pendente = false;
+    const compacto = raizDoc.classList.contains('topo-compacto');
+    if (!compacto && window.scrollY > 140) {
+      const antes = topo.offsetHeight;
+      raizDoc.classList.add('topo-compacto');
+      window.scrollBy(0, topo.offsetHeight - antes);
+    } else if (compacto && window.scrollY < 40) {
+      raizDoc.classList.remove('topo-compacto');
+    }
+  };
+  window.addEventListener('scroll', () => {
+    if (pendente) return;
+    pendente = true;
+    setTimeout(avaliar, 0);
+  }, { passive: true });
 }
 
 /** Botão de tema claro/escuro (html[data-theme]); a escolha fica no navegador quando dá. */

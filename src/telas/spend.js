@@ -2,7 +2,8 @@
 // Substitui a aba "Spend" da planilha antiga (pizza e colunas por filial, segmentações Ano/Mês,
 // Comprador, Contrato e Filial: aqui são os filtros globais). Pizza virou barras ordenadas.
 import { el } from '../ui/dom.js';
-import { cartao, linhaDeCartoes, bloco, estadoVazio } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, estadoVazio, variacao, variacaoRelativa } from '../ui/cartoes.js';
+import { blocoComparacao } from './comparacao.js';
 import { barras } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
@@ -65,5 +66,16 @@ export function telaSpend(ctx) {
     }).elemento,
   );
 
-  return el('div', { class: 'tela' }, cartoes, el('div', { class: 'grade-2' }, filiais, meses));
+  const comparacao = blocoComparacao(ctx, (atuais, anteriores, rotulo) => {
+    const a = resumoSpend(atuais);
+    const b = resumoSpend(anteriores);
+    const media = (x) => (x.ofs ? x.total / x.ofs : null);
+    return [
+      cartao({ icone: 'moeda', rotulo: 'Spend', valor: fmt.moedaCompacta(a.total), detalhe: `Antes: ${fmt.moedaCompacta(b.total)}`, variacao: variacaoRelativa({ atual: a.total, anterior: b.total, rotulo }) }),
+      cartao({ icone: 'carrinho', rotulo: 'OFs', valor: fmt.inteiro(a.ofs), detalhe: `Antes: ${fmt.inteiro(b.ofs)}`, variacao: variacao({ atual: a.ofs, anterior: b.ofs, rotulo, formato: fmt.inteiro, ligacao: 'x' }) }),
+      cartao({ icone: 'tendencia', rotulo: 'Média por OF', valor: fmt.moedaCompacta(media(a)), detalhe: `Antes: ${fmt.moedaCompacta(media(b))}`, variacao: variacaoRelativa({ atual: media(a), anterior: media(b), rotulo }) }),
+    ];
+  });
+
+  return el('div', { class: 'tela' }, cartoes, comparacao, el('div', { class: 'grade-2' }, filiais, meses));
 }

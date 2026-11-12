@@ -360,6 +360,15 @@ Pedido da equipe: tudo o que as abas visíveis da planilha mostram precisa estar
   - Spend e Saving por mês: barras deitadas no lugar de colunas (o gráfico `colunas` saiu).
   - Acabamento (pacote A): fundo da página um tom abaixo do branco, cantos de 12 px e sombra suave em cartões e blocos; cartões com ícone no canto (cor do tom) e número maior (`--fs-3xl`); tabelas com faixa alternada (por SC/OF nas agrupadas) e algarismos de largura fixa; esqueleto enquanto as bases salvas abrem (app) ou os dados descompactam (painel); fade curto ao trocar de aba (sem animação com "reduzir movimento"); estados vazios com ícone e "Limpar filtros".
   - Topo abaixo de 1100 px (janela pela metade): ações descem para uma linha própria; título e período não quebram. Sem layout de celular.
+  - Pacote moderno (12/11/2026):
+    - Aba **Hoje** (só no app, primeira aba): SCs que viraram fora do prazo desde a base anterior, que vencem em até 2 dias úteis, sem comprador (Pendente) e novas. Cada lista abre o detalhe da SC.
+    - **Detalhe da SC:** clicar numa linha (Regional, Atendimento, Status, Hoje) abre um painel à direita com os dados da SC e todos os itens. Esc ou ✕ fecha. Na Regional com atendidas ligadas, o clique espera 260 ms para não brigar com o duplo clique.
+    - **Mini gráficos** nos cartões de Status, Regional e Atendimento: histórico das últimas 30 bases de dias diferentes (IndexedDB, tipo `historico`). Só sem filtro ativo; aparecem a partir da 2ª base de outro dia.
+    - **Topo compacto** ao rolar: título, abas e emblema numa linha só; volta ao topo, expande.
+    - **Barras** com gradiente e animação de crescer ao abrir a aba (sem animação com "reduzir movimento").
+    - **Comparação de períodos** em Spend e Saving: mês (ou trimestre) atual até o dia de hoje contra o mesmo trecho do anterior, pela data do pedido. Ignora o filtro "Mês do pedido". Painel `VERSAO` 7 (leva `dataPedido`).
+    - **Densidade:** botão "Compacta" nas tabelas tira respiro das linhas (todas as tabelas; lembrado no navegador).
+    - Colunas fixas ao rolar para o lado: testadas e retiradas (a equipe não gostou).
 - **Lista de SCs da Regional (pedido da equipe):** 200 SCs por página (eram 50); as colunas cabem na largura da janela (as de texto e as alargadas encolhem com reticências, sem rolar para o lado); botão "Colunas" oculta colunas (lembrado no navegador; CSV e "Copiar tabela" seguem com todas); tela cheia só pelo botão: abrir o app ou importar mostra sempre a tela normal (pedido da equipe; antes abria sozinha e ficava lembrada).
 - **Filtros lembrados no navegador:** a seleção dos filtros globais volta na próxima vez que abrir o app (e o painel, onde o navegador deixar guardar). "Limpar filtros" limpa também o que ficou salvo.
 - **SLA com prazo único (pedido da equipe):** fora do prazo só com mais de 30 dias úteis em aberto, qualquer prioridade. Saiu a tabela de SLA da Configuração e a coluna "Prazo máx." do Atendimento; painel `VERSAO` 5 (sem `slaMax`). Bases de 11/11/2026: itens fora do prazo de 149 para 43.

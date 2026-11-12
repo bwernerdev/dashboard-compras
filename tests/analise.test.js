@@ -4,16 +4,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   aplicarFiltros, opcoesDosFiltros, chaveMes, rotuloMes, itensEmAberto, resumoEmAberto, porFaixaDeDias,
-  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorStatus, resumoStatus, spendPorFilial, resumoSpend, entregasPorStatus, recortarPor, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
+  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorStatus, resumoStatus, resumoDoDia, periodosDePedido, spendPorFilial, resumoSpend, entregasPorStatus, recortarPor, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
   pctSaving, resumoSaving, savingPorFilial, savingPorComprador, savingPorMes,
 } from '../src/analise.js';
-import { brutosDe, recalcular } from '../src/memoria.js';
+import { brutosDe, recalcular, juntarAoHistorico } from '../src/memoria.js';
 import { validarConfig } from '../src/telas/configuracao.js';
 import { gerarCsv } from '../src/ui/tabela.js';
 import { criarConfig, CONFIG_PADRAO } from '../src/config/index.js';
 import { calcularLinhaBase } from '../src/regras.js';
 import { serie } from '../src/datas.js';
-import { variacao, comparar, pontos } from '../src/ui/cartoes.js';
+import { variacao, variacaoRelativa, comparar, pontos, serieDe } from '../src/ui/cartoes.js';
 import { diasDesdeABase } from '../src/ui/casca.js';
 
 /** Registro já calculado, só com os campos que as telas usam. */
@@ -288,7 +288,7 @@ test('resumoStatus: SCs distintas no período, em aberto, em pedido e canceladas
 test('variacao: sinal no texto, tom pelo lado melhor, igual e sem base anterior', () => {
   const inteiro = (n) => String(n);
   assert.deepEqual(variacao({ atual: 47, anterior: 42, rotulo: '10/11', formato: inteiro, melhor: 'menor' }),
-    { seta: '▲', texto: '+5 desde 10/11', tom: 'pior', rotulo: '10/11' });
+    { seta: '▲', texto: '+5 desde 10/11', tom: 'pior', rotulo: '10/11', ligacao: 'desde' });
   assert.equal(variacao({ atual: 40, anterior: 42, rotulo: '10/11', formato: inteiro, melhor: 'menor' }).tom, 'melhor');
   assert.equal(variacao({ atual: 40, anterior: 42, rotulo: '10/11', formato: inteiro }).texto, '−2 desde 10/11');
   assert.equal(variacao({ atual: 40, anterior: 42, rotulo: '10/11', formato: inteiro }).tom, 'neutro');
@@ -305,4 +305,66 @@ test('diasDesdeABase: dias úteis desde a execução do ME, sem contar o dia del
   assert.equal(diasDesdeABase(qua, serie(2026, 11, 13)), 2);
   assert.equal(diasDesdeABase(serie(2026, 11, 13), serie(2026, 11, 16)), 1); // sexta -> segunda
   assert.equal(diasDesdeABase(null, qua), 0);
+});
+
+test('resumoDoDia: viraram fora, vencendo, sem comprador e novas (com e sem base anterior)', () => {
+  const agora = [
+    reg({ solicitacao: 'S1', diasEmAberto: 31, sla: 'Fora do Prazo', comprador: 'Bruno W.' }),
+    reg({ solicitacao: 'S1', diasEmAberto: 31, sla: 'No Prazo', comprador: 'Bruno W.' }),
+    reg({ solicitacao: 'S2', diasEmAberto: 40, sla: 'Fora do Prazo', comprador: 'Vitor' }),
+    reg({ solicitacao: 'S3', diasEmAberto: 29, sla: 'No Prazo', comprador: 'Pendente' }),
+    reg({ solicitacao: 'S4', diasEmAberto: 1, sla: 'No Prazo', comprador: null }),
+    reg({ solicitacao: 'S5', diasEmAberto: 30, sla: null, comprador: 'Vitor' }), // sem SLA: não vence
+  ];
+  const ids = (l) => l.map((s) => s.solicitacao);
+  const sem = resumoDoDia(agora, null, 30);
+  assert.deepEqual(ids(sem.viraramFora), ['S1']); // 31 dias = 1º dia fora
+  assert.deepEqual(ids(sem.vencendo), ['S3']);
+  assert.deepEqual(ids(sem.semComprador), ['S3', 'S4']);
+  assert.deepEqual(ids(sem.novas), ['S4']);
+  assert.equal(sem.viraramFora[0].itens, 2);
+  const antes = [
+    reg({ solicitacao: 'S1', diasEmAberto: 30, sla: 'No Prazo' }),
+    reg({ solicitacao: 'S2', diasEmAberto: 39, sla: 'Fora do Prazo' }),
+    reg({ solicitacao: 'S3', diasEmAberto: 28, sla: 'No Prazo' }),
+  ];
+  const com = resumoDoDia(agora, antes, 30);
+  assert.deepEqual(ids(com.viraramFora), ['S1']);
+  assert.deepEqual(ids(com.novas), ['S5', 'S4']); // ordem: mais dias primeiro
+});
+
+test('periodosDePedido: mesmo trecho do mês/trimestre anterior, sem passar do fim', () => {
+  const p = (sc, d) => reg({ solicitacao: sc, numeroPedido: `OF-${sc}`, dataPedido: d });
+  const regs = [p('a', serie(2026, 11, 12)), p('b', serie(2026, 11, 2)), p('c', serie(2026, 10, 12)), p('d', serie(2026, 10, 13)), p('e', serie(2026, 9, 30)), reg({ solicitacao: 'x' })];
+  const m = periodosDePedido(regs, 'mes');
+  assert.deepEqual([m.atual.inicio, m.atual.fim, m.anterior.inicio, m.anterior.fim], [serie(2026, 11, 1), serie(2026, 11, 12), serie(2026, 10, 1), serie(2026, 10, 12)]);
+  assert.deepEqual(m.atual.registros.map((r) => r.solicitacao), ['a', 'b']);
+  assert.deepEqual(m.anterior.registros.map((r) => r.solicitacao), ['c']);
+  const t = periodosDePedido(regs, 'tri');
+  assert.deepEqual([t.atual.inicio, t.anterior.inicio, t.anterior.fim], [serie(2026, 10, 1), serie(2026, 7, 1), serie(2026, 8, 12)]);
+  // 31/03 -> fevereiro termina antes: o anterior para no último dia dele.
+  const mar = periodosDePedido([p('f', serie(2026, 3, 31))], 'mes');
+  assert.equal(mar.anterior.fim, serie(2026, 2, 28));
+  // janeiro compara com dezembro do ano anterior
+  assert.equal(periodosDePedido([p('g', serie(2026, 1, 5))], 'mes').anterior.inicio, serie(2025, 12, 1));
+  assert.equal(periodosDePedido([reg({ solicitacao: 'y' })], 'mes'), null);
+});
+
+test('histórico dos mini gráficos: um ponto por dia, em ordem, no máximo 30; série só com 2+ pontos', () => {
+  let h = [];
+  for (let d = 1; d <= 35; d++) h = juntarAoHistorico(h, { dia: d, v: d });
+  assert.equal(h.length, 30);
+  assert.equal(h[0].dia, 6);
+  h = juntarAoHistorico(h, { dia: 20, v: 99 });
+  assert.equal(h.filter((p) => p.dia === 20).length, 1);
+  assert.equal(h.find((p) => p.dia === 20).v, 99);
+  assert.deepEqual(serieDe([{ v: 1 }, { v: 2 }], (p) => p.v, 3), [1, 2, 3]);
+  assert.equal(serieDe(null, (p) => p.v, 3), null);
+  assert.equal(serieDe([], (p) => p.v, 3), null);
+});
+
+test('variacaoRelativa: % do anterior, ligação "x", sem base = null', () => {
+  assert.equal(variacaoRelativa({ atual: 112, anterior: 100, rotulo: '01/10 a 12/10' }).texto, '+12% x 01/10 a 12/10');
+  assert.equal(variacaoRelativa({ atual: 95, anterior: 100, rotulo: 'out', melhor: 'maior' }).tom, 'pior');
+  assert.equal(variacaoRelativa({ atual: 5, anterior: 0, rotulo: 'out' }), null);
 });

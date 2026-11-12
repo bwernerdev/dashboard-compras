@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { arquivoBase, arquivoFollowUp, COMPRADOR } from './ajuda/bases.js';
 
 const TELAS = ['Status', 'Entrega', 'Regional', 'Spend', 'Saving', 'Atendimento', 'Organograma'];
-const cartao = (raiz, rotulo) => raiz.locator('.cartao', { has: raiz.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
+const cartao = (raiz, rotulo) => raiz.locator('.tela > .cartoes > .cartao', { has: raiz.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
 
 async function gerarPainel(page, info) {
   await page.goto('./');

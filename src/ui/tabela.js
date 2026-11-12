@@ -86,6 +86,22 @@ export async function copiarTexto(texto) {
 const exportacao = { csv: true };
 export function definirExportacao({ csv }) { exportacao.csv = csv; }
 
+// Densidade das tabelas (todas de uma vez): "compacta" tira respiro das linhas. Lembrada no navegador.
+const CLASSE_COMPACTA = 'densidade-compacta';
+let densidadeLida = false;
+const ehCompacta = () => document.documentElement.classList.contains(CLASSE_COMPACTA);
+function lerDensidade() {
+  if (densidadeLida) return;
+  densidadeLida = true;
+  document.documentElement.classList.toggle(CLASSE_COMPACTA, lerPreferencia('densidade') === 'compacta');
+}
+function trocarDensidade() {
+  const compacta = !ehCompacta();
+  document.documentElement.classList.toggle(CLASSE_COMPACTA, compacta);
+  salvarPreferencia('densidade', compacta ? 'compacta' : 'confortavel');
+  for (const b of document.querySelectorAll('.botao-densidade')) b.setAttribute('aria-pressed', String(compacta));
+}
+
 /**
  * colunas: [{ id, rotulo, valor(linha), formato?(valor), tipo?: 'data', num?: bool, centro?: bool,
  *            exibir?(linha) -> Node|texto, classe?(linha) -> string, titulo?,
@@ -116,6 +132,7 @@ export function criarTabela(opcoes) {
     colunas, titulo, porPagina = 50, pesquisa = true, nomeArquivo = 'tabela.csv', rodape, vazio = 'Nada para mostrar.',
     aoClicarLinha, aoDuploClique, classeLinha, grupo, caberNaLargura = false, escolherColunas = false,
   } = opcoes;
+  lerDensidade();
   const pesquisaveis = exportaveis(colunas);
   const idTabela = novoId('tab');
   const chaveLarguras = `larguras:${nomeArquivo}`;
@@ -328,7 +345,8 @@ export function criarTabela(opcoes) {
           ig % 2 ? 'faixa' : '', aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '',
           grupo && i < visiveis.length - 1 ? 'grupo-continua' : '', rec ? 'grupo-recolhido' : '', classeLinha?.(l) ?? '',
         ].join(' ').trim() || null,
-        onclick: aoClicarLinha ? () => aoClicarLinha(l) : null,
+        // Clique em botão/link/campo da linha (olho, copiar) não conta como clique na linha.
+        onclick: aoClicarLinha ? (e) => { if (!e.target.closest('button, a, input')) aoClicarLinha(l); } : null,
         ondblclick: aoDuploClique ? (e) => { if (!e.target.closest('button, a, input, [data-sem-duplo-clique]')) aoDuploClique(l); } : null,
       }, colunas.map((c) => (rec && !(grupo.colunasRecolhido ?? grupo.colunas).includes(c.id)
         ? el('td', { class: classeColuna(c) })
@@ -441,9 +459,15 @@ export function criarTabela(opcoes) {
   aplicarLarguras();
   aplicarOcultas();
 
+  const botaoDensidade = el('button', {
+    type: 'button', class: 'botao botao-sec botao-pequeno botao-densidade', 'aria-pressed': String(ehCompacta()),
+    title: 'Linhas mais baixas: cabem mais na tela (vale para todas as tabelas, lembrado neste navegador)',
+    onclick: trocarDensidade,
+  }, 'Compacta');
+
   const elemento = el('div', { class: 'tabela-bloco' },
     estiloLarguras, estiloOcultas, estiloAjuste,
-    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, botaoLarguras, botaoColunas, botaoCopiar, botaoCsv),
+    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, botaoLarguras, botaoColunas, botaoDensidade, botaoCopiar, botaoCsv),
     rolagem,
     paginacao);
   render();

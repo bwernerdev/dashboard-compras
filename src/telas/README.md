@@ -6,6 +6,8 @@ Telas públicas (vão também para o painel) ficam em `publicas.js`, na ordem da
 
 | Arquivo | Conteúdo |
 |---|---|
+| `hoje.js` | Aba Hoje (só no app, primeira aba; interna, não vai para o painel): cartões e listas de SCs que viraram fora do prazo, que vencem em até 2 dias úteis, sem comprador e novas (`resumoDoDia` em `analise.js`). Clique abre o detalhe da SC |
+| `comparacao.js` | `blocoComparacao(ctx, cartoesDe)`: mês (ou trimestre) atual x anterior pela data do pedido (`periodosDePedido`), alternador lembrado no navegador (`comparacao-periodo`). Usado em Spend e Saving; ignora o filtro "Mês do pedido" |
 | `publicas.js` | `TELAS_PUBLICAS` (ordem das abas, usada pelo app e pelo painel) e `reiniciarTelas` (zera os recortes locais ao importar). Não pode importar `compradores.js`, `config/`, `importar.js` nem `memoria.js` |
 | `status.js` | Tela Status (aba Status): todas as SCs do período; cartões (SCs, em aberto, em pedido, canceladas), SCs distintas por status (barra clicável recorta a lista) com tabela, lista agrupada por SC com recorte por Status (lista de marcar) e pesquisa (cobre a segmentação Solicitante) |
 | `entrega.js` | Tela Entrega (aba Entrega, base Follow-Up): OFs distintas por status de entrega (Não entregue, Parcial, Entregue; cor fixa + texto), OFs por filial x status (barras empilhadas), lista agrupada por SC e OF (fornecedor, CNPJ) com recorte por status. Sem Follow-Up: aviso |
@@ -19,6 +21,6 @@ Telas públicas (vão também para o painel) ficam em `publicas.js`, na ordem da
 | `importacao.js` | Caixas "Base" e "Follow-Up" (escolher/arrastar, progresso, erro). Na tela vazia e no diálogo "Atualizar bases". Os `input[data-tipo]` são usados pelo e2e |
 | `configuracao.js` | Diálogo "Configuração": edita filiais e compradores; `validarConfig`; "Restaurar padrão". Salva no navegador |
 
-Cartões de Status, Regional e Atendimento mostram a variação desde a base anterior (`ctx.anteriores`, só no app). Subtítulo dos blocos em uma frase; detalhes no `ajuda` (botão "?").
+Cartões de Status, Regional e Atendimento mostram a variação desde a base anterior (`ctx.anteriores`, só no app) e o mini gráfico do histórico (`ctx.historico`, só no app, sem filtro). Clicar numa linha da lista de SCs (Regional, Atendimento, Status) abre o detalhe da SC (`ui/detalhe.js`). Subtítulo dos blocos em uma frase; detalhes no `ajuda` (botão "?").
 
 Seleções locais das telas (faixa, status, agrupar, SLA) ficam em cada módulo e zeram ao importar outra base (`reiniciarTelas`).
