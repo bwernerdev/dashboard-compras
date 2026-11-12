@@ -232,7 +232,6 @@ export function telaRegional(ctx) {
         : 'Itens agrupados por SC, da mais antiga para a mais nova. CSV e "Copiar tabela" trazem um item por linha.',
     },
     recortes,
-    legendaRegularizacao(abertos),
     atendidasLigadas ? aviso : null,
     tabela.elemento,
   );
@@ -251,15 +250,6 @@ export function telaRegional(ctx) {
   aplicarTelaCheia(telaCheia);
 
   return el('div', { class: 'tela' }, cartoes, el('div', { class: 'grade-2 grade-2-3' }, graficoFaixas, blocoGrupos), blocoLista);
-}
-
-/** Legenda da linha vermelha (cor nunca sozinha): só quando há SC de regularização em aberto. */
-function legendaRegularizacao(abertos) {
-  const scs = new Set(abertos.filter(ehRegularizacao).map((r) => r.solicitacao)).size;
-  if (!scs) return null;
-  return el('p', { class: 'legenda-lista' },
-    el('span', { class: 'legenda-regularizacao', 'aria-hidden': 'true' }),
-    `Linha vermelha: SC de regularização (${fmt.inteiro(scs)} ${scs === 1 ? 'SC' : 'SCs'} em aberto)`);
 }
 
 /** Zera as seleções locais (ao trocar de bases). */

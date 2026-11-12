@@ -295,7 +295,7 @@ Pedido da equipe: a lista "SCs em aberto" ocupar a tela toda, em desktop (não h
 Pedido da equipe: SC com "Categoria solicitação" = **REGULARIZAÇÃO** (compra já feita, SC aberta depois) fica com a **linha toda em vermelho** na lista de SCs em aberto da Regional. A planilha antiga não tinha essa cor: regra nova.
 - Categoria vale para a SC inteira (nenhuma SC mistura categorias na base de 11/11/2026): todos os itens ficam vermelhos. Base de 11/11/2026: 51 SCs em aberto (57 itens) de 397.
 - Cor: vermelho claro com texto vermelho escuro (estilo do Excel: fundo `#ffc7ce`, texto `#9c0006`); tema escuro `#4a1d22` / `#ffb3b8`. Tokens `--linha-reg-*`. A coluna do olho fica sem cor (fora da grade).
-- Cor nunca sozinha: legenda acima da lista ("Linha vermelha: SC de regularização (N SCs em aberto)") e "(regularização)" para leitor de tela na célula da SC.
+- Sem legenda (tirada em 12/11/2026 a pedido da equipe, para sobrar espaço para a tabela: a equipe conhece a cor). Leitor de tela ouve "(regularização)" na célula da SC.
 - `analise.ehRegularizacao` (sem maiúsculas nem acento). Também no painel publicado: dados versão 3 com o campo `categoria`.
 
 ### SCs atendidas: olho e duplo clique (11/11/2026)

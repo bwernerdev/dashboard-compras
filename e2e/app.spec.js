@@ -36,10 +36,10 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   await expect(linhas.nth(1).locator('td').nth(2)).toHaveText('');
   await expect(linhas.nth(1)).toContainText('Em pendências de compra');
   await expect(linhas.nth(2).locator('td').nth(2)).toHaveText('1000001 (regularização)');
-  // Regularização: linha vermelha + legenda.
+  // Regularização: linha vermelha (sem legenda, a pedido da equipe).
   await expect(linhas.nth(2)).toHaveClass(/linha-regularizacao/);
   await expect(linhas.nth(0)).not.toHaveClass(/linha-regularizacao/);
-  await expect(lista.locator('.legenda-lista')).toContainText('SC de regularização (1 SC em aberto)');
+  await expect(lista.locator('.legenda-lista')).toHaveCount(0);
 
   // Status: atalho "Só pendências".
   await lista.getByRole('button', { name: 'Só pendências' }).click();
