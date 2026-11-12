@@ -12,7 +12,7 @@ export const CONFIG_PADRAO = {
     { codigo: '178716', descricao: 'SEARA COMERCIO DE ALIMENTOS LT  -  BAURU - CD', ajustada: '716', nome: 'CDA', regional: 'Central Compras - Itajaí' },
     { codigo: '30901', descricao: 'SEARA ALIMENTOS LTDA  -  CAMPINAS - CD', ajustada: '901', nome: 'Campinas', regional: 'Filiais Thayane' , aprovadorGA: 'BRUNO SOUSA MELO' },
     { codigo: '178692', descricao: 'SEARA COMERCIO DE ALIMENTOS LT  -  CAMPINAS - CD', ajustada: '692', nome: 'Campinas', regional: 'Filiais Thayane' , aprovadorGA: 'BRUNO SOUSA MELO' },
-    { codigo: '30892', descricao: 'SEARA ALIMENTOS LTDA  -  SP ANHANGUERA - CD', ajustada: '892', nome: 'CDA', regional: 'Filiais Thayane' },
+    { codigo: '30892', descricao: 'SEARA ALIMENTOS LTDA  -  SP ANHANGUERA - CD', ajustada: '892', nome: 'CDA', regional: 'Filiais Thayane' , aprovadorGA: 'DAVID KOLLER' },
     { codigo: '30458', descricao: 'SEARA ALIMENTOS LTDA  -  NOVA SANTA RITA - CD', ajustada: '458', nome: 'Nova Sta Rita', regional: 'Filiais Vitor' , aprovadorGA: 'PAULO ALESSANDRO' },
     { codigo: '30319', descricao: 'SEARA ALIMENTOS LTDA  -  RIBEIRAO PRETO - CD', ajustada: '319', nome: 'Rib. Preto', regional: 'Filiais Thayane' , aprovadorGA: 'BRUNO SOUSA MELO' },
     { codigo: '178963', descricao: 'SEARA COMERCIO DE ALIMENTOS LT  -  RIBEIRAO PRETO - CD', ajustada: '963', nome: 'Rib. Preto', regional: 'Filiais Thayane' , aprovadorGA: 'BRUNO SOUSA MELO' },
