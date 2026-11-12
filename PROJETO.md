@@ -255,6 +255,11 @@ As colunas da seção 2 (dias em aberto, Data, Serviço, SLA, tempos por etapa) 
 - **Spend** e **Saving** por filial: batem ao centavo.
 - **sc p Compr, SCs por comprador × status:** batem. Única diferença: a planilha tem 1 SC a mais em "-", que é uma linha vazia da tabela Base (o app não lê linha sem filial).
 - **sc p Compr, pré-pedidos por comprador × regional:** batem (ex.: Thayane 1.354). A contagem distinta do modelo de dados da planilha conta o pré-pedido vazio como um valor (+1 em cada grupo com SC sem pré-pedido); por decisão de 11/11/2026 o app conta igual. Só aparecem compradores e regionais com pelo menos um pré-pedido de verdade.
+- **Revalidação da aba sc p Compr (12/11/2026, pedido da equipe: "regra exatamente a da planilha"):** lidas as definições das 3 tabelas dinâmicas e das segmentações (todas em "Todos").
+  - SCs por comprador × status: contagem distinta de "Solicitação de Compra" no modelo de dados, comprador = coluna "Comprador" (apelido do de-para; "-" fora dele; Pendente sem "Selecionado por"). Bate linha a linha, inclusive a linha Total Geral (3.837 x 3.836: a linha vazia da tabela Base).
+  - Pré-pedidos (QTD Pré-Pedido): contagem distinta de "Número Pré-Pedido"; o vazio conta 1 em cada grupo (ex.: Thayane 1.354 = 1.353 pré-pedidos gerados + 1). A planilha mostra **só os compradores do de-para** (Thayane, Vitor, Bruno W.): "-" tinha 218 itens com pré-pedido e ficava de fora. **Corrigido no app**: "-" e Pendente saem da tabela e do cartão "Pré-pedidos" (antes o app mostrava "-" com 162).
+  - % sc's atendidas: contagem de SC (itens) do comprador ÷ total dos compradores visíveis. A planilha foi salva filtrada só na Thayane (100%); o app com o filtro Comprador = Thayane dá 100%. Sem filtro, o app mostra todos.
+  - `npm run conferir` passou a conferir também a linha Total Geral, comprador que só o app mostra e a % sc's atendidas.
 
 ### Base de 11/11/2026 na tela
 397 SCs em aberto (622 itens), 74,1% no prazo, 143 itens fora do prazo, 70 sem prazo (status sem SLA ou sem linha na tabela), média de 9,7 dias úteis, mais antiga com 42.

@@ -10,7 +10,7 @@ import { criarConfig } from '../src/config/index.js';
 import { diasUteis, formatarSerie } from '../src/datas.js';
 import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
 import {
-  aplicarFiltros, savingPorFilial, spendPorFilial, scsPorCompradorStatus, prePedidosPorCompradorRegional, OUTROS,
+  aplicarFiltros, savingPorFilial, spendPorFilial, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores, OUTROS,
 } from '../src/analise.js';
 
 const caminho = process.argv[2] ?? 'DASHBOARD COMPRAS 2026.xlsm';
@@ -132,8 +132,9 @@ const abaCompr = await lerAbaInteira(pasta, 'sc p Compr');
   console.log('\n== Tabela dinâmica sc p Compr (SCs distintas por comprador x status)');
   for (const l of abaCompr.slice(57, 64)) {
     const comprador = l[2];
-    if (comprador === undefined || comprador === 'Total Geral' || comprador === '(vazio)') continue;
-    const linha = calc.linhas.find((x) => x.comprador === String(comprador));
+    if (comprador === undefined || comprador === '(vazio)') continue;
+    const total = { comprador: 'Total Geral', porStatus: calc.totaisStatus, total: calc.totalGeral };
+    const linha = comprador === 'Total Geral' ? total : calc.linhas.find((x) => x.comprador === String(comprador));
     const difs = [];
     const explicadas = [];
     for (let c = 3; c <= 11; c++) {
@@ -143,7 +144,7 @@ const abaCompr = await lerAbaInteira(pasta, 'sc p Compr');
       if (esperado === obtido) continue;
       // Linha vazia da tabela Base (sem SC, sem status; comprador "-" pela fórmula): a contagem
       // distinta do modelo de dados conta o vazio como 1 SC. O app não lê linha sem filial.
-      if (comprador === '-' && (coluna === '(vazio)' || coluna === 'Total Geral') && esperado === obtido + 1) explicadas.push(`${coluna}: ${esperado} x ${obtido}`);
+      if ((comprador === '-' || comprador === 'Total Geral') && (coluna === '(vazio)' || coluna === 'Total Geral') && esperado === obtido + 1) explicadas.push(`${coluna}: ${esperado} x ${obtido}`);
       else difs.push(`${coluna}: ${esperado} x ${obtido}`);
     }
     if (difs.length) falhas++;
@@ -172,6 +173,29 @@ const abaCompr = await lerAbaInteira(pasta, 'sc p Compr');
     const ok = esperado === obtido;
     if (!ok) falhas++;
     console.log(`${ok ? 'OK   ' : 'DIFERE'} ${regionais.has(String(rotulo)) ? '  ' : ''}${String(rotulo).padEnd(16)} ${esperado} x ${obtido}`);
+  }
+  // Comprador que o app mostra e a planilha não (ex.: "-" ou Pendente): também é diferença.
+  const naPlanilha = new Set(abaCompr.slice(5, 19).map((l) => l?.[2]).filter((v) => v !== undefined && v !== null && v !== '').map(String));
+  for (const l of calc.linhas.filter((x) => !naPlanilha.has(x.comprador))) {
+    falhas++;
+    console.log(`DIFERE ${l.comprador.padEnd(16)} só no app (${l.total})`);
+  }
+}
+
+// sc p Compr, tabela 2: "% sc's atendidas" (H8:I9) = contagem de SC (itens) do comprador ÷ total dos
+// compradores visíveis. A planilha foi salva mostrando só a Thayane (100%); o app com o filtro
+// Comprador = Thayane tem de dar o mesmo.
+{
+  const linhas = abaCompr.slice(8, 20).filter((l) => l?.[7] !== undefined && l?.[7] !== null && l?.[7] !== '' && l?.[7] !== 'Total Geral');
+  const visiveis = new Set(linhas.map((l) => String(l[7])));
+  const calc = participacaoCompradores(aplicarFiltros(base.registros, { comprador: visiveis }));
+  console.log(`
+== Tabela dinâmica sc p Compr (% sc's atendidas; compradores visíveis na planilha: ${[...visiveis].join(', ')})`);
+  for (const l of linhas) {
+    const c = calc.find((x) => x.comprador === String(l[7]));
+    const ok = c && Math.abs(c.participacao - l[8]) < 1e-9;
+    if (!ok) falhas++;
+    console.log(`${ok ? 'OK   ' : 'DIFERE'} ${String(l[7]).padEnd(16)} ${(l[8] * 100).toFixed(1)}% x ${c ? (c.participacao * 100).toFixed(1) : '-'}%`);
   }
 }
 

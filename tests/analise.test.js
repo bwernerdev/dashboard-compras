@@ -143,6 +143,8 @@ test('prePedidosPorCompradorRegional: distintos, vazio conta 1 como na planilha 
     reg({ comprador: 'Bia', regional: 'Sul', numeroPrePedido: null }), // vazio: +1 em Bia/Sul e Bia
     reg({ comprador: 'Bia', regional: 'Leste', numeroPrePedido: '' }), // Leste sem pré-pedido real: não vira coluna
     reg({ comprador: 'Caio', regional: 'Sul', numeroPrePedido: null }), // sem pré-pedido real: não vira linha
+    reg({ comprador: null, regional: 'Oeste', numeroPrePedido: 'P9' }), // "-" (fora do de-para): fora, como na planilha
+    reg({ comprador: 'Pendente', regional: 'Sul', numeroPrePedido: 'P8' }), // Pendente: fora, como na planilha
   ]);
   assert.deepEqual(r.regionais, ['Norte', 'Sul']);
   assert.deepEqual(r.linhas.map((l) => [l.comprador, l.porRegional.Norte, l.porRegional.Sul, l.total]),

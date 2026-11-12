@@ -98,7 +98,7 @@ export function telaCompradores(ctx) {
       icone: 'usuario', rotulo: 'SCs sem comprador (Pendente)', valor: fmt.inteiro(pendente?.total ?? 0), tom: pendente?.total ? 'alerta' : null,
       detalhe: 'Itens sem "Selecionado por" no ME',
     }),
-    cartao({ icone: 'pacote', rotulo: 'Pré-pedidos', valor: fmt.inteiro(pre.totalGeral), detalhe: 'Distintos, como na planilha (SC sem pré-pedido conta 1)' }),
+    cartao({ icone: 'pacote', rotulo: 'Pré-pedidos', valor: fmt.inteiro(pre.totalGeral), detalhe: 'Distintos, só compradores do de-para, como na planilha (SC sem pré-pedido conta 1)' }),
     cartao({
       icone: 'alerta', rotulo: 'Itens em aberto fora do prazo', valor: fmt.inteiro(aberto.fora), tom: aberto.fora ? 'critico' : null,
       detalhe: `${fmt.pct(aberto.pctNoPrazo)} dos itens em aberto no prazo`,
@@ -133,7 +133,7 @@ export function telaCompradores(ctx) {
 
   const prePedidos = bloco(
     { titulo: 'Pré-pedidos por comprador e regional', subtitulo: 'Números de pré-pedido distintos.',
-      ajuda: 'Como na planilha, as SCs sem pré-pedido contam como 1 em cada grupo.' },
+      ajuda: 'Como na planilha: só os compradores do de-para ("-" e Pendente ficam de fora) e as SCs sem pré-pedido contam como 1 em cada grupo.' },
     criarTabela({
       titulo: 'Pré-pedidos por comprador e regional',
       linhas: pre.linhas,

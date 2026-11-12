@@ -3,6 +3,7 @@
 // do modelo de dados da planilha antiga; contagem de itens = linhas.
 
 import { serie, partesDaSerie } from './datas.js';
+import { PENDENTE } from './regras.js';
 
 const SEM_VALOR = '-';
 const nomeOuTraco = (v) => (v === null || v === undefined || v === '' ? SEM_VALOR : String(v));
@@ -255,10 +256,13 @@ const VAZIO = Symbol('vazio');
  * Pré-pedidos distintos por comprador x regional (tabela dinâmica 1 da aba sc p Compr).
  * Igual à planilha (decisão de 11/11/2026): a contagem distinta do modelo de dados (DISTINCTCOUNT)
  * conta o pré-pedido VAZIO como um valor, então todo grupo com alguma SC sem pré-pedido soma 1.
- * Só aparecem compradores e regionais com pelo menos um pré-pedido de verdade.
+ * Só os compradores do de-para, como a tabela da planilha (conferido em 12/11/2026: ela mostra só
+ * Thayane, Vitor e Bruno W.; "-" (comprador fora do de-para) e Pendente ficam de fora, mesmo com
+ * pré-pedido). Só aparecem compradores e regionais com pelo menos um pré-pedido de verdade.
  */
 export function prePedidosPorCompradorRegional(registros) {
-  const comPre = registros.filter(temPrePedido);
+  const doDePara = (r) => { const c = nomeOuTraco(r.comprador); return c !== SEM_VALOR && c !== PENDENTE; };
+  const comPre = registros.filter((r) => temPrePedido(r) && doDePara(r));
   const compradores = new Set(comPre.map((r) => nomeOuTraco(r.comprador)));
   const regionais = [...new Set(comPre.map((r) => nomeOuTraco(r.regional)))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
   const valor = (r) => (temPrePedido(r) ? r.numeroPrePedido : VAZIO);
