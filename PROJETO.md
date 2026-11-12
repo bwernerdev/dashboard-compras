@@ -345,7 +345,7 @@ Pedido da equipe: tudo o que as abas visíveis da planilha mostram precisa estar
 - **Entrega** (aba Entrega, base Follow-Up): OFs distintas por status de entrega e por filial, lista agrupada por SC e OF com fornecedor e CNPJ. Os filtros globais valem para o Follow-Up (`comprador` e `temContrato` passaram a ser calculados também no Follow-Up, `src/regras.js`). Sem Follow-Up importado, a tela avisa.
 - **Spend** (aba Spend): pedido c/ impostos por filial com % do total e OFs distintas; por mês do pedido. A pizza virou barras ordenadas. Soma toda linha com valor, mesmo sem nº de pedido, como a planilha.
 - **Atendimento** (aba Atendimento): itens em aberto um por linha, do mais antigo, com SLA e prazo máximo; recorte Todos / Fora do prazo / No prazo.
-- **Organograma**: texto da aba (cargos e filiais de cada comprador), iniciais no lugar das fotos (fotos não entram no arquivo). Corrigidos "Bruno Wener" e "Acessoria". Cada comprador mostra as SCs em aberto da regional dele e filtra o painel ao clicar. Mudou a equipe: editar `src/telas/organograma.js`.
+- **Organograma**: texto e fotos da aba (cargos e filiais de cada comprador; fotos recortadas em 96 px dentro de `src/telas/organograma-fotos.js`, entram no painel). Erico não tem foto na planilha: iniciais. Corrigidos "Bruno Wener" e "Acessoria". Sem contagem de SCs (pedido da equipe). Mudou a equipe: editar `src/telas/organograma.js` e as fotos.
 - **Painel** (`src/painel/dados.js`, `VERSAO` 4): produto, solicitante, data e filial em toda linha (tela Status), `numeroPedido` (Spend) e `slaMax` (Atendimento); bloco `followUp` só com os campos da Entrega. Continuam fora: Compradores, pré-pedidos, configuração.
 
 ### Bases de 11/11/2026
