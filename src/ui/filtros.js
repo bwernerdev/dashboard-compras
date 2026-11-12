@@ -10,6 +10,7 @@ function fecharAberto() {
   if (abertoAtual) {
     abertoAtual.painel.hidden = true;
     abertoAtual.botao.setAttribute('aria-expanded', 'false');
+    abertoAtual.aoFechar?.();
     abertoAtual = null;
   }
 }
@@ -28,8 +29,13 @@ document.addEventListener('keydown', (ev) => {
 /**
  * Botão + lista de marcar (seleção múltipla). Usado na barra de filtros e nos recortes das telas.
  * id: data-filtro; rotulo; valores: [valor]; rotuloValor?(v) -> texto da opção; resumoValor?(v) ->
- * texto no botão com 1 marcado (padrão: rotuloValor); selecionados: Set (alterado no lugar);
- * aoMudar(novoSet) a cada marcação. Marcar não fecha a lista; Esc/clique fora fecha.
+ * texto no botão com 1 marcado (padrão: rotuloValor); selecionados: Set (alterado no lugar; vazio =
+ * todos); aoMudar(novoSet) a cada marcação. Marcar não fecha a lista; Esc/clique fora fecha.
+ *
+ * Como o filtro do Excel (pedido da equipe, 12/11/2026): sem filtro, "Todos" e todas as opções
+ * aparecem marcados. Desmarcar uma opção tira só ela; desmarcar "Todos" desmarca tudo para marcar
+ * só as que interessam (enquanto nada estiver marcado, o filtro não muda); marcar "Todos" volta a
+ * todas. Marcar todas uma a uma também vira "Todos".
  */
 export function listaDeMarcar({ id, rotulo, valores, rotuloValor = (v) => v, resumoValor = rotuloValor, selecionados, aoMudar }) {
   const idPainel = novoId('filtro');
@@ -37,49 +43,82 @@ export function listaDeMarcar({ id, rotulo, valores, rotuloValor = (v) => v, res
   const botao = el('button', {
     type: 'button', class: 'filtro-botao', 'aria-haspopup': 'true', 'aria-expanded': 'false', 'aria-controls': idPainel,
   }, el('span', { class: 'filtro-nome' }, rotulo), valorBotao);
-  const botaoTodos = el('button', { type: 'button', class: 'botao botao-sec botao-pequeno' }, 'Todos');
+
+  // nenhum: "Todos" desmarcado e nada marcado ainda (só na lista; o filtro continua como estava).
+  let nenhum = false;
+  let termo = '';
+  const todos = () => !nenhum && selecionados.size === 0;
+  const marcado = (v) => !nenhum && (selecionados.size === 0 || selecionados.has(v));
 
   const resumo = () => {
+    if (nenhum) return 'Marque uma opção';
     if (!selecionados.size) return 'Todos';
     if (selecionados.size === 1) return resumoValor([...selecionados][0]);
     return `${selecionados.size} selecionados`;
   };
   const mostrar = () => {
     valorBotao.textContent = resumo();
-    botao.classList.toggle('ativo', selecionados.size > 0);
-    botaoTodos.disabled = selecionados.size === 0;
+    botao.classList.toggle('ativo', selecionados.size > 0 || nenhum);
   };
-  const mudou = () => { mostrar(); aoMudar(new Set(selecionados)); };
-
   const lista = el('div', { class: 'filtro-lista', role: 'group', 'aria-label': rotulo });
-  const desenharLista = (termo = '') => {
+
+  function desenharLista() {
     const t = termo.toLowerCase();
-    substituir(lista, valores
-      .filter((v) => !t || String(rotuloValor(v)).toLowerCase().includes(t))
-      .map((v) => el('label', { class: 'filtro-opcao' },
-        el('input', {
-          type: 'checkbox', checked: selecionados.has(v), value: v,
-          onchange: (ev) => {
-            if (ev.target.checked) selecionados.add(v); else selecionados.delete(v);
-            mudou();
-          },
-        }),
-        el('span', {}, rotuloValor(v)))));
-  };
-  desenharLista();
-  botaoTodos.addEventListener('click', () => {
+    // Redesenhar troca as caixas: devolve o foco à mesma opção (uso pelo teclado).
+    const foco = lista.contains(document.activeElement) ? document.activeElement.value : null;
+    substituir(lista,
+      el('label', { class: 'filtro-opcao filtro-todos' },
+        el('input', { type: 'checkbox', checked: todos(), value: '(todos)', onchange: alternarTodos }),
+        el('span', {}, 'Todos')),
+      valores
+        .filter((v) => !t || String(rotuloValor(v)).toLowerCase().includes(t))
+        .map((v) => el('label', { class: 'filtro-opcao' },
+          el('input', { type: 'checkbox', checked: marcado(v), value: v, onchange: () => alternar(v) }),
+          el('span', {}, rotuloValor(v)))));
+    if (foco !== null) [...lista.querySelectorAll('input')].find((i) => i.value === foco)?.focus();
+  }
+
+  /** Só a lista e o botão (o filtro não muda). */
+  const redesenhar = () => { mostrar(); desenharLista(); };
+  const mudou = () => { redesenhar(); aoMudar(new Set(selecionados)); };
+
+  function alternarTodos() {
+    if (todos()) { nenhum = true; redesenhar(); return; }
+    nenhum = false;
     selecionados.clear();
-    for (const c of lista.querySelectorAll('input')) c.checked = false;
     mudou();
-  });
+  }
+
+  function alternar(v) {
+    if (nenhum) {
+      nenhum = false;
+      selecionados.clear();
+      selecionados.add(v);
+    } else if (selecionados.size === 0) {
+      for (const x of valores) if (x !== v) selecionados.add(x); // todos menos o desmarcado
+      if (!selecionados.size) { nenhum = true; redesenhar(); return; }
+    } else if (selecionados.has(v)) {
+      selecionados.delete(v);
+      // Desmarcou a última: lista vazia esperando uma marcação; o filtro volta a Todos.
+      if (!selecionados.size) { nenhum = true; redesenhar(); aoMudar(new Set()); return; }
+    } else {
+      selecionados.add(v);
+      if (valores.every((x) => selecionados.has(x))) selecionados.clear(); // marcou todas = Todos
+    }
+    mudou();
+  }
+
+  desenharLista();
 
   const painel = el('div', { class: 'filtro-painel', id: idPainel, hidden: true },
     valores.length > 8 ? el('input', {
       type: 'search', class: 'campo', placeholder: `Procurar ${rotulo.toLowerCase()}`,
-      'aria-label': `Procurar ${rotulo}`, oninput: (ev) => desenharLista(ev.target.value),
+      'aria-label': `Procurar ${rotulo}`, oninput: (ev) => { termo = ev.target.value; desenharLista(); },
     }) : null,
-    lista,
-    el('div', { class: 'filtro-acoes' }, botaoTodos));
+    lista);
+
+  // Fechou sem marcar nada: volta a mostrar o filtro que vale (Todos).
+  const aoFechar = () => { if (nenhum) { nenhum = false; redesenhar(); } };
 
   const raiz = el('div', { class: 'filtro', dataset: { filtro: id } }, botao, painel);
   botao.addEventListener('click', () => {
@@ -88,7 +127,7 @@ export function listaDeMarcar({ id, rotulo, valores, rotuloValor = (v) => v, res
     if (!estavaAberto) {
       painel.hidden = false;
       botao.setAttribute('aria-expanded', 'true');
-      abertoAtual = { raiz, painel, botao };
+      abertoAtual = { raiz, painel, botao, aoFechar };
       (painel.querySelector('input[type="search"]') ?? painel.querySelector('input'))?.focus();
     }
   });

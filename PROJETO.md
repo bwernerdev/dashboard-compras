@@ -348,6 +348,8 @@ Pedido da equipe: tudo o que as abas visíveis da planilha mostram precisa estar
 - **Organograma**: texto e fotos da aba (cargos e filiais de cada comprador; fotos recortadas em 96 px dentro de `src/telas/organograma-fotos.js`, entram no painel). Erico não tem foto na planilha: iniciais. Corrigidos "Bruno Wener" e "Acessoria". Sem contagem de SCs (pedido da equipe). Mudou a equipe: editar `src/telas/organograma.js` e as fotos.
 - **Painel** (`src/painel/dados.js`, `VERSAO` 4): produto, solicitante, data e filial em toda linha (tela Status), `numeroPedido` (Spend) e `slaMax` (Atendimento); bloco `followUp` só com os campos da Entrega. Continuam fora: Compradores, pré-pedidos, configuração.
 
+- **Listas de marcar como o filtro do Excel** (filtros globais e recortes de status): sem filtro, "Todos" e todas as opções aparecem marcados; desmarcar uma opção tira só ela; desmarcar "Todos" limpa a lista para marcar só o que interessa; marcar "Todos" volta a todas. Antes "Todos" era um botão que só limpava a seleção e ficava desativado sem filtro (parecia não funcionar).
+
 ### Bases de 11/11/2026
 - `npm run conferir`: tudo confere, inclusive a tabela dinâmica Spend, agora calculada com a função da tela (`spendPorFilial`).
 - Follow-Up: 2.983 itens, 1.259 OFs; não entregue 919 OFs (2.032 itens), parcial 409 (938), entregue 8 (13).

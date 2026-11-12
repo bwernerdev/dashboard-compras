@@ -46,15 +46,18 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   await expect(lista.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
   await expect(lista.locator('[data-filtro="status"] .filtro-valor')).toHaveText('Em pendências de compra');
 
-  // Status: vários de uma vez; a lista de marcar continua aberta.
+  // Status: marcar as duas = Todos; a lista de marcar continua aberta.
   await lista.locator('[data-filtro="status"] .filtro-botao').click();
   await lista.getByRole('checkbox', { name: /^Em Cotação/ }).check();
   await expect(lista.locator('.tabela-contagem')).toHaveText('2 SCs, 3 itens');
-  await expect(lista.locator('[data-filtro="status"] .filtro-valor')).toHaveText('2 selecionados');
-  await expect(lista.getByRole('checkbox', { name: /^Em Cotação/ })).toBeVisible();
+  await expect(lista.locator('[data-filtro="status"] .filtro-valor')).toHaveText('Todos');
+  await expect(lista.getByRole('checkbox', { name: 'Todos', exact: true })).toBeChecked();
+  // Desmarcar uma tira só ela (como no Excel).
   await lista.getByRole('checkbox', { name: /^Em pendências de compra/ }).uncheck();
   await expect(lista.locator('.tabela-contagem')).toHaveText('2 SCs, 2 itens');
-  await lista.locator('[data-filtro="status"]').getByRole('button', { name: 'Todos' }).click();
+  await expect(lista.getByRole('checkbox', { name: 'Todos', exact: true })).not.toBeChecked();
+  await lista.getByRole('checkbox', { name: 'Todos', exact: true }).check();
+  await expect(lista.locator('.tabela-contagem')).toHaveText('2 SCs, 3 itens');
   await page.keyboard.press('Escape');
 
   // Faixa "Até 5 dias" recorta a lista.
@@ -189,10 +192,23 @@ test('largura da coluna: arrastar, setas, autoajuste com dois cliques, lembrada 
 
 test('filtro global pela lista; Esc fecha', async ({ page }) => {
   await importarBase(page);
-  await page.locator('[data-filtro="prioridade"] .filtro-botao').click();
-  await page.getByRole('checkbox', { name: 'URGENTE' }).check();
+  const prioridade = page.locator('[data-filtro="prioridade"]');
+  await prioridade.locator('.filtro-botao').click();
+  // Sem filtro: Todos e todas as opções marcadas, como no Excel.
+  await expect(prioridade.getByRole('checkbox', { name: 'Todos' })).toBeChecked();
+  await expect(prioridade.getByRole('checkbox', { name: 'URGENTE' })).toBeChecked();
+  // Desmarcar Todos limpa a lista sem mudar os números; marcar uma opção filtra por ela.
+  await prioridade.getByRole('checkbox', { name: 'Todos' }).uncheck();
+  await expect(prioridade.getByRole('checkbox', { name: 'URGENTE' })).not.toBeChecked();
+  await expect(prioridade.locator('.filtro-valor')).toHaveText('Marque uma opção');
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
+  await prioridade.getByRole('checkbox', { name: 'URGENTE' }).check();
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('1');
-  await expect(page.getByRole('checkbox', { name: 'URGENTE' })).toBeVisible(); // lista continua aberta
+  await expect(prioridade.getByRole('checkbox', { name: 'URGENTE' })).toBeVisible(); // lista continua aberta
+  // Todos volta a todas.
+  await prioridade.getByRole('checkbox', { name: 'Todos' }).check();
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
+  await expect(prioridade.locator('.filtro-valor')).toHaveText('Todos');
   await page.keyboard.press('Escape');
   await expect(page.locator('[data-filtro="prioridade"] .filtro-painel')).toBeHidden();
 });
@@ -266,6 +282,7 @@ test('Entrega: sem Follow-Up avisa; com Follow-Up mostra OFs por status', async 
 
   // Filtro global vale para o Follow-Up também.
   await page.locator('[data-filtro="regional"] .filtro-botao').click();
+  await page.locator('[data-filtro="regional"]').getByRole('checkbox', { name: 'Todos' }).uncheck();
   await page.getByRole('checkbox', { name: FILIAL_B.regional }).check();
   await expect(valorDoCartao(page, /^OFs$/)).toHaveText('1');
   await page.keyboard.press('Escape');
