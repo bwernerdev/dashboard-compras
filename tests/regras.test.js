@@ -216,3 +216,13 @@ test('Status Pré-Pedido nível 1: nome do aprovador GA da filial (Configuraçã
   assert.equal(calcularLinhaBase(linha(nivel1), cfg, HOJE).aprovacao, 'Ag. aprovação GA');
   assert.equal(calcularLinhaBase(linha(), cfg, HOJE).aprovacao, null);
 });
+
+test('aprovador GA: configuração salva sem o campo usa o padrão; campo apagado fica sem nome', () => {
+  const semCampo = criarConfig({ filiais: [{ codigo: '30570', ajustada: '570', nome: 'X', regional: 'R' }], compradores: [] });
+  const padrao = criarConfig().aprovadorGA('30.570');
+  assert.ok(padrao);
+  assert.equal(semCampo.aprovadorGA('30570'), padrao);
+  const apagado = criarConfig({ filiais: [{ codigo: '30570', ajustada: '570', nome: 'X', regional: 'R', aprovadorGA: '' }], compradores: [] });
+  assert.equal(apagado.aprovadorGA('30570'), null);
+  assert.equal(cfg.aprovadorGA('30999'), null);
+});

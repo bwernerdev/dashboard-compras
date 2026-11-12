@@ -18,6 +18,8 @@ function primeiraOcorrencia(lista, fnChave) {
   return mapa;
 }
 
+const padraoPorCodigo = primeiraOcorrencia(CONFIG_PADRAO.filiais, (f) => normalizarCodigoFilial(f.codigo));
+
 /**
  * Monta as tabelas de busca a partir da configuração (padrão ou editada).
  * Cada busca reproduz um PROCV exato da planilha: primeira linha que bate.
@@ -42,10 +44,16 @@ export function criarConfig(config = CONFIG_PADRAO) {
       const f = porAjustada.get(chave(ajustada));
       return f ? { nome: f.nome, regional: f.regional } : null;
     },
-    /** Aprovador GA (nível 1 do pré-pedido) da filial pelo código do ME, ou null. Não existe na planilha. */
+    /**
+     * Aprovador GA (nível 1 do pré-pedido) da filial pelo código do ME, ou null. Não existe na planilha.
+     * Configuração salva antes deste campo (linha sem `aprovadorGA`) usa o nome do padrão;
+     * campo apagado na Configuração ("") fica sem nome.
+     */
     aprovadorGA(codigo) {
-      const nome = String(porCodigo.get(normalizarCodigoFilial(codigo))?.aprovadorGA ?? '').trim();
-      return nome || null;
+      const k = normalizarCodigoFilial(codigo);
+      const f = porCodigo.get(k);
+      const nome = f && 'aprovadorGA' in f ? f.aprovadorGA : padraoPorCodigo.get(k)?.aprovadorGA;
+      return String(nome ?? '').trim() || null;
     },
     /** PROCV(nome completo; Base Analitico!N:O; 2) -> apelido, ou null. */
     apelidoComprador(nome) {

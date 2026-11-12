@@ -78,6 +78,9 @@ function editorDeLista(secao, linhas) {
  */
 export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar }) {
   const rascunho = copiar(config);
+  // Configuração salva antes do campo "Aprovador GA": mostra (e salva) o nome do padrão, que já vale no app.
+  const padrao = new Map(CONFIG_PADRAO.filiais.map((f) => [normalizarCodigoFilial(f.codigo), f.aprovadorGA ?? '']));
+  for (const f of rascunho.filiais) if (!('aprovadorGA' in f)) f.aprovadorGA = padrao.get(normalizarCodigoFilial(f.codigo)) ?? '';
   const avisos = el('div', { class: 'config-avisos', role: 'alert' });
   const dialogo = el('dialog', { class: 'dialogo dialogo-largo', 'aria-labelledby': 'titulo-config' });
 
