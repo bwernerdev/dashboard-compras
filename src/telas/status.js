@@ -1,13 +1,13 @@
 // Tela Status: todas as SCs do período (abertas, em pedido e canceladas) por status.
 // Substitui a aba "Status" da planilha antiga (tabela dinâmica SC > Status > Produto > ...).
 import { el } from '../ui/dom.js';
-import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, comparar } from '../ui/cartoes.js';
 import { barras } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import { listaDeMarcar } from '../ui/filtros.js';
 import * as fmt from '../ui/formatos.js';
 import { seloDoStatus, marcaDaPrioridade } from '../ui/cores-planilha.js';
-import { scsPorStatus, recortarPorStatus, ehRegularizacao } from '../analise.js';
+import { scsPorStatus, resumoStatus, recortarPorStatus, ehRegularizacao } from '../analise.js';
 
 // Recorte local (não é filtro global): status marcados na lista ou na barra do gráfico.
 const local = { status: new Set() };
@@ -31,15 +31,14 @@ export function telaStatus(ctx) {
 
   const porStatus = scsPorStatus(regs);
   const doStatus = new Map(porStatus.map((s) => [s.status, s]));
-  const scs = new Set(regs.map((r) => r.solicitacao)).size;
-  const conta = (nome) => doStatus.get(nome)?.scs ?? 0;
-  const abertas = new Set(regs.filter((r) => r.diasEmAberto !== null && r.diasEmAberto !== undefined).map((r) => r.solicitacao)).size;
+  const resumo = resumoStatus(regs);
+  const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoStatus(ctx.anteriores.registros) : null);
 
   const cartoes = linhaDeCartoes(
-    cartao({ rotulo: 'SCs no período', valor: fmt.inteiro(scs), detalhe: `${fmt.inteiro(regs.length)} itens` }),
-    cartao({ rotulo: 'SCs em aberto', valor: fmt.inteiro(abertas), detalhe: 'Com item sem pedido e não cancelado' }),
-    cartao({ rotulo: 'SCs em pedido', valor: fmt.inteiro(conta('Em Pedido')), detalhe: 'Com item no status Em Pedido' }),
-    cartao({ rotulo: 'SCs canceladas', valor: fmt.inteiro(conta('Cancelado')), detalhe: 'Com item no status Cancelado' }),
+    cartao({ rotulo: 'SCs no período', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens`, variacao: vs('scs', fmt.inteiro) }),
+    cartao({ rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.abertas), detalhe: 'Com item sem pedido e não cancelado', variacao: vs('abertas', fmt.inteiro, 'menor') }),
+    cartao({ rotulo: 'SCs em pedido', valor: fmt.inteiro(resumo.emPedido), detalhe: 'Com item no status Em Pedido', variacao: vs('emPedido', fmt.inteiro) }),
+    cartao({ rotulo: 'SCs canceladas', valor: fmt.inteiro(resumo.canceladas), detalhe: 'Com item no status Cancelado', variacao: vs('canceladas', fmt.inteiro) }),
   );
 
   // Status marcado que os filtros globais zeraram continua na lista (com 0) para poder desmarcar.
@@ -48,7 +47,8 @@ export function telaStatus(ctx) {
   let tabela = null;
 
   const grafico = bloco(
-    { titulo: 'SCs por status', subtitulo: 'SCs distintas: uma SC com itens em status diferentes conta em cada um. Clique numa barra para recortar a lista.' },
+    { titulo: 'SCs por status', subtitulo: 'SCs distintas. Clique numa barra para recortar a lista.',
+      ajuda: 'Uma SC com itens em status diferentes conta em cada um deles.' },
     barras({
       itens: porStatus.map((s) => ({ id: s.status, rotulo: s.status, valor: s.scs, detalhe: [{ valor: fmt.inteiro(s.itens), rotulo: 'itens' }] })),
       formato: fmt.inteiro,
@@ -63,7 +63,7 @@ export function telaStatus(ctx) {
         { id: 'scs', rotulo: 'SCs', num: true, valor: (s) => s.scs, formato: fmt.inteiro },
         { id: 'itens', rotulo: 'Itens', num: true, valor: (s) => s.itens, formato: fmt.inteiro },
       ],
-      rodape: () => ['Total geral', fmt.inteiro(scs), fmt.inteiro(regs.length)],
+      rodape: () => ['Total geral', fmt.inteiro(resumo.scs), fmt.inteiro(resumo.itens)],
     }).elemento,
   );
 

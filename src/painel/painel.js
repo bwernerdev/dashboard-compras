@@ -11,12 +11,12 @@ import '../styles/base.css';
 import '../styles/componentes.css';
 import '../styles/impressao.css';
 import { descompactar, registrosDoPainel, followUpDoPainel } from './dados.js';
-import { criarNavegador, ligarTema, ligarImpressao } from '../ui/casca.js';
+import { criarNavegador, ligarTema, ligarImpressao, diasDesdeABase, BASE_ANTIGA_DIAS } from '../ui/casca.js';
 import { aplicarMarca } from '../ui/marca.js';
 import { definirExportacao } from '../ui/tabela.js';
 import { el, substituir } from '../ui/dom.js';
 import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
-import { formatarSerie } from '../datas.js';
+import { formatarSerie, hojeSerie } from '../datas.js';
 import { TELAS_PUBLICAS } from '../telas/publicas.js';
 
 /** Dentro de um quadro (pré-visualização do SharePoint): download, imprimir e janelas novas bloqueados. */
@@ -44,6 +44,11 @@ function mostrarPeriodo(dados) {
   const partes = [];
   if (dados.periodo?.inicio) partes.push(`${formatarSerie(dados.periodo.inicio)} a ${formatarSerie(dados.periodo.fim)}`);
   partes.push(`dados de ${new Date(dados.geradoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}`);
+  // Painel antigo na Intranet: avisa quem lê (o selo fica amarelo, o texto diz quanto).
+  const atraso = diasDesdeABase(dados.periodo?.execucao ?? dados.hoje, hojeSerie());
+  const antigo = atraso >= BASE_ANTIGA_DIAS;
+  if (antigo) partes.push(`${atraso} dias úteis atrás`);
+  raiz.periodo.classList.toggle('selo-alerta', antigo);
   raiz.periodo.textContent = partes.join(' · ');
   raiz.periodo.title = 'Dias em aberto e SLA calculados na data em que o painel foi gerado.';
   raiz.periodo.hidden = false;

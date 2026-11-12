@@ -43,14 +43,22 @@ button:disabled { cursor: default; }
 }
 .topo-emblema { grid-area: emblema; display: block; width: auto; height: 80px; }
 .topo-marca { grid-area: marca; display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
-.topo h1 { font-size: var(--fs-xl); font-weight: 700; color: var(--text-strong); }
+.topo h1 { font-size: var(--fs-xl); font-weight: 700; color: var(--text-strong); white-space: nowrap; }
 .selo {
   font-size: var(--fs-xs); padding: 2px var(--s2); border-radius: var(--r-pill);
   background: var(--surface-selected); color: var(--accent-text); font-variant-numeric: tabular-nums;
 }
+/* Base com 2+ dias úteis (main.js / painel.js): o texto diz quanto, o amarelo reforça. */
+.selo.selo-alerta { background: var(--warning-bg); color: var(--warning-fg); font-weight: 600; }
 .topo-acoes { grid-area: acoes; display: flex; gap: var(--s2); flex-wrap: wrap; justify-content: flex-end; }
 /* Ações do topo no mesmo tamanho dos seletores de filtro (controles da página: 13 px, 28 px). */
 .topo-acoes .botao { height: var(--h-control-sm); font-size: var(--fs-sm); }
+/* Janela estreita (notebook com duas janelas lado a lado, ~800-1100 px): as ações descem para uma
+   linha própria, para o título e o período não quebrarem palavra a palavra. Não é layout de celular. */
+@media (max-width: 1100px) {
+  .topo { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "emblema marca" "emblema acoes" "emblema abas"; }
+  .topo-acoes { justify-content: flex-start; }
+}
 
 .abas { grid-area: abas; display: flex; flex-wrap: wrap; gap: var(--s1); margin-left: calc(-1 * var(--s3)); }
 .aba {

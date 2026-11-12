@@ -81,7 +81,8 @@ export function telaEntrega(ctx) {
 
   const status = porStatus.map((s) => s.status);
   const grafico = bloco(
-    { titulo: 'OFs por status de entrega', subtitulo: 'OFs distintas: uma OF com itens em status diferentes conta em cada um. Clique numa barra para recortar a lista.' },
+    { titulo: 'OFs por status de entrega', subtitulo: 'OFs distintas. Clique numa barra para recortar a lista.',
+      ajuda: 'Uma OF com itens em status diferentes conta em cada um deles.' },
     barras({
       itens: porStatus.map((s) => ({ id: s.status, rotulo: s.status, valor: s.ofs, detalhe: [{ valor: fmt.inteiro(s.itens), rotulo: 'itens' }] })),
       formato: fmt.inteiro,
@@ -137,7 +138,8 @@ export function telaEntrega(ctx) {
   });
 
   const lista = bloco(
-    { titulo: 'Lista de OFs', subtitulo: 'Itens agrupados por SC e OF, do pedido mais antigo para o mais novo. Pesquise por SC, OF, produto ou fornecedor.' },
+    { titulo: 'Lista de OFs', subtitulo: 'Itens agrupados por SC e OF, do pedido mais antigo para o mais novo.',
+      ajuda: 'Pesquise por SC, OF, produto ou fornecedor.' },
     el('div', { class: 'recortes' }, filtroStatus),
     tabela.elemento,
   );

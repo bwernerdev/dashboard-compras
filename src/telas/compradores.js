@@ -107,7 +107,8 @@ export function telaCompradores(ctx) {
 
   const series = porStatus.status.map((s) => ({ id: s, rotulo: s, cor: corDoStatus(s) }));
   const grafico = bloco(
-    { titulo: 'SCs por comprador e status', subtitulo: 'SCs distintas. Uma SC com itens em status diferentes aparece em cada status, mas conta uma vez no total.' },
+    { titulo: 'SCs por comprador e status', subtitulo: 'SCs distintas.',
+      ajuda: 'Uma SC com itens em status diferentes aparece em cada status, mas conta uma vez no total.' },
     barrasEmpilhadas({
       series,
       categorias: porStatus.linhas.map((l) => ({ rotulo: l.comprador, partes: l.porStatus, total: l.total })),
@@ -131,7 +132,8 @@ export function telaCompradores(ctx) {
   );
 
   const prePedidos = bloco(
-    { titulo: 'Pré-pedidos por comprador e regional', subtitulo: 'Números de pré-pedido distintos. Como na planilha, as SCs sem pré-pedido contam como 1 em cada grupo.' },
+    { titulo: 'Pré-pedidos por comprador e regional', subtitulo: 'Números de pré-pedido distintos.',
+      ajuda: 'Como na planilha, as SCs sem pré-pedido contam como 1 em cada grupo.' },
     criarTabela({
       titulo: 'Pré-pedidos por comprador e regional',
       linhas: pre.linhas,
@@ -148,7 +150,8 @@ export function telaCompradores(ctx) {
   );
 
   const participacao = bloco(
-    { titulo: 'Participação e SLA por comprador', subtitulo: 'Participação = itens de SC do comprador ÷ itens de SC do período (como "% sc\'s atendidas" da planilha).' },
+    { titulo: 'Participação e SLA por comprador', subtitulo: 'Itens de SC do comprador ÷ itens de SC do período.',
+      ajuda: 'Participação calculada como "% sc’s atendidas" da planilha. O SLA conta itens em aberto.' },
     criarTabela({
       titulo: 'Participação e SLA por comprador',
       linhas: part,

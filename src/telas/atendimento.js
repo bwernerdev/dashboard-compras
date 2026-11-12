@@ -2,7 +2,7 @@
 // Substitui a aba "Atendimento" da planilha antiga (Dias em aberto > SC > Filial > ... > Status).
 import { PRAZO_SLA_DIAS } from '../regras.js';
 import { el } from '../ui/dom.js';
-import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, comparar } from '../ui/cartoes.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
 import { seloDoStatus } from '../ui/cores-planilha.js';
@@ -40,16 +40,18 @@ export function telaAtendimento(ctx) {
   const abertos = itensEmAberto(ctx.registros);
   if (!abertos.length) return el('div', { class: 'estado-vazio' }, 'Nenhum item em aberto com os filtros atuais.');
   const resumo = resumoEmAberto(abertos);
+  const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoEmAberto(itensEmAberto(ctx.anteriores.registros)) : null);
 
   const cartoes = linhaDeCartoes(
-    cartao({ rotulo: 'Itens em aberto', valor: fmt.inteiro(resumo.itens), detalhe: `${fmt.inteiro(resumo.scs)} SCs` }),
+    cartao({ rotulo: 'Itens em aberto', valor: fmt.inteiro(resumo.itens), detalhe: `${fmt.inteiro(resumo.scs)} SCs`, variacao: vs('itens', fmt.inteiro, 'menor') }),
     // No prazo e fora do prazo contam SCs (pedido da equipe, 12/11/2026): SC fora = algum item fora.
-    cartao({ rotulo: 'SCs no prazo', valor: fmt.inteiro(resumo.scsNoPrazo), detalhe: `${fmt.pct(resumo.pctScsNoPrazo)} das SCs com prazo` }),
+    cartao({ rotulo: 'SCs no prazo', valor: fmt.inteiro(resumo.scsNoPrazo), detalhe: `${fmt.pct(resumo.pctScsNoPrazo)} das SCs com prazo`, variacao: vs('scsNoPrazo', fmt.inteiro) }),
     cartao({
       rotulo: 'SCs fora do prazo', valor: fmt.inteiro(resumo.scsFora), tom: resumo.scsFora ? 'critico' : null,
       detalhe: resumo.scsSemPrazo ? `${fmt.inteiro(resumo.scsSemPrazo)} SCs sem prazo definido` : `Algum item com mais de ${PRAZO_SLA_DIAS} dias úteis em aberto`,
+      variacao: vs('scsFora', fmt.inteiro, 'menor'),
     }),
-    cartao({ rotulo: 'Mais antigo', valor: `${fmt.inteiro(resumo.maxDias)} dias`, detalhe: `Média: ${fmt.decimal(resumo.mediaDias)} dias úteis` }),
+    cartao({ rotulo: 'Mais antigo', valor: `${fmt.inteiro(resumo.maxDias)} dias`, detalhe: `Média: ${fmt.decimal(resumo.mediaDias)} dias úteis`, variacao: vs('maxDias', fmt.inteiro, 'menor') }),
   );
 
   const recortar = () => (local.sla === 'todos' ? abertos : abertos.filter((r) => r.sla === local.sla));
@@ -72,7 +74,8 @@ export function telaAtendimento(ctx) {
   });
 
   return el('div', { class: 'tela' }, cartoes, bloco(
-    { titulo: 'Itens em aberto', subtitulo: 'Itens agrupados por SC, da mais antiga para a mais nova. Pesquise por SC, produto, solicitante ou filial. CSV e "Copiar tabela" trazem um item por linha.' },
+    { titulo: 'Itens em aberto', subtitulo: 'Itens agrupados por SC, da mais antiga para a mais nova.',
+      ajuda: 'Pesquise por SC, produto, solicitante ou filial. CSV e "Copiar tabela" trazem um item por linha.' },
     alternar,
     tabela.elemento,
   ));

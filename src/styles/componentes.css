@@ -51,6 +51,11 @@ input[type="search"].campo { min-width: 220px; }
   color: var(--text-strong); font-variant-numeric: tabular-nums;
 }
 .cartao-detalhe { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-xs); }
+/* Variação desde a base anterior: sinal no texto, cor só reforça. */
+.cartao-variacao { margin-top: 2px; font-size: var(--fs-xs); font-weight: 600; font-variant-numeric: tabular-nums; }
+.variacao-neutro { color: var(--text-muted); }
+.variacao-melhor { color: var(--success-fg); }
+.variacao-pior { color: var(--danger-fg); }
 .cartao-critico { border-left: 3px solid var(--danger-fg); }
 .cartao-alerta { border-left: 3px solid var(--warning-fg); }
 .cartao-bom { border-left: 3px solid var(--success-fg); }
@@ -85,6 +90,14 @@ input[type="search"].campo { min-width: 220px; }
 }
 .bloco-cabecalho h2 { font-size: var(--fs-lg); font-weight: 700; color: var(--text-strong); }
 .bloco-subtitulo { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-sm); }
+.bloco-titulo-linha { display: flex; align-items: center; gap: var(--s2); }
+/* Botão "?" de ajuda ao lado do título do bloco (texto longo na dica). */
+.botao-ajuda {
+  display: inline-grid; place-items: center; flex: none; width: 18px; height: 18px; padding: 0;
+  border: 1px solid var(--line-strong); border-radius: 50%; background: var(--surface);
+  color: var(--text-muted); font-size: var(--fs-2xs); font-weight: 700; line-height: 1; cursor: help;
+}
+.botao-ajuda:hover, .botao-ajuda:focus-visible { color: var(--accent-text); border-color: var(--accent); }
 .bloco > * + .tabela-bloco { margin-top: var(--s4); }
 
 .estado-vazio, .boas-vindas {
@@ -153,16 +166,6 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .legenda-chave { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 
 /* Colunas verticais */
-.grafico-colunas { display: flex; align-items: stretch; gap: var(--s2); height: 200px; padding-top: var(--s1); overflow-x: auto; }
-.gc-coluna {
-  flex: 1 0 48px; display: flex; flex-direction: column; align-items: center; gap: var(--s1);
-  padding: 2px; border-radius: var(--r-sm);
-}
-.gc-coluna:hover, .gc-coluna:focus-visible { background: var(--surface-hover); }
-.gc-valor { font-size: var(--fs-xs); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.gc-area { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; border-bottom: 1px solid var(--line-strong); }
-.gc-barra { width: 16px; min-height: 1px; background: var(--serie-unica); border-radius: 4px 4px 0 0; }
-.gc-rotulo { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
 
 /* Barra segmentada na célula */
 .celula-sla { display: inline-flex; align-items: center; gap: var(--s2); }
@@ -173,11 +176,12 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 /* Dica */
 .dica {
   position: fixed; z-index: 100; pointer-events: none;
-  min-width: 140px; max-width: 280px; padding: var(--s2) var(--s3);
+  min-width: 140px; max-width: 320px; padding: var(--s2) var(--s3);
   background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-3);
   font-size: var(--fs-sm);
 }
 .dica-titulo { font-weight: 700; margin-bottom: 2px; color: var(--text-strong); }
+.dica-texto { line-height: 1.4; }
 .dica-linha { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
 .dica-linha span:last-child { color: var(--text-muted); }
 .dica-chave { width: 8px; height: 8px; border-radius: 2px; flex: none; }

@@ -2,7 +2,7 @@
 // Substitui as abas "Saving" e "Spend". % Saving = economia ÷ (total + economia), como na planilha.
 import { el } from '../ui/dom.js';
 import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
-import { barras, colunas } from '../ui/graficos.js';
+import { barras } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
 import { seloDoSaving } from '../ui/cores-planilha.js';
@@ -64,9 +64,10 @@ export function telaSaving(ctx) {
 
   const meses = bloco(
     { titulo: 'Economia por mês do pedido' },
-    porMes.length ? colunas({
+    // Barras deitadas, como Spend por mês (poucos meses não esticam o gráfico).
+    porMes.length ? barras({
       itens: porMes.map((g) => ({
-        rotulo: rotuloMes(g.chave), valor: g.economia,
+        id: g.chave, rotulo: rotuloMes(g.chave), valor: g.economia,
         detalhe: [{ valor: fmt.moeda(g.total), rotulo: 'total comprado' }, { valor: fmt.pctFino(g.pct), rotulo: 'saving' }],
       })),
       formato: fmt.moedaCompacta,

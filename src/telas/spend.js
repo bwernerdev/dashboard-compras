@@ -3,7 +3,7 @@
 // Comprador, Contrato e Filial: aqui são os filtros globais). Pizza virou barras ordenadas.
 import { el } from '../ui/dom.js';
 import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
-import { barras, colunas } from '../ui/graficos.js';
+import { barras } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
 import { spendPorFilial, resumoSpend, savingPorMes, rotuloMes } from '../analise.js';
@@ -48,8 +48,9 @@ export function telaSpend(ctx) {
 
   const meses = bloco(
     { titulo: 'Spend por mês do pedido' },
-    colunas({
-      itens: porMes.map((g) => ({ rotulo: rotuloMes(g.chave), valor: g.total })),
+    // Barras deitadas (não colunas): poucos meses não esticam o gráfico e ficam alinhados com o de filiais.
+    barras({
+      itens: porMes.map((g) => ({ id: g.chave, rotulo: rotuloMes(g.chave), valor: g.total })),
       formato: fmt.moedaCompacta,
       rotuloSerie: 'em OFs',
     }),

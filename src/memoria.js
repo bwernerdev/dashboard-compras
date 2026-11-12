@@ -70,7 +70,20 @@ export async function salvarImportacao(tipo, registros, meta) {
   }
 }
 
-/** { base?, followUp? } com { brutos, meta, salvoEm }; vazio se não houver nada ou o navegador bloquear. */
+/**
+ * Base anterior (outro dia do ME), para a variação nos cartões: { brutos, meta, salvoEm } já em brutos.
+ * Fica na mesma loja, com tipo 'base-anterior'.
+ */
+export async function salvarAnterior(anterior) {
+  try {
+    await transacao('readwrite', (loja) => loja.put({ tipo: 'base-anterior', ...anterior }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** { base?, followUp?, 'base-anterior'? } com { brutos, meta, salvoEm }; vazio se não houver nada ou o navegador bloquear. */
 export async function lerImportacoes() {
   try {
     const todas = await transacao('readonly', (loja) => loja.getAll());

@@ -1,7 +1,7 @@
 // Fluxo completo no navegador com bases fictícias (e2e/ajuda/bases.js).
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { arquivoBase, arquivoFollowUp, FILIAL_A, FILIAL_B, COMPRADOR } from './ajuda/bases.js';
+import { arquivoBase, arquivoBaseAnterior, arquivoFollowUp, FILIAL_A, FILIAL_B, COMPRADOR } from './ajuda/bases.js';
 
 const valorDoCartao = (page, rotulo) => page.locator('.cartao', { has: page.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
 
@@ -10,6 +10,24 @@ async function importarBase(page) {
   await page.locator('input[data-tipo="base"]').setInputFiles(await arquivoBase());
   await expect(valorDoCartao(page, 'SCs em aberto')).toBeVisible();
 }
+
+test('cartões mostram a variação desde a base de outro dia (e lembram ao recarregar)', async ({ page }) => {
+  await page.goto('./');
+  await page.locator('input[data-tipo="base"]').setInputFiles(await arquivoBaseAnterior());
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('3');
+  await expect(page.locator('.cartao-variacao')).toHaveCount(0); // sem base anterior ainda
+  await page.getByRole('button', { name: 'Atualizar bases' }).click();
+  await page.locator('dialog input[data-tipo="base"]').setInputFiles(await arquivoBase());
+  await expect(page.locator('dialog .arquivo[data-tipo="base"] .arquivo-status')).toContainText('linhas');
+  await page.locator('dialog').getByRole('button', { name: 'Fechar' }).last().click();
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
+  const variacao = (rotulo) => page.locator('.cartao', { has: page.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-variacao');
+  await expect(variacao('SCs em aberto')).toHaveText('▼ −1 desde 10/11');
+  await expect(variacao('SCs em aberto')).toHaveClass(/variacao-melhor/);
+  await expect(variacao('SCs fora do prazo')).toHaveText('▼ −1 desde 10/11');
+  await page.reload();
+  await expect(variacao('SCs em aberto')).toHaveText('▼ −1 desde 10/11');
+});
 
 test('sem bases mostra a importação; arquivo errado mostra o motivo', async ({ page }) => {
   await page.goto('./');
@@ -24,8 +42,10 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   await expect(page.locator('#periodo')).toContainText('12/09/2026 a 11/11/2026');
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
   await expect(page.locator('.cartao', { hasText: 'SCs em aberto' }).locator('.cartao-detalhe')).toContainText('3 itens');
-  await expect(valorDoCartao(page, 'Itens fora do prazo')).toHaveText('2');
-  await expect(valorDoCartao(page, 'SLA no prazo')).toHaveText('33,3%');
+  // SLA por SC: 1 SC fora (2 itens) e 1 no prazo.
+  await expect(valorDoCartao(page, 'SCs fora do prazo')).toHaveText('1');
+  await expect(page.locator('.cartao', { hasText: 'SCs fora do prazo' }).locator('.cartao-detalhe')).toContainText('2 itens');
+  await expect(valorDoCartao(page, 'SLA no prazo')).toHaveText('50%');
 
   // Lista agrupada por SC: dados da SC só na 1ª linha (como a tabela dinâmica da planilha).
   const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });

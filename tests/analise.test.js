@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   aplicarFiltros, opcoesDosFiltros, chaveMes, rotuloMes, itensEmAberto, resumoEmAberto, porFaixaDeDias,
-  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorStatus, spendPorFilial, resumoSpend, entregasPorStatus, recortarPor, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
+  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorStatus, resumoStatus, spendPorFilial, resumoSpend, entregasPorStatus, recortarPor, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
   pctSaving, resumoSaving, savingPorFilial, savingPorComprador, savingPorMes,
 } from '../src/analise.js';
 import { brutosDe, recalcular } from '../src/memoria.js';
@@ -13,6 +13,8 @@ import { gerarCsv } from '../src/ui/tabela.js';
 import { criarConfig, CONFIG_PADRAO } from '../src/config/index.js';
 import { calcularLinhaBase } from '../src/regras.js';
 import { serie } from '../src/datas.js';
+import { variacao, comparar, pontos } from '../src/ui/cartoes.js';
+import { diasDesdeABase } from '../src/ui/casca.js';
 
 /** Registro já calculado, só com os campos que as telas usam. */
 const reg = (x) => ({
@@ -272,4 +274,35 @@ test('entregasPorStatus: OFs distintas e itens, na ordem do acompanhamento; reco
   ]);
   assert.equal(recortarPor(regs, 'statusEntrega', new Set(['ENTREGUE'])).length, 1);
   assert.equal(recortarPor(regs, 'statusEntrega', new Set()).length, 4);
+});
+
+test('resumoStatus: SCs distintas no período, em aberto, em pedido e canceladas', () => {
+  const regs = [
+    reg({ solicitacao: 'S1', status: 'Em Pedido', diasEmAberto: null }),
+    reg({ solicitacao: 'S1', status: 'Em Cotação', diasEmAberto: 3 }),
+    reg({ solicitacao: 'S2', status: 'Cancelado', diasEmAberto: null }),
+  ];
+  assert.deepEqual(resumoStatus(regs), { scs: 2, itens: 3, abertas: 1, emPedido: 1, canceladas: 1 });
+});
+
+test('variacao: sinal no texto, tom pelo lado melhor, igual e sem base anterior', () => {
+  const inteiro = (n) => String(n);
+  assert.deepEqual(variacao({ atual: 47, anterior: 42, rotulo: '10/11', formato: inteiro, melhor: 'menor' }),
+    { seta: '▲', texto: '+5 desde 10/11', tom: 'pior', rotulo: '10/11' });
+  assert.equal(variacao({ atual: 40, anterior: 42, rotulo: '10/11', formato: inteiro, melhor: 'menor' }).tom, 'melhor');
+  assert.equal(variacao({ atual: 40, anterior: 42, rotulo: '10/11', formato: inteiro }).texto, '−2 desde 10/11');
+  assert.equal(variacao({ atual: 40, anterior: 42, rotulo: '10/11', formato: inteiro }).tom, 'neutro');
+  assert.equal(variacao({ atual: 3, anterior: 3, rotulo: '10/11', formato: inteiro }).texto, 'igual a 10/11');
+  assert.equal(variacao({ atual: 3, anterior: null, rotulo: '10/11', formato: inteiro }), null);
+  assert.equal(comparar(undefined, { a: 1 }, null)('a', inteiro), null);
+  assert.equal(comparar('10/11', { a: 0.9 }, { a: 0.85 })('a', pontos, 'maior').texto, '+5 p.p. desde 10/11');
+});
+
+test('diasDesdeABase: dias úteis desde a execução do ME, sem contar o dia dela', () => {
+  const qua = serie(2026, 11, 11); // quarta
+  assert.equal(diasDesdeABase(qua, qua), 0);
+  assert.equal(diasDesdeABase(qua, serie(2026, 11, 12)), 1);
+  assert.equal(diasDesdeABase(qua, serie(2026, 11, 13)), 2);
+  assert.equal(diasDesdeABase(serie(2026, 11, 13), serie(2026, 11, 16)), 1); // sexta -> segunda
+  assert.equal(diasDesdeABase(null, qua), 0);
 });

@@ -3,7 +3,7 @@
 import { PRAZO_SLA_DIAS } from '../regras.js';
 import { el, icone } from '../ui/dom.js';
 import { estaAtendida, marcarAtendida } from '../atendidas.js';
-import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, comparar, pontos } from '../ui/cartoes.js';
 import { barras, barraSegmentada } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
@@ -67,16 +67,17 @@ function tabelaGrupos(grupos, rotuloGrupo, aoClicar) {
       { id: 'chave', rotulo: rotuloGrupo, valor: (g) => g.chave },
       { id: 'scs', rotulo: 'SCs', num: true, valor: (g) => g.scs, formato: fmt.inteiro },
       { id: 'itens', rotulo: 'Itens', num: true, valor: (g) => g.itens, formato: fmt.inteiro },
-      { id: 'noPrazo', rotulo: 'No prazo', num: true, valor: (g) => g.noPrazo, formato: fmt.inteiro },
-      { id: 'fora', rotulo: 'Fora do prazo', num: true, valor: (g) => g.fora, formato: fmt.inteiro },
+      // SLA por SC, como os cartões e o Atendimento (pedido da equipe, 12/11/2026).
+      { id: 'noPrazo', rotulo: 'SCs no prazo', num: true, valor: (g) => g.scsNoPrazo, formato: fmt.inteiro },
+      { id: 'fora', rotulo: 'SCs fora do prazo', num: true, valor: (g) => g.scsFora, formato: fmt.inteiro },
       {
-        id: 'barra', rotulo: 'SLA', valor: (g) => g.pctNoPrazo, formato: fmt.pct,
+        id: 'barra', rotulo: 'SLA', valor: (g) => g.pctScsNoPrazo, formato: fmt.pct,
         exibir: (g) => el('span', { class: 'celula-sla' },
           barraSegmentada([
-            { valor: g.noPrazo, cor: 'var(--st-bom)', rotulo: 'No prazo' },
-            { valor: g.fora, cor: 'var(--st-critico)', rotulo: 'Fora do prazo' },
+            { valor: g.scsNoPrazo, cor: 'var(--st-bom)', rotulo: 'SCs no prazo' },
+            { valor: g.scsFora, cor: 'var(--st-critico)', rotulo: 'SCs fora do prazo' },
           ], g.chave),
-          el('span', {}, fmt.pct(g.pctNoPrazo))),
+          el('span', {}, fmt.pct(g.pctScsNoPrazo))),
       },
       { id: 'media', rotulo: 'Média de dias', num: true, valor: (g) => g.mediaDias, formato: fmt.decimal },
       { id: 'max', rotulo: 'Mais antiga', num: true, valor: (g) => g.maxDias, formato: fmt.inteiro },
@@ -94,17 +95,21 @@ export function telaRegional(ctx) {
     return el('div', { class: 'estado-vazio' }, 'Nenhuma SC em aberto com os filtros atuais.');
   }
 
+  const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoEmAberto(itensEmAberto(ctx.anteriores.registros)) : null);
   const cartoes = linhaDeCartoes(
-    cartao({ rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens sem pedido e não cancelados` }),
+    cartao({ rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens sem pedido e não cancelados`, variacao: vs('scs', fmt.inteiro, 'menor') }),
+    // SLA conta SCs, como o Atendimento (SC fora = algum item fora).
     cartao({
-      rotulo: 'SLA no prazo', valor: fmt.pct(resumo.pctNoPrazo),
-      detalhe: `${fmt.inteiro(resumo.noPrazo)} itens no prazo, ${fmt.inteiro(resumo.fora)} fora`,
+      rotulo: 'SLA no prazo', valor: fmt.pct(resumo.pctScsNoPrazo),
+      detalhe: `${fmt.inteiro(resumo.scsNoPrazo)} SCs no prazo, ${fmt.inteiro(resumo.scsFora)} fora`,
+      variacao: vs('pctScsNoPrazo', pontos, 'maior'),
     }),
     cartao({
-      rotulo: 'Itens fora do prazo', valor: fmt.inteiro(resumo.fora), tom: resumo.fora ? 'critico' : null,
-      detalhe: resumo.semPrazo ? `${fmt.inteiro(resumo.semPrazo)} sem prazo definido` : `Mais de ${PRAZO_SLA_DIAS} dias úteis em aberto`,
+      rotulo: 'SCs fora do prazo', valor: fmt.inteiro(resumo.scsFora), tom: resumo.scsFora ? 'critico' : null,
+      detalhe: `${fmt.inteiro(resumo.fora)} itens com mais de ${PRAZO_SLA_DIAS} dias úteis${resumo.scsSemPrazo ? `; ${fmt.inteiro(resumo.scsSemPrazo)} SCs sem prazo` : ''}`,
+      variacao: vs('scsFora', fmt.inteiro, 'menor'),
     }),
-    cartao({ rotulo: 'Média de dias em aberto', valor: fmt.decimal(resumo.mediaDias), detalhe: `Mais antiga: ${fmt.inteiro(resumo.maxDias)} dias úteis` }),
+    cartao({ rotulo: 'Média de dias em aberto', valor: fmt.decimal(resumo.mediaDias), detalhe: `Mais antiga: ${fmt.inteiro(resumo.maxDias)} dias úteis`, variacao: vs('mediaDias', fmt.decimal, 'menor') }),
   );
 
   const faixas = porFaixaDeDias(abertos);
@@ -224,9 +229,10 @@ export function telaRegional(ctx) {
     {
       titulo: 'SCs em aberto',
       acoes: botaoTelaCheia,
-      subtitulo: atendidasLigadas
-        ? 'Itens agrupados por SC, da mais antiga para a mais nova. Já atendeu? Clique no olho ou dê dois cliques na linha (fora do número da SC) para recolher a SC numa linha só (fica salvo neste navegador). CSV e "Copiar tabela" trazem um item por linha.'
-        : 'Itens agrupados por SC, da mais antiga para a mais nova. CSV e "Copiar tabela" trazem um item por linha.',
+      subtitulo: 'Itens agrupados por SC, da mais antiga para a mais nova.',
+      ajuda: atendidasLigadas
+        ? 'Já atendeu? Clique no olho ou dê dois cliques na linha (fora do número da SC) para recolher a SC numa linha só (fica salvo neste navegador). CSV e "Copiar tabela" trazem um item por linha.'
+        : 'CSV e "Copiar tabela" trazem um item por linha.',
     },
     recortes,
     tabela.elemento,

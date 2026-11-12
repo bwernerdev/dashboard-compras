@@ -3,9 +3,9 @@
 | Arquivo / pasta | Conteúdo |
 |---|---|
 | `assets/` | Imagens: emblema da Controladoria (`marca.webp`). Mapa em `assets/README.md` |
-| `main.js` | App da equipe: estado (bases, config), período, ações do topo (Atualizar bases, Gerar painel, Configuração, Imprimir, tema). Abas, filtros e tela vêm de `ui/casca.js`. Recalcula ao mudar config ou virar o dia |
+| `main.js` | App da equipe: estado (bases, config), período, ações do topo (Atualizar bases, Gerar painel, Configuração, Imprimir, tema). Abas, filtros e tela vêm de `ui/casca.js`. Recalcula ao mudar config ou virar o dia. Troca a base anterior quando chega base de outro dia do ME; selo do período em amarelo com base de 2+ dias úteis |
 | `analise.js` | Filtros globais (`FILTROS`, `aplicarFiltros`) e agregações puras das telas (SCs em aberto, faixas de dias, pendências e regularização (`ehPendencia`, `ehRegularizacao`), comprador x status, pré-pedidos, participação, saving, spend por filial, SCs por status, OFs por status de entrega). Sem DOM. Usado também pelo `scripts/conferir-xlsm.mjs` |
-| `memoria.js` | Memória local do app da equipe: última importação de cada base no IndexedDB (só colunas do ME; `recalcular` refaz os campos calculados) e configuração no localStorage |
+| `memoria.js` | Memória local do app da equipe: última importação de cada base no IndexedDB (só colunas do ME; `recalcular` refaz os campos calculados) e configuração no localStorage. Guarda também a base anterior (`salvarAnterior`, tipo `base-anterior`) para a variação nos cartões |
 | `atendidas.js` | SCs marcadas como atendidas (olho/duplo clique na lista da Regional): `estaAtendida`, `marcarAtendida`. No localStorage deste navegador, por Solicitação; vence em 120 dias. Só o app da equipe liga (`ligarAtendidas`) |
 | `preferencias.js` | Aba, tema, tela cheia e larguras de coluna no localStorage, com try/catch (no quadro do SharePoint não há armazenamento). Usado pelo app e pelo painel |
 | `painel/` | Painel publicado (`painel-compras.html`): dados públicos, entrada, modelo e geração. Ver `painel/README.md` |

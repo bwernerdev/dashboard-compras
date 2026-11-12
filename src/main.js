@@ -5,10 +5,10 @@
 import { importarNoWorker } from './importacao.js';
 import { criarConfig, CONFIG_PADRAO } from './config/index.js';
 import { hojeSerie, formatarSerie } from './datas.js';
-import { brutosDe, recalcular, salvarImportacao, lerImportacoes, lerConfig, salvarConfig, apagarConfig } from './memoria.js';
+import { brutosDe, recalcular, salvarImportacao, salvarAnterior, lerImportacoes, lerConfig, salvarConfig, apagarConfig } from './memoria.js';
 import { lerPreferencia, salvarPreferencia } from './preferencias.js';
 import { el } from './ui/dom.js';
-import { criarNavegador, ligarTema, ligarImpressao } from './ui/casca.js';
+import { criarNavegador, ligarTema, ligarImpressao, diasDesdeABase, BASE_ANTIGA_DIAS } from './ui/casca.js';
 import { aplicarMarca } from './ui/marca.js';
 import { baixar } from './ui/tabela.js';
 import { caixasDeImportacao } from './telas/importacao.js';
@@ -33,6 +33,7 @@ const estado = {
   hoje: hojeSerie(),
   base: null, // { registros, brutos, meta, salvoEm }
   followUp: null,
+  anterior: null, // base de outro dia do ME { brutos, meta, salvoEm }: variação nos cartões
 };
 
 const raiz = {
@@ -65,10 +66,29 @@ function definirBase(tipo, dados) {
   else nav.definirFollowUp(dados.registros);
 }
 
+// ---------- Base anterior (variação nos cartões) ----------
+
+/** Dia do ME da base: a anterior só troca quando chega base de outro dia (reimportar no mesmo dia mantém). */
+const diaDaBase = (meta) => Math.floor(meta?.dadosGerais?.execucao ?? meta?.hoje ?? 0);
+
+/** Recalcula a base anterior com o "hoje" dela: os cartões comparam com o que se via naquele dia. */
+function definirAnterior() {
+  const a = estado.anterior;
+  nav.definirAnteriores(a ? {
+    registros: recalcular('base', a.brutos, estado.cfg, a.meta?.hoje ?? diaDaBase(a.meta)),
+    rotulo: formatarSerie(diaDaBase(a.meta)).slice(0, 5),
+  } : null);
+}
+
 async function importar(tipo, arquivo, aoAvancar) {
   const hoje = hojeSerie();
   const resultado = await importarNoWorker(tipo, arquivo, { hoje, config: estado.config, aoAvancar });
   const dados = { registros: resultado.registros, brutos: brutosDe(tipo, resultado.registros), meta: resultado.meta, salvoEm: Date.now() };
+  if (tipo === 'base' && estado.base && diaDaBase(estado.base.meta) < diaDaBase(resultado.meta)) {
+    estado.anterior = { brutos: estado.base.brutos, meta: estado.base.meta, salvoEm: estado.base.salvoEm };
+    salvarAnterior(estado.anterior);
+    definirAnterior();
+  }
   estado.hoje = hoje;
   if (tipo === 'base' || tipo === 'followUp') reiniciarTelas();
   definirBase(tipo, dados);
@@ -84,6 +104,7 @@ function recalcularTudo() {
     const d = estado[tipo];
     if (d) definirBase(tipo, { ...d, registros: recalcular(tipo, d.brutos, estado.cfg, estado.hoje) });
   }
+  definirAnterior();
 }
 
 async function restaurar() {
@@ -91,6 +112,11 @@ async function restaurar() {
   for (const tipo of ['base', 'followUp']) {
     const s = salvas[tipo];
     if (s?.brutos) definirBase(tipo, { brutos: s.brutos, meta: s.meta, salvoEm: s.salvoEm, registros: recalcular(tipo, s.brutos, estado.cfg, estado.hoje) });
+  }
+  const a = salvas['base-anterior'];
+  if (a?.brutos && estado.base && diaDaBase(a.meta) < diaDaBase(estado.base.meta)) {
+    estado.anterior = { brutos: a.brutos, meta: a.meta, salvoEm: a.salvoEm };
+    definirAnterior();
   }
 }
 
@@ -115,7 +141,12 @@ function desenharPeriodo() {
   const g = m.dadosGerais;
   const partes = [g.inicio ? `${formatarSerie(g.inicio)} a ${formatarSerie(g.fim)}` : 'Período não informado'];
   if (g.execucao) partes.push(`ME de ${formatarSerie(g.execucao)}`);
+  // Base antiga: aviso em texto no próprio selo (amarelo só reforça).
+  const atraso = diasDesdeABase(g.execucao, estado.hoje);
+  const antiga = atraso >= BASE_ANTIGA_DIAS;
+  if (antiga) partes.push(`${atraso} dias úteis atrás: atualize as bases`);
   raiz.periodo.textContent = partes.join(' · ');
+  raiz.periodo.classList.toggle('selo-alerta', antiga);
   raiz.periodo.title = m.hoje !== estado.hoje ? 'Dias em aberto e SLA recalculados para hoje.' : '';
   raiz.periodo.hidden = false;
 }

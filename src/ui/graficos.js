@@ -69,23 +69,6 @@ export function barrasEmpilhadas({ series, categorias, formato }) {
   return el('div', {}, legenda, lista);
 }
 
-/** Colunas verticais de uma série (ex.: por mês). itens: [{ rotulo, valor, detalhe? }]. */
-export function colunas({ itens, formato, rotuloSerie = '' }) {
-  const max = Math.max(0, ...itens.map((i) => i.valor));
-  return el('div', { class: 'grafico-colunas', role: 'list' },
-    itens.map((item) => {
-      const coluna = el('div', {
-        class: 'gc-coluna', role: 'listitem', tabindex: '0',
-        'aria-label': `${item.rotulo}: ${formato(item.valor)} ${rotuloSerie}`,
-      },
-      el('span', { class: 'gc-valor' }, formato(item.valor)),
-      el('span', { class: 'gc-area' }, el('span', { class: 'gc-barra', style: { height: `${max > 0 ? (item.valor / max) * 100 : 0}%` } })),
-      el('span', { class: 'gc-rotulo' }, item.rotulo));
-      ligarDica(coluna, item.rotulo, () => [{ valor: formato(item.valor), rotulo: rotuloSerie }, ...(item.detalhe ?? [])]);
-      return coluna;
-    }));
-}
-
 /**
  * Barra segmentada fina (8 px) para célula de tabela: partes de um todo, sem texto.
  * partes: [{ valor, cor, rotulo }]. Os números ficam nas colunas vizinhas.

@@ -6,6 +6,17 @@ import { esconderDica } from './dica.js';
 import { barraDeFiltros } from './filtros.js';
 import { aplicarFiltros, opcoesDosFiltros, FILTROS, filtroValeNaTela } from '../analise.js';
 import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
+import { diasUteis } from '../datas.js';
+
+/**
+ * Dias úteis entre a execução do relatório no ME e hoje, sem contar o dia da execução
+ * (0 = hoje, 1 = ontem). Base com 2 ou mais fica marcada no topo (pedido da equipe, 12/11/2026).
+ */
+export function diasDesdeABase(execucao, hoje) {
+  if (!execucao || !hoje) return 0;
+  return Math.max(0, diasUteis(execucao, hoje) - 1);
+}
+export const BASE_ANTIGA_DIAS = 2;
 
 /** Filtros ativos em texto (linha que sai na impressão). */
 export function descreverFiltros(selecao, tela) {
@@ -20,7 +31,9 @@ export function descreverFiltros(selecao, tela) {
  * telaVazia(): conteúdo quando não há registros; aoTrocarAba(id) opcional.
  * chaveFiltros: preferência onde a seleção dos filtros globais fica salva neste navegador (volta na
  * próxima vez que abrir; pedido da equipe, 12/11/2026). Sem ela, os filtros começam vazios.
- * ctx de cada tela: { registros, followUp (null sem a base Follow-Up), redesenhar, filtrar }.
+ * ctx de cada tela: { registros, followUp (null sem a base Follow-Up), anteriores, redesenhar, filtrar }.
+ * anteriores: { registros (base anterior, mesmos filtros), rotulo ('10/11') } ou null; só o app da
+ * equipe guarda a base anterior (variação nos cartões), o painel não.
  * Os filtros globais valem para as duas bases; as opções vêm só da base principal.
  */
 export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba, chaveFiltros }) {
@@ -29,6 +42,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     selecao: chaveFiltros ? lerSelecao(chaveFiltros) : {},
     registros: null,
     followUp: null,
+    anteriores: null,
     opcoes: null,
   };
   let pedido = 0;
@@ -58,6 +72,11 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
 
   function definirFollowUp(registros) {
     estado.followUp = registros ?? null;
+  }
+
+  /** anteriores: { registros, rotulo } ou null. */
+  function definirAnteriores(anteriores) {
+    estado.anteriores = anteriores ?? null;
   }
 
   function trocarAba(id) {
@@ -116,6 +135,9 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     substituir(raiz.conteudo, tela.desenhar({
       registros: aplicarFiltros(estado.registros, estado.selecao, estado.aba),
       followUp: estado.followUp ? aplicarFiltros(estado.followUp, estado.selecao, estado.aba) : null,
+      anteriores: estado.anteriores
+        ? { registros: aplicarFiltros(estado.anteriores.registros, estado.selecao, estado.aba), rotulo: estado.anteriores.rotulo }
+        : null,
       redesenhar: desenharTela,
       filtrar(idFiltro, valor) {
         const atual = estado.selecao[idFiltro];
@@ -135,7 +157,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     desenharTela();
   }
 
-  return { estado, definirRegistros, definirFollowUp, desenhar, desenharTela, observador };
+  return { estado, definirRegistros, definirFollowUp, definirAnteriores, desenhar, desenharTela, observador };
 }
 
 /** Botão de tema claro/escuro (html[data-theme]); a escolha fica no navegador quando dá. */

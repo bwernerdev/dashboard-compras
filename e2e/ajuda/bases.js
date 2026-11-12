@@ -13,15 +13,16 @@ export const FILIAL_A = CONFIG_PADRAO.filiais.find((f) => f.regional === regiona
 export const FILIAL_B = CONFIG_PADRAO.filiais.find((f) => f.regional === regionais[1]);
 export const COMPRADOR = CONFIG_PADRAO.compradores[0];
 
-const DADOS_GERAIS = {
+const dadosGerais = (execucao = '11/11/2026') => ({
   nome: 'Dados Gerais',
   linhas: [
     ['Nome do filtro', 'Valor do Filtro'],
     ['Data Inicio', '12/09/2026'],
     ['Data Fim', '11/11/2026'],
-    ['Data de Execução do Relatório', '11/11/2026'],
+    ['Data de Execução do Relatório', execucao],
   ],
-};
+});
+const DADOS_GERAIS = dadosGerais();
 
 function relatorio(esquema, linhas) {
   const chaves = Object.keys(esquema.colunas);
@@ -71,6 +72,13 @@ const paraBuffer = async (blob) => Buffer.from(await blob.arrayBuffer());
 
 export async function arquivoBase() {
   return { name: 'base.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: await paraBuffer(await criarXlsx([DADOS_GERAIS, relatorio(BASE, LINHAS_BASE)])) };
+}
+
+/** Base do dia anterior (ME de 10/11/2026): a mesma + SC 1000009 em aberto e fora do prazo (variação nos cartões). */
+export async function arquivoBaseAnterior() {
+  const linhas = [...LINHAS_BASE,
+    linha({ solicitacao: 'FDS-1000009', codigoFilial: FILIAL_A.codigo, criacao: HOJE - 90, prioridade: 'NORMAL', status: 'Em Cotação' })];
+  return { name: 'base.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: await paraBuffer(await criarXlsx([dadosGerais('10/11/2026'), relatorio(BASE, linhas)])) };
 }
 
 export async function arquivoFollowUp() {

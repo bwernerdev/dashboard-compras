@@ -16,14 +16,24 @@ function obterCaixa() {
  * Liga a dica a um elemento. conteudo(): [{ valor, rotulo, cor? }] — o valor vem em destaque.
  */
 export function ligarDica(alvo, titulo, conteudo) {
+  ligarCaixa(alvo, () => [
+    el('div', { class: 'dica-titulo' }, titulo),
+    conteudo().map((l) => el('div', { class: 'dica-linha' },
+      l.cor ? el('span', { class: 'dica-chave', style: { background: l.cor } }) : null,
+      el('strong', {}, l.valor),
+      el('span', {}, l.rotulo))),
+  ]);
+}
+
+/** Dica só de texto (botão "?" de ajuda dos blocos). O mesmo texto vai no aria-label do botão. */
+export function ligarDicaTexto(alvo, texto) {
+  ligarCaixa(alvo, () => [el('div', { class: 'dica-texto' }, texto)]);
+}
+
+function ligarCaixa(alvo, filhos) {
   const mostrar = (x, y) => {
     const c = obterCaixa();
-    substituir(c,
-      el('div', { class: 'dica-titulo' }, titulo),
-      conteudo().map((l) => el('div', { class: 'dica-linha' },
-        l.cor ? el('span', { class: 'dica-chave', style: { background: l.cor } }) : null,
-        el('strong', {}, l.valor),
-        el('span', {}, l.rotulo))));
+    substituir(c, ...filhos());
     c.hidden = false;
     const larg = c.offsetWidth;
     const alt = c.offsetHeight;

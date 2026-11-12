@@ -67,6 +67,18 @@ export const faixaDe = (dias) => FAIXAS_DIAS.find((f) => dias <= f.ate).id;
 
 const distintas = (linhas) => new Set(linhas.map((r) => r.solicitacao)).size;
 
+/** Cartões da tela Status: SCs distintas no período, em aberto, em pedido e canceladas. */
+export function resumoStatus(registros) {
+  const doStatus = new Map(scsPorStatus(registros).map((s) => [s.status, s.scs]));
+  return {
+    scs: distintas(registros),
+    itens: registros.length,
+    abertas: distintas(registros.filter((r) => r.diasEmAberto !== null && r.diasEmAberto !== undefined)),
+    emPedido: doStatus.get('Em Pedido') ?? 0,
+    canceladas: doStatus.get('Cancelado') ?? 0,
+  };
+}
+
 /** Cartões das telas Regional, Atendimento e SCs por Comprador (contagens por item e por SC). */
 export function resumoEmAberto(abertos) {
   const noPrazo = abertos.filter((r) => r.sla === 'No Prazo').length;
