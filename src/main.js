@@ -9,6 +9,7 @@ import { brutosDe, recalcular, salvarImportacao, lerImportacoes, lerConfig, salv
 import { lerPreferencia, salvarPreferencia } from './preferencias.js';
 import { el } from './ui/dom.js';
 import { criarNavegador, ligarTema, ligarImpressao } from './ui/casca.js';
+import { aplicarMarca } from './ui/marca.js';
 import { baixar } from './ui/tabela.js';
 import { caixasDeImportacao } from './telas/importacao.js';
 import { abrirConfiguracao } from './telas/configuracao.js';
@@ -202,6 +203,7 @@ document.getElementById('acao-config').addEventListener('click', () => abrirConf
   },
 }));
 ligarImpressao(document.getElementById('acao-imprimir'));
+aplicarMarca();
 ligarTema(document.getElementById('acao-tema'));
 
 // Virou o dia com a página aberta: recalcula dias em aberto e SLA.

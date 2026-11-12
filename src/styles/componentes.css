@@ -96,7 +96,8 @@ input[type="search"].campo { min-width: 220px; }
 
 /* Barra de filtros */
 .barra-filtros { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
-.barra-filtros-titulo { font-size: var(--fs-xs); font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.barra-filtros-titulo { font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); }
+.barra-filtros .botao-link { font-size: var(--fs-sm); }
 .filtro { position: relative; }
 .filtro-botao {
   display: inline-flex; align-items: center; gap: var(--s1);

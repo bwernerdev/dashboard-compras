@@ -7,7 +7,8 @@
   .topo-acoes, .abas, .faixa-filtros, .pular, .tabela-barra .campo, .tabela-barra .botao,
   .paginacao, .recortes, .alternador, .dica, .aviso, .col-controle, dialog { display: none !important; }
   .so-impressao { display: block; padding: 0 0 6px; font-size: var(--fs-2xs); color: #333; }
-  .topo { padding: 0 0 6px; border: 0; }
+  .topo { padding: 0 0 6px; border: 0; grid-template-areas: "emblema marca"; grid-template-columns: auto minmax(0, 1fr); }
+  .topo-emblema { height: 40px; }
   .pagina { padding: 0; max-width: none; }
   .bloco, .cartao { box-shadow: none; break-inside: avoid; }
   .tabela-rolagem { max-height: none; overflow: visible; border: 0; }

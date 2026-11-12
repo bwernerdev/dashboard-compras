@@ -31,21 +31,28 @@ button:disabled { cursor: default; }
 .pular:focus { top: var(--s2); }
 
 /* Topo */
+/* Duas linhas: marca e ações em cima, abas embaixo (cabem 8 abas e 5 botões em qualquer largura).
+   O emblema (ui/marca.js) fica à esquerda ocupando as duas linhas. */
 .topo {
-  display: flex; align-items: center; gap: var(--s3) var(--s5); flex-wrap: wrap;
-  padding: var(--s3) var(--s5);
+  display: grid; align-items: center; gap: var(--s2) var(--s4);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "emblema marca acoes" "emblema abas abas";
+  padding: var(--s3) var(--s5) var(--s2);
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
-.topo-marca { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
+.topo-emblema { grid-area: emblema; display: block; width: auto; height: 80px; }
+.topo-marca { grid-area: marca; display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
 .topo h1 { font-size: var(--fs-xl); font-weight: 700; color: var(--text-strong); }
 .selo {
   font-size: var(--fs-xs); padding: 2px var(--s2); border-radius: var(--r-pill);
   background: var(--surface-selected); color: var(--accent-text); font-variant-numeric: tabular-nums;
 }
-.topo-acoes { display: flex; gap: var(--s2); flex-wrap: wrap; margin-left: auto; }
+.topo-acoes { grid-area: acoes; display: flex; gap: var(--s2); flex-wrap: wrap; justify-content: flex-end; }
+/* Ações do topo no mesmo tamanho dos seletores de filtro (controles da página: 13 px, 28 px). */
+.topo-acoes .botao { height: var(--h-control-sm); font-size: var(--fs-sm); }
 
-.abas { display: flex; gap: var(--s1); }
+.abas { grid-area: abas; display: flex; flex-wrap: wrap; gap: var(--s1); margin-left: calc(-1 * var(--s3)); }
 .aba {
   height: var(--h-control); padding: 0 var(--s3);
   border: 0; border-radius: var(--r-sm); background: transparent; color: var(--text-muted); font-weight: 600;
@@ -82,7 +89,6 @@ button:disabled { cursor: default; }
 }
 @media (max-width: 640px) {
   .topo, .faixa-filtros, .aviso, .pagina { padding-left: var(--s4); padding-right: var(--s4); }
-  .topo-acoes { margin-left: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

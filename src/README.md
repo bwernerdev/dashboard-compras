@@ -2,6 +2,7 @@
 
 | Arquivo / pasta | Conteúdo |
 |---|---|
+| `assets/` | Imagens: emblema da Controladoria (`marca.webp`). Mapa em `assets/README.md` |
 | `main.js` | App da equipe: estado (bases, config), período, ações do topo (Atualizar bases, Gerar painel, Configuração, Imprimir, tema). Abas, filtros e tela vêm de `ui/casca.js`. Recalcula ao mudar config ou virar o dia |
 | `analise.js` | Filtros globais (`FILTROS`, `aplicarFiltros`) e agregações puras das telas (SCs em aberto, faixas de dias, pendências e regularização (`ehPendencia`, `ehRegularizacao`), comprador x status, pré-pedidos, participação, saving, spend por filial, SCs por status, OFs por status de entrega). Sem DOM. Usado também pelo `scripts/conferir-xlsm.mjs` |
 | `memoria.js` | Memória local do app da equipe: última importação de cada base no IndexedDB (só colunas do ME; `recalcular` refaz os campos calculados) e configuração no localStorage |

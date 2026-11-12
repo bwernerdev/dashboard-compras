@@ -12,6 +12,7 @@ import '../styles/componentes.css';
 import '../styles/impressao.css';
 import { descompactar, registrosDoPainel, followUpDoPainel } from './dados.js';
 import { criarNavegador, ligarTema, ligarImpressao } from '../ui/casca.js';
+import { aplicarMarca } from '../ui/marca.js';
 import { definirExportacao } from '../ui/tabela.js';
 import { el, substituir } from '../ui/dom.js';
 import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
@@ -36,6 +37,7 @@ document.getElementById('aviso-quadro').hidden = !noQuadro;
 const botaoImprimir = document.getElementById('acao-imprimir');
 if (noQuadro) botaoImprimir.hidden = true;
 else ligarImpressao(botaoImprimir);
+aplicarMarca();
 ligarTema(document.getElementById('acao-tema'));
 
 function mostrarPeriodo(dados) {
