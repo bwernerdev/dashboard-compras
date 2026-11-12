@@ -8,7 +8,7 @@ import { cliqueDeDetalhe } from '../ui/detalhe.js';
 import { listaDeMarcar } from '../ui/filtros.js';
 import { lerConjunto, salvarConjunto } from '../preferencias.js';
 import * as fmt from '../ui/formatos.js';
-import { seloDoStatus, marcaDaPrioridade } from '../ui/cores-planilha.js';
+import { seloDoStatus, marcaDaPrioridade, classeDaLinhaSc } from '../ui/cores-planilha.js';
 import { scsPorStatus, resumoStatus, recortarPorStatus, ehRegularizacao } from '../analise.js';
 
 // Recorte local (não é filtro global): status marcados na lista ou na barra do gráfico.
@@ -88,7 +88,7 @@ export function telaStatus(ctx) {
     colunas: COLUNAS,
     ordem: { coluna: 'sc', desc: true },
     grupo: { chave: (r) => r.solicitacao, colunas: ['sc', 'solicitante', 'filial', 'nomeFilial'], nome: ['SC', 'SCs'] },
-    classeLinha: (r) => (ehRegularizacao(r) ? 'linha-regularizacao' : ''),
+    classeLinha: classeDaLinhaSc,
     nomeArquivo: 'scs-status.csv',
     aoClicarLinha: cliqueDeDetalhe((r) => regs.filter((x) => x.solicitacao === r.solicitacao)).aoClicarLinha,
     vazio: 'Nenhuma SC com esse recorte.',

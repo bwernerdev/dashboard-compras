@@ -6,7 +6,7 @@ import { cartao, linhaDeCartoes, bloco, comparar, serieDe, estadoVazio } from '.
 import { criarTabela } from '../ui/tabela.js';
 import { cliqueDeDetalhe } from '../ui/detalhe.js';
 import * as fmt from '../ui/formatos.js';
-import { seloDoStatus } from '../ui/cores-planilha.js';
+import { seloDoStatus, classeDaLinhaSc } from '../ui/cores-planilha.js';
 import { itensEmAberto, resumoEmAberto, ehRegularizacao, aguardandoAprovacao } from '../analise.js';
 
 const local = { sla: 'todos', pre: 'todos' };
@@ -83,7 +83,7 @@ export function telaAtendimento(ctx) {
     ordem: { coluna: 'dias', desc: true },
     // Itens da mesma SC juntos, dados da SC só na 1ª linha (como a Regional; pedido da equipe, 12/11/2026).
     grupo: { chave: (r) => r.solicitacao, colunas: ['dias', 'sc', 'nomeFilial', 'regional', 'filial', 'solicitante'], nome: ['SC', 'SCs'] },
-    classeLinha: (r) => (ehRegularizacao(r) ? 'linha-regularizacao' : ''),
+    classeLinha: classeDaLinhaSc,
     nomeArquivo: 'atendimento.csv',
     aoClicarLinha: cliqueDeDetalhe((r) => ctx.registros.filter((x) => x.solicitacao === r.solicitacao)).aoClicarLinha,
     vazio: 'Nenhum item com esse recorte.',

@@ -353,6 +353,8 @@ body:has(.th-alca.arrastando) { cursor: col-resize; user-select: none; }
 /* SC de regularização: linha toda em vermelho (menos o olho, fora da grade). Legenda acima da lista. */
 .tabela tbody tr.linha-regularizacao td:not(.col-controle) { background: var(--linha-reg-bg); color: var(--linha-reg-fg); }
 .tabela tbody tr.linha-regularizacao:hover td:not(.col-controle) { background: var(--linha-reg-hover); }
+/* Prioridade EMERGENCIAL: faixa vermelha (cor da planilha) na 1ª célula da linha de cada item. */
+.tabela tbody tr.linha-emergencial td:first-child { box-shadow: inset 4px 0 0 var(--pl-emergencial); }
 /* SC atendida recolhida numa linha (como na tabela dinâmica): só Dias da aprovação (fundo cinza) e SC.
    Neutra: vem depois e vence o vermelho de regularização. */
 .tabela tbody tr.grupo-recolhido td:not(.col-controle),

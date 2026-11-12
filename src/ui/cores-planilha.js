@@ -8,6 +8,7 @@
 // Tokens em ../styles/tokens.css, classes em ../styles/componentes.css.
 // Comparação sem maiúsculas, como o "É igual a" do Excel.
 import { el } from './dom.js';
+import { ehRegularizacao } from '../analise.js';
 
 const chave = (v) => String(v ?? '').trim().toLowerCase();
 
@@ -45,6 +46,16 @@ export function seloDoStatus(status) {
 }
 
 /** Prioridade: marca quadrada na cor da planilha + texto. */
+/**
+ * Classe da linha de item de SC nas listas (Regional, Atendimento, Status): regularização com a
+ * linha toda em vermelho; prioridade EMERGENCIAL com faixa vermelha à esquerda (pedido da equipe,
+ * 12/11/2026). As duas podem vir juntas.
+ */
+export function classeDaLinhaSc(r) {
+  return [ehRegularizacao(r) ? 'linha-regularizacao' : '', chaveDaPrioridade(r.prioridade) === 'emergencial' ? 'linha-emergencial' : '']
+    .filter(Boolean).join(' ');
+}
+
 export function marcaDaPrioridade(prioridade) {
   const k = chaveDaPrioridade(prioridade);
   if (!k) return prioridade || '-';

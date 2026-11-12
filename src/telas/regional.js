@@ -8,7 +8,7 @@ import { barras, barraSegmentada } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import { cliqueDeDetalhe } from '../ui/detalhe.js';
 import * as fmt from '../ui/formatos.js';
-import { seloDoStatus, marcaDaPrioridade } from '../ui/cores-planilha.js';
+import { seloDoStatus, marcaDaPrioridade, classeDaLinhaSc } from '../ui/cores-planilha.js';
 import {
   itensEmAberto, resumoEmAberto, porFaixaDeDias, emAbertoPor, faixaDe, FAIXAS_DIAS,
   recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao,
@@ -231,7 +231,7 @@ export function telaRegional(ctx) {
     caberNaLargura: true,
     escolherColunas: true,
     vazio,
-    classeLinha: (r) => (ehRegularizacao(r) ? 'linha-regularizacao' : ''),
+    classeLinha: classeDaLinhaSc,
     aoClicarLinha: detalhe.aoClicarLinha,
     aoDuploClique: atendidasLigadas ? (r) => { detalhe.cancelar(); alternarAtendida(r, !estaAtendida(r.solicitacao)); } : null,
   });

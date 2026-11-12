@@ -1,7 +1,7 @@
 // Cores da planilha antiga (src/ui/cores-planilha.js).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { chaveDoStatus, chaveDaPrioridade, chaveDoSaving, corDoStatusNoGrafico } from '../src/ui/cores-planilha.js';
+import { chaveDoStatus, chaveDaPrioridade, chaveDoSaving, corDoStatusNoGrafico, classeDaLinhaSc } from '../src/ui/cores-planilha.js';
 
 test('status: chave de cor, sem maiúsculas', () => {
   assert.equal(chaveDoStatus('Em Cotação'), 'cotacao');
@@ -33,4 +33,11 @@ test('gráfico: cada status com a sua cor; desconhecido em "outros"', () => {
   assert.equal(corDoStatusNoGrafico('Em Cotação'), 'var(--graf-cotacao)');
   assert.notEqual(corDoStatusNoGrafico('Em pendências de contrato'), corDoStatusNoGrafico('Em pendências de compra'));
   assert.equal(corDoStatusNoGrafico('Outro'), 'var(--serie-outros)');
+});
+
+test('classe da linha: regularização (linha vermelha) e emergencial (faixa), juntas ou não', () => {
+  assert.equal(classeDaLinhaSc({ prioridade: 'NORMAL', categoria: 'MATERIAL' }), '');
+  assert.equal(classeDaLinhaSc({ prioridade: ' Emergencial ', categoria: null }), 'linha-emergencial');
+  assert.equal(classeDaLinhaSc({ prioridade: 'URGENTE', categoria: 'REGULARIZAÇÃO' }), 'linha-regularizacao');
+  assert.equal(classeDaLinhaSc({ prioridade: 'EMERGENCIAL', categoria: 'Regularizacao' }), 'linha-regularizacao linha-emergencial');
 });
