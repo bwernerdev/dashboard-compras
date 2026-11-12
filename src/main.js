@@ -8,6 +8,7 @@ import { hojeSerie, formatarSerie } from './datas.js';
 import { brutosDe, recalcular, salvarImportacao, salvarAnterior, lerImportacoes, lerConfig, salvarConfig, apagarConfig } from './memoria.js';
 import { lerPreferencia, salvarPreferencia } from './preferencias.js';
 import { el } from './ui/dom.js';
+import { esqueleto } from './ui/cartoes.js';
 import { criarNavegador, ligarTema, ligarImpressao, diasDesdeABase, BASE_ANTIGA_DIAS } from './ui/casca.js';
 import { aplicarMarca } from './ui/marca.js';
 import { baixar } from './ui/tabela.js';
@@ -34,6 +35,7 @@ const estado = {
   base: null, // { registros, brutos, meta, salvoEm }
   followUp: null,
   anterior: null, // base de outro dia do ME { brutos, meta, salvoEm }: variação nos cartões
+  carregando: true, // lendo as bases salvas ao abrir: esqueleto no lugar da tela de importação
 };
 
 const raiz = {
@@ -50,12 +52,12 @@ const nav = criarNavegador({
   abaInicial: lerPreferencia('aba') ?? 'regional',
   aoTrocarAba: (id) => salvarPreferencia('aba', id),
   chaveFiltros: 'filtros',
-  telaVazia: () => el('div', { class: 'boas-vindas' },
+  telaVazia: () => (estado.carregando ? esqueleto('Abrindo as bases salvas...') : el('div', { class: 'boas-vindas' },
     el('h2', {}, 'Importe as bases do ME'),
     el('p', { class: 'texto-fraco' },
       'Use o favorito do navegador para baixar as duas bases e escolha os arquivos abaixo. ',
       'Tudo é lido e calculado neste computador; nada é enviado.'),
-    caixasDeImportacao({ estado, aoImportar: importar })),
+    caixasDeImportacao({ estado, aoImportar: importar }))),
 });
 
 // ---------- Dados ----------
@@ -247,4 +249,4 @@ document.addEventListener('visibilitychange', () => {
 });
 
 desenharTudo();
-restaurar().then(() => { if (estado.base) desenharTudo(); });
+restaurar().finally(() => { estado.carregando = false; desenharTudo(); });

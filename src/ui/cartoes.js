@@ -1,14 +1,17 @@
 // Cartões de indicador (stat tiles): rótulo, valor e detalhe.
-import { el } from './dom.js';
+import { el, icone as desenharIcone } from './dom.js';
 import { ligarDicaTexto } from './dica.js';
 
 /**
  * tom: 'bom' | 'alerta' | 'critico' | null — sempre acompanhado de texto, nunca só a cor.
  * variacao: resultado de `variacao()` (linha "+5 desde 10/11") ou null.
+ * icone: nome de um ícone de `dom.js` (decorativo, no canto; a cor acompanha o tom).
  */
-export function cartao({ rotulo, valor, detalhe = null, tom = null, variacao: v = null }) {
+export function cartao({ rotulo, valor, detalhe = null, tom = null, variacao: v = null, icone = null }) {
   return el('div', { class: `cartao${tom ? ` cartao-${tom}` : ''}` },
-    el('div', { class: 'cartao-rotulo' }, rotulo),
+    el('div', { class: 'cartao-topo' },
+      el('div', { class: 'cartao-rotulo' }, rotulo),
+      icone ? el('span', { class: 'cartao-icone' }, desenharIcone(icone, 18)) : null),
     el('div', { class: 'cartao-valor' }, valor),
     detalhe ? el('div', { class: 'cartao-detalhe' }, detalhe) : null,
     v ? el('div', { class: `cartao-variacao variacao-${v.tom}`, title: `Comparado com a base do ME de ${v.rotulo}` },
@@ -37,6 +40,29 @@ export const comparar = (rotulo, atual, anterior) => (campo, formato, melhor = n
 export const pontos = (d) => `${(d * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} p.p.`;
 
 export const linhaDeCartoes = (...cartoes) => el('div', { class: 'cartoes' }, cartoes);
+
+/** Esqueleto da tela (cartões e dois blocos) enquanto os dados abrem. */
+export function esqueleto(texto = 'Carregando os dados...') {
+  const peca = (classe) => el('div', { class: `esqueleto-peca ${classe}` });
+  return el('div', { class: 'esqueleto', 'aria-busy': 'true' },
+    el('p', { class: 'so-leitor', role: 'status' }, texto),
+    el('div', { class: 'esqueleto-linha' }, [1, 2, 3, 4].map(() => peca('esqueleto-cartao'))),
+    el('div', { class: 'grade-2' }, peca('esqueleto-bloco'), peca('esqueleto-bloco')));
+}
+
+/**
+ * Estado vazio: ícone, texto e, quando há filtros ativos, o botão "Limpar filtros"
+ * (ctx.limparFiltros vem da casca; null sem filtro ativo).
+ */
+export function estadoVazio(texto, ctx = null, { icone = 'filtro', acao = null } = {}) {
+  const botao = acao ?? (ctx?.limparFiltros
+    ? { rotulo: 'Limpar filtros', aoClicar: ctx.limparFiltros }
+    : null);
+  return el('div', { class: 'estado-vazio' },
+    el('span', { class: 'estado-vazio-icone' }, desenharIcone(icone, 22)),
+    el('p', {}, texto),
+    botao ? el('button', { type: 'button', class: 'botao botao-sec botao-pequeno', onclick: botao.aoClicar }, botao.rotulo) : null);
+}
 
 /**
  * Bloco com título, subtítulo opcional (uma frase curta), ações à direita do título (botões) e conteúdo.

@@ -2,7 +2,7 @@
 // Substitui a aba "Spend" da planilha antiga (pizza e colunas por filial, segmentações Ano/Mês,
 // Comprador, Contrato e Filial: aqui são os filtros globais). Pizza virou barras ordenadas.
 import { el } from '../ui/dom.js';
-import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, estadoVazio } from '../ui/cartoes.js';
 import { barras } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
@@ -10,15 +10,15 @@ import { spendPorFilial, resumoSpend, savingPorMes, rotuloMes } from '../analise
 
 export function telaSpend(ctx) {
   const porFilial = spendPorFilial(ctx.registros);
-  if (!porFilial.length) return el('div', { class: 'estado-vazio' }, 'Nenhum pedido com os filtros atuais.');
+  if (!porFilial.length) return estadoVazio('Nenhum pedido com os filtros atuais.', ctx);
   const r = resumoSpend(ctx.registros);
   const porMes = savingPorMes(ctx.registros);
 
   const cartoes = linhaDeCartoes(
-    cartao({ rotulo: 'Spend', valor: fmt.moedaCompacta(r.total), detalhe: `${fmt.moedaCentavos(r.total)} em OFs c/ impostos` }),
-    cartao({ rotulo: 'OFs', valor: fmt.inteiro(r.ofs), detalhe: `Pedidos distintos em ${fmt.inteiro(r.filiais)} filiais` }),
-    cartao({ rotulo: 'Média por OF', valor: fmt.moedaCompacta(r.ofs ? r.total / r.ofs : null), detalhe: 'Spend ÷ OFs' }),
-    cartao({ rotulo: 'Maior filial', valor: fmt.pct(r.maior?.pct), detalhe: r.maior ? `${r.maior.chave}: ${fmt.moeda(r.maior.valor)}` : '-' }),
+    cartao({ icone: 'moeda', rotulo: 'Spend', valor: fmt.moedaCompacta(r.total), detalhe: `${fmt.moedaCentavos(r.total)} em OFs c/ impostos` }),
+    cartao({ icone: 'carrinho', rotulo: 'OFs', valor: fmt.inteiro(r.ofs), detalhe: `Pedidos distintos em ${fmt.inteiro(r.filiais)} filiais` }),
+    cartao({ icone: 'tendencia', rotulo: 'Média por OF', valor: fmt.moedaCompacta(r.ofs ? r.total / r.ofs : null), detalhe: 'Spend ÷ OFs' }),
+    cartao({ icone: 'predio', rotulo: 'Maior filial', valor: fmt.pct(r.maior?.pct), detalhe: r.maior ? `${r.maior.chave}: ${fmt.moeda(r.maior.valor)}` : '-' }),
   );
 
   const filiais = bloco(

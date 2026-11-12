@@ -13,6 +13,7 @@
   --fs-lg: 16px;
   --fs-xl: 20px;
   --fs-2xl: 26px;
+  --fs-3xl: 30px; /* só o número dos cartões de indicador */
 
   --s1: 4px;
   --s2: 8px;
@@ -23,14 +24,18 @@
 
   --r-sm: 6px;
   --r-md: 8px;
+  --r-lg: 12px; /* cartões, blocos e estados vazios */
   --r-pill: 999px;
   --h-control: 34px;
   --h-control-sm: 28px;
 
-  --bg: #f6f7f9;
+  --bg: #f1f3f6; /* um tom abaixo do branco: blocos e cartões se destacam */
   --surface: #fff;
   --surface-2: #f9fafb;
-  --surface-hover: #f1f3f5;
+  --surface-hover: #edf1f8;
+  --zebra: #f8f9fb; /* faixa alternada das tabelas (por SC nas agrupadas) */
+  --esqueleto: #e6e9ee;
+  --esqueleto-brilho: #f3f5f8;
   --surface-selected: #eef3fd;
   --ring: #2f5bd3;
 
@@ -62,7 +67,7 @@
   --neutral-fg: #5f6672;
   --neutral-bg: #f1f3f5;
 
-  --shadow-1: 0 1px 2px rgba(17, 20, 24, .05);
+  --shadow-1: 0 1px 2px rgba(17, 20, 24, .04), 0 2px 8px rgba(17, 20, 24, .04);
   --shadow-2: 0 6px 16px rgba(17, 20, 24, .08), 0 1px 3px rgba(17, 20, 24, .06);
   --shadow-3: 0 12px 32px rgba(17, 20, 24, .16);
   --backdrop: rgba(17, 20, 24, .25);
@@ -114,7 +119,10 @@ html[data-theme="dark"] {
   --bg: #17191e;
   --surface: #1f2229;
   --surface-2: #232730;
-  --surface-hover: #2a2f38;
+  --surface-hover: #2a303b;
+  --zebra: #22252c;
+  --esqueleto: #2a2e36;
+  --esqueleto-brilho: #333843;
   --surface-selected: #222c40;
   --ring: #6b93f0;
 

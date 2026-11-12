@@ -42,12 +42,21 @@ input[type="search"].campo { min-width: 220px; }
 /* Cartões de indicador */
 .cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--s3); }
 .cartao {
-  padding: var(--s3) var(--s4);
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-1);
+  padding: var(--s4);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-1);
 }
+.cartao-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s2); }
 .cartao-rotulo { color: var(--text-muted); font-size: var(--fs-xs); font-weight: 600; }
+/* Ícone decorativo no canto: fundo claro da cor do tom (azul sem tom). */
+.cartao-icone {
+  display: grid; place-items: center; flex: none; width: 32px; height: 32px; margin: -4px -4px 0 0;
+  border-radius: var(--r-md); background: var(--surface-selected); color: var(--accent-text);
+}
+.cartao-critico .cartao-icone { background: var(--danger-bg); color: var(--danger-fg); }
+.cartao-alerta .cartao-icone { background: var(--warning-bg); color: var(--warning-fg); }
+.cartao-bom .cartao-icone { background: var(--success-bg); color: var(--success-fg); }
 .cartao-valor {
-  margin-top: 2px; font-size: var(--fs-2xl); font-weight: 700; line-height: 1.2;
+  margin-top: 2px; font-size: var(--fs-3xl); font-weight: 700; line-height: 1.15; letter-spacing: -0.01em;
   color: var(--text-strong); font-variant-numeric: tabular-nums;
 }
 .cartao-detalhe { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-xs); }
@@ -63,7 +72,7 @@ input[type="search"].campo { min-width: 220px; }
 /* Bloco (gráfico/tabela com título) */
 .bloco {
   min-width: 0; padding: var(--s4);
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-1);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-1);
 }
 .bloco-cabecalho { display: flex; align-items: flex-start; gap: var(--s3); margin-bottom: var(--s3); }
 .bloco-titulos { flex: 1; min-width: 0; }
@@ -102,7 +111,31 @@ input[type="search"].campo { min-width: 220px; }
 
 .estado-vazio, .boas-vindas {
   padding: var(--s6) var(--s5); text-align: center;
-  background: var(--surface); border: 1px dashed var(--line-strong); border-radius: var(--r-md); color: var(--text-muted);
+  background: var(--surface); border: 1px dashed var(--line-strong); border-radius: var(--r-lg); color: var(--text-muted);
+}
+.estado-vazio { display: flex; flex-direction: column; align-items: center; gap: var(--s3); }
+.estado-vazio-icone {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+  background: var(--surface-selected); color: var(--accent-text);
+}
+
+/* Esqueleto (bases salvas sendo lidas ao abrir): blocos cinza com brilho; sem animação se o sistema pedir. */
+.esqueleto { display: flex; flex-direction: column; gap: var(--s4); }
+.esqueleto-linha { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--s3); }
+.esqueleto-peca {
+  border-radius: var(--r-lg);
+  background: linear-gradient(90deg, var(--esqueleto) 25%, var(--esqueleto-brilho) 50%, var(--esqueleto) 75%) 0 0 / 200% 100%;
+  animation: brilho 1.4s ease-in-out infinite;
+}
+.esqueleto-cartao { height: 104px; }
+.esqueleto-bloco { height: 280px; }
+@keyframes brilho { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* Troca de aba: a tela nova entra com um fade curto. */
+.entrando { animation: entrar .18s ease-out; }
+@keyframes entrar { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto-peca, .entrando { animation: none; }
 }
 .boas-vindas { text-align: left; max-width: 900px; margin: var(--s5) auto 0; border-style: solid; }
 .boas-vindas h2 { color: var(--text-strong); font-size: var(--fs-xl); margin-bottom: var(--s1); }
@@ -207,11 +240,14 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 }
 .tabela { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
 .tabela th, .tabela td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+.tabela td { font-variant-numeric: tabular-nums; } /* datas, códigos e números alinham coluna abaixo */
 .tabela thead th { position: sticky; top: 0; z-index: 1; background: var(--surface-2); padding: 0; font-weight: 600; }
 /* Cabeçalho quebra em 2 linhas quando falta largura (ex.: "Dias da aprovação"), em vez de rolar para o lado. */
 .tabela thead th { white-space: normal; }
 .tabela tfoot td { position: sticky; bottom: 0; background: var(--surface-2); font-weight: 700; border-top: 1px solid var(--line-strong); }
 .tabela .num { text-align: right; font-variant-numeric: tabular-nums; }
+/* Faixa alternada: por linha nas tabelas simples, por SC/OF nas agrupadas (tabela.js marca `faixa`). */
+.tabela tbody tr.faixa { background: var(--zebra); }
 .tabela tbody tr:hover { background: var(--surface-hover); }
 .tabela tr.clicavel { cursor: pointer; }
 /* Linhas agrupadas (itens da mesma SC): separador forte entre grupos, nenhum dentro do grupo. */

@@ -1,7 +1,7 @@
 // Tela Status: todas as SCs do período (abertas, em pedido e canceladas) por status.
 // Substitui a aba "Status" da planilha antiga (tabela dinâmica SC > Status > Produto > ...).
 import { el } from '../ui/dom.js';
-import { cartao, linhaDeCartoes, bloco, comparar } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, comparar, estadoVazio } from '../ui/cartoes.js';
 import { barras } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import { listaDeMarcar } from '../ui/filtros.js';
@@ -27,7 +27,7 @@ const COLUNAS = [
 
 export function telaStatus(ctx) {
   const regs = ctx.registros;
-  if (!regs.length) return el('div', { class: 'estado-vazio' }, 'Nenhuma linha com os filtros atuais.');
+  if (!regs.length) return estadoVazio('Nenhuma linha com os filtros atuais.', ctx);
 
   const porStatus = scsPorStatus(regs);
   const doStatus = new Map(porStatus.map((s) => [s.status, s]));
@@ -35,10 +35,10 @@ export function telaStatus(ctx) {
   const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoStatus(ctx.anteriores.registros) : null);
 
   const cartoes = linhaDeCartoes(
-    cartao({ rotulo: 'SCs no período', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens`, variacao: vs('scs', fmt.inteiro) }),
-    cartao({ rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.abertas), detalhe: 'Com item sem pedido e não cancelado', variacao: vs('abertas', fmt.inteiro, 'menor') }),
-    cartao({ rotulo: 'SCs em pedido', valor: fmt.inteiro(resumo.emPedido), detalhe: 'Com item no status Em Pedido', variacao: vs('emPedido', fmt.inteiro) }),
-    cartao({ rotulo: 'SCs canceladas', valor: fmt.inteiro(resumo.canceladas), detalhe: 'Com item no status Cancelado', variacao: vs('canceladas', fmt.inteiro) }),
+    cartao({ icone: 'documento', rotulo: 'SCs no período', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens`, variacao: vs('scs', fmt.inteiro) }),
+    cartao({ icone: 'relogio', rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.abertas), detalhe: 'Com item sem pedido e não cancelado', variacao: vs('abertas', fmt.inteiro, 'menor') }),
+    cartao({ icone: 'carrinho', rotulo: 'SCs em pedido', valor: fmt.inteiro(resumo.emPedido), detalhe: 'Com item no status Em Pedido', variacao: vs('emPedido', fmt.inteiro) }),
+    cartao({ icone: 'cancelado', rotulo: 'SCs canceladas', valor: fmt.inteiro(resumo.canceladas), detalhe: 'Com item no status Cancelado', variacao: vs('canceladas', fmt.inteiro) }),
   );
 
   // Status marcado que os filtros globais zeraram continua na lista (com 0) para poder desmarcar.

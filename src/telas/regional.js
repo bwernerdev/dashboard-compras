@@ -3,7 +3,7 @@
 import { PRAZO_SLA_DIAS } from '../regras.js';
 import { el, icone } from '../ui/dom.js';
 import { estaAtendida, marcarAtendida } from '../atendidas.js';
-import { cartao, linhaDeCartoes, bloco, comparar, pontos } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, comparar, pontos, estadoVazio } from '../ui/cartoes.js';
 import { barras, barraSegmentada } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
@@ -92,24 +92,24 @@ export function telaRegional(ctx) {
 
   sairDaTelaCheia = null; // a tela é refeita a cada desenho
   if (!abertos.length) {
-    return el('div', { class: 'estado-vazio' }, 'Nenhuma SC em aberto com os filtros atuais.');
+    return estadoVazio('Nenhuma SC em aberto com os filtros atuais.', ctx);
   }
 
   const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoEmAberto(itensEmAberto(ctx.anteriores.registros)) : null);
   const cartoes = linhaDeCartoes(
-    cartao({ rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens sem pedido e não cancelados`, variacao: vs('scs', fmt.inteiro, 'menor') }),
+    cartao({ icone: 'documento', rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens sem pedido e não cancelados`, variacao: vs('scs', fmt.inteiro, 'menor') }),
     // SLA conta SCs, como o Atendimento (SC fora = algum item fora).
     cartao({
-      rotulo: 'SLA no prazo', valor: fmt.pct(resumo.pctScsNoPrazo),
+      icone: 'check', rotulo: 'SLA no prazo', valor: fmt.pct(resumo.pctScsNoPrazo),
       detalhe: `${fmt.inteiro(resumo.scsNoPrazo)} SCs no prazo, ${fmt.inteiro(resumo.scsFora)} fora`,
       variacao: vs('pctScsNoPrazo', pontos, 'maior'),
     }),
     cartao({
-      rotulo: 'SCs fora do prazo', valor: fmt.inteiro(resumo.scsFora), tom: resumo.scsFora ? 'critico' : null,
+      icone: 'alerta', rotulo: 'SCs fora do prazo', valor: fmt.inteiro(resumo.scsFora), tom: resumo.scsFora ? 'critico' : null,
       detalhe: `${fmt.inteiro(resumo.fora)} itens com mais de ${PRAZO_SLA_DIAS} dias úteis${resumo.scsSemPrazo ? `; ${fmt.inteiro(resumo.scsSemPrazo)} SCs sem prazo` : ''}`,
       variacao: vs('scsFora', fmt.inteiro, 'menor'),
     }),
-    cartao({ rotulo: 'Média de dias em aberto', valor: fmt.decimal(resumo.mediaDias), detalhe: `Mais antiga: ${fmt.inteiro(resumo.maxDias)} dias úteis`, variacao: vs('mediaDias', fmt.decimal, 'menor') }),
+    cartao({ icone: 'relogio', rotulo: 'Média de dias em aberto', valor: fmt.decimal(resumo.mediaDias), detalhe: `Mais antiga: ${fmt.inteiro(resumo.maxDias)} dias úteis`, variacao: vs('mediaDias', fmt.decimal, 'menor') }),
   );
 
   const faixas = porFaixaDeDias(abertos);

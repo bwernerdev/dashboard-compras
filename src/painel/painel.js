@@ -18,6 +18,7 @@ import { el, substituir } from '../ui/dom.js';
 import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
 import { formatarSerie, hojeSerie } from '../datas.js';
 import { TELAS_PUBLICAS } from '../telas/publicas.js';
+import { esqueleto } from '../ui/cartoes.js';
 
 /** Dentro de um quadro (pré-visualização do SharePoint): download, imprimir e janelas novas bloqueados. */
 const noQuadro = (() => {
@@ -55,6 +56,7 @@ function mostrarPeriodo(dados) {
 }
 
 async function iniciar() {
+  substituir(raiz.conteudo, esqueleto('Abrindo os dados do painel...'));
   let dados;
   try {
     dados = await descompactar(document.getElementById('dados').textContent);

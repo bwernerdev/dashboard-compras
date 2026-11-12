@@ -31,7 +31,8 @@ export function descreverFiltros(selecao, tela) {
  * telaVazia(): conteúdo quando não há registros; aoTrocarAba(id) opcional.
  * chaveFiltros: preferência onde a seleção dos filtros globais fica salva neste navegador (volta na
  * próxima vez que abrir; pedido da equipe, 12/11/2026). Sem ela, os filtros começam vazios.
- * ctx de cada tela: { registros, followUp (null sem a base Follow-Up), anteriores, redesenhar, filtrar }.
+ * ctx de cada tela: { registros, followUp (null sem a base Follow-Up), anteriores, redesenhar, filtrar,
+ * limparFiltros (null sem filtro ativo; botão dos estados vazios) }.
  * anteriores: { registros (base anterior, mesmos filtros), rotulo ('10/11') } ou null; só o app da
  * equipe guarda a base anterior (variação nos cartões), o painel não.
  * Os filtros globais valem para as duas bases; as opções vêm só da base principal.
@@ -46,6 +47,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     opcoes: null,
   };
   let pedido = 0;
+  let entrar = false; // troca de aba: a tela nova entra com fade curto (classe `entrando`)
 
   // Altura da faixa de filtros (fixa no topo ao rolar): as tabelas descontam dela para caber na janela.
   // Mede ao desenhar os filtros, ao mudar a janela e quando a faixa muda de altura (quebra de linha).
@@ -83,6 +85,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     if (estado.aba === id) return;
     estado.aba = id;
     aoTrocarAba?.(id);
+    entrar = true;
     desenhar();
   }
 
@@ -116,8 +119,15 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
       selecao: estado.selecao,
       opcoes: estado.opcoes,
       aoMudar: (id, valores) => { estado.selecao[id] = valores; guardarSelecao(); agendarTela(); },
-      aoLimpar: () => { estado.selecao = {}; guardarSelecao(); desenharFiltros(); desenharTela(); },
+      aoLimpar: limparFiltros,
     }));
+  }
+
+  function limparFiltros() {
+    estado.selecao = {};
+    guardarSelecao();
+    desenharFiltros();
+    desenharTela();
   }
 
   // setTimeout (não requestAnimationFrame): continua funcionando com a aba em segundo plano.
@@ -139,6 +149,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
         ? { registros: aplicarFiltros(estado.anteriores.registros, estado.selecao, estado.aba), rotulo: estado.anteriores.rotulo }
         : null,
       redesenhar: desenharTela,
+      limparFiltros: Object.values(estado.selecao).some((v) => v?.size) ? limparFiltros : null,
       filtrar(idFiltro, valor) {
         const atual = estado.selecao[idFiltro];
         const jaEra = atual?.size === 1 && atual.has(valor);
@@ -149,6 +160,10 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
         window.scrollTo({ top: 0, behavior: 'smooth' });
       },
     }));
+    if (entrar) {
+      entrar = false;
+      raiz.conteudo.firstElementChild?.classList.add('entrando');
+    }
   }
 
   function desenhar() {

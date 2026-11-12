@@ -3,7 +3,7 @@
 // Período De/Até (pedido da equipe, 12/11/2026): recorta pela "Data Criação solicitação"; fica
 // salvo neste navegador.
 import { el } from '../ui/dom.js';
-import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, estadoVazio } from '../ui/cartoes.js';
 import { barrasEmpilhadas } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
@@ -82,8 +82,8 @@ export function telaCompradores(ctx) {
   const barra = barraDePeriodo(ctx);
   const regs = recortarPeriodo(ctx.registros, periodo);
   if (!regs.length) {
-    return el('div', { class: 'tela' }, barra, el('div', { class: 'estado-vazio' },
-      descreverPeriodo() ? `Nenhuma SC criada no período (${descreverPeriodo()}) com os filtros atuais.` : 'Nenhuma linha com os filtros atuais.'));
+    return el('div', { class: 'tela' }, barra, estadoVazio(
+      descreverPeriodo() ? `Nenhuma SC criada no período (${descreverPeriodo()}) com os filtros atuais.` : 'Nenhuma linha com os filtros atuais.', ctx));
   }
 
   const porStatus = scsPorCompradorStatus(regs);
@@ -93,14 +93,14 @@ export function telaCompradores(ctx) {
   const aberto = resumoEmAberto(itensEmAberto(regs));
 
   const cartoes = linhaDeCartoes(
-    cartao({ rotulo: 'SCs no período', valor: fmt.inteiro(porStatus.totalGeral), detalhe: `${descreverPeriodo() ? `Criadas ${descreverPeriodo()}. ` : ''}${fmt.inteiro(porStatus.linhas.length)} compradores (inclui "-" e Pendente)` }),
+    cartao({ icone: 'documento', rotulo: 'SCs no período', valor: fmt.inteiro(porStatus.totalGeral), detalhe: `${descreverPeriodo() ? `Criadas ${descreverPeriodo()}. ` : ''}${fmt.inteiro(porStatus.linhas.length)} compradores (inclui "-" e Pendente)` }),
     cartao({
-      rotulo: 'SCs sem comprador (Pendente)', valor: fmt.inteiro(pendente?.total ?? 0), tom: pendente?.total ? 'alerta' : null,
+      icone: 'usuario', rotulo: 'SCs sem comprador (Pendente)', valor: fmt.inteiro(pendente?.total ?? 0), tom: pendente?.total ? 'alerta' : null,
       detalhe: 'Itens sem "Selecionado por" no ME',
     }),
-    cartao({ rotulo: 'Pré-pedidos', valor: fmt.inteiro(pre.totalGeral), detalhe: 'Distintos, como na planilha (SC sem pré-pedido conta 1)' }),
+    cartao({ icone: 'pacote', rotulo: 'Pré-pedidos', valor: fmt.inteiro(pre.totalGeral), detalhe: 'Distintos, como na planilha (SC sem pré-pedido conta 1)' }),
     cartao({
-      rotulo: 'Itens em aberto fora do prazo', valor: fmt.inteiro(aberto.fora), tom: aberto.fora ? 'critico' : null,
+      icone: 'alerta', rotulo: 'Itens em aberto fora do prazo', valor: fmt.inteiro(aberto.fora), tom: aberto.fora ? 'critico' : null,
       detalhe: `${fmt.pct(aberto.pctNoPrazo)} dos itens em aberto no prazo`,
     }),
   );

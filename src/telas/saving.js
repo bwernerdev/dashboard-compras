@@ -1,7 +1,7 @@
 // Tela Saving: total comprado (pedido c/ impostos), economia (Saving Real) e % saving.
 // Substitui as abas "Saving" e "Spend". % Saving = economia ÷ (total + economia), como na planilha.
 import { el } from '../ui/dom.js';
-import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, estadoVazio } from '../ui/cartoes.js';
 import { barras } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
@@ -30,7 +30,7 @@ const rodapeSaving = (rotulo) => (linhas) => {
 
 export function telaSaving(ctx) {
   const regs = ctx.registros;
-  if (!regs.length) return el('div', { class: 'estado-vazio' }, 'Nenhuma linha com os filtros atuais.');
+  if (!regs.length) return estadoVazio('Nenhuma linha com os filtros atuais.', ctx);
 
   const r = resumoSaving(regs);
   const porFilial = savingPorFilial(regs);
@@ -38,10 +38,10 @@ export function telaSaving(ctx) {
   const porMes = savingPorMes(regs);
 
   const cartoes = linhaDeCartoes(
-    cartao({ rotulo: 'Total comprado', valor: fmt.moedaCompacta(r.total), detalhe: `${fmt.moedaCentavos(r.total)} em pedidos c/ impostos` }),
-    cartao({ rotulo: 'Economia', valor: fmt.moedaCompacta(r.economia), detalhe: fmt.moedaCentavos(r.economia) }),
-    cartao({ rotulo: '% Saving', valor: fmt.pctFino(r.pct), detalhe: 'Economia ÷ (total comprado + economia)' }),
-    cartao({ rotulo: 'Itens com saving', valor: fmt.inteiro(r.itensComSaving), detalhe: `de ${fmt.inteiro(regs.length)} itens` }),
+    cartao({ icone: 'carrinho', rotulo: 'Total comprado', valor: fmt.moedaCompacta(r.total), detalhe: `${fmt.moedaCentavos(r.total)} em pedidos c/ impostos` }),
+    cartao({ icone: 'moeda', rotulo: 'Economia', valor: fmt.moedaCompacta(r.economia), detalhe: fmt.moedaCentavos(r.economia) }),
+    cartao({ icone: 'porcentagem', rotulo: '% Saving', valor: fmt.pctFino(r.pct), detalhe: 'Economia ÷ (total comprado + economia)' }),
+    cartao({ icone: 'lista', rotulo: 'Itens com saving', valor: fmt.inteiro(r.itensComSaving), detalhe: `de ${fmt.inteiro(regs.length)} itens` }),
   );
 
   const filiais = bloco(

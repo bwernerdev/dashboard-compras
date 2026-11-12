@@ -2,7 +2,7 @@
 // antiga (SC > OF > Data pedido > Filial > ... > Fornecedor > CNPJ > Status Entrega).
 // Usa ctx.followUp (base Follow-Up, com os mesmos filtros globais); sem Follow-Up, avisa.
 import { el } from '../ui/dom.js';
-import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
+import { cartao, linhaDeCartoes, bloco, estadoVazio } from '../ui/cartoes.js';
 import { barras, barrasEmpilhadas } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import { listaDeMarcar } from '../ui/filtros.js';
@@ -61,11 +61,11 @@ function ofsPorFilial(regs, status) {
 
 export function telaEntrega(ctx) {
   if (!ctx.followUp) {
-    return el('div', { class: 'estado-vazio' },
-      'Sem a base Follow-Up. No app da equipe: "Atualizar bases", escolha o Follow-Up.xlsx (e gere o painel de novo).');
+    return estadoVazio('Sem a base Follow-Up. No app da equipe: "Atualizar bases", escolha o Follow-Up.xlsx (e gere o painel de novo).',
+      null, { icone: 'caminhao' });
   }
   const regs = ctx.followUp;
-  if (!regs.length) return el('div', { class: 'estado-vazio' }, 'Nenhuma OF com os filtros atuais.');
+  if (!regs.length) return estadoVazio('Nenhuma OF com os filtros atuais.', ctx);
 
   const porStatus = entregasPorStatus(regs);
   const doStatus = new Map(porStatus.map((s) => [s.status, s]));
@@ -73,10 +73,10 @@ export function telaEntrega(ctx) {
   const conta = (s) => doStatus.get(s)?.ofs ?? 0;
 
   const cartoes = linhaDeCartoes(
-    cartao({ rotulo: 'OFs', valor: fmt.inteiro(ofs), detalhe: `${fmt.inteiro(regs.length)} itens` }),
-    cartao({ rotulo: 'OFs não entregues', valor: fmt.inteiro(conta('NÃO ENTREGUE')), tom: conta('NÃO ENTREGUE') ? 'critico' : null, detalhe: `${fmt.inteiro(doStatus.get('NÃO ENTREGUE')?.itens ?? 0)} itens` }),
-    cartao({ rotulo: 'OFs entregues em parte', valor: fmt.inteiro(conta('ENTREGUE PARCIAL')), detalhe: `${fmt.inteiro(doStatus.get('ENTREGUE PARCIAL')?.itens ?? 0)} itens` }),
-    cartao({ rotulo: 'OFs entregues', valor: fmt.inteiro(conta('ENTREGUE')), detalhe: `${fmt.inteiro(doStatus.get('ENTREGUE')?.itens ?? 0)} itens` }),
+    cartao({ icone: 'carrinho', rotulo: 'OFs', valor: fmt.inteiro(ofs), detalhe: `${fmt.inteiro(regs.length)} itens` }),
+    cartao({ icone: 'caminhao', rotulo: 'OFs não entregues', valor: fmt.inteiro(conta('NÃO ENTREGUE')), tom: conta('NÃO ENTREGUE') ? 'critico' : null, detalhe: `${fmt.inteiro(doStatus.get('NÃO ENTREGUE')?.itens ?? 0)} itens` }),
+    cartao({ icone: 'parcial', rotulo: 'OFs entregues em parte', valor: fmt.inteiro(conta('ENTREGUE PARCIAL')), detalhe: `${fmt.inteiro(doStatus.get('ENTREGUE PARCIAL')?.itens ?? 0)} itens` }),
+    cartao({ icone: 'check', rotulo: 'OFs entregues', valor: fmt.inteiro(conta('ENTREGUE')), detalhe: `${fmt.inteiro(doStatus.get('ENTREGUE')?.itens ?? 0)} itens` }),
   );
 
   const status = porStatus.map((s) => s.status);

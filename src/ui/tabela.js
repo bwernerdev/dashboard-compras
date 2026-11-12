@@ -319,12 +319,13 @@ export function criarTabela(opcoes) {
     const pagina = grupos.slice(inicio, inicio + porPagina);
 
     const recolhido = (g) => !!grupo?.recolhido?.(grupo.chave(g[0]));
-    substituir(corpo, pagina.length ? pagina.flatMap((g) => {
+    // `faixa`: grupos ímpares da página (por linha sem `grupo`) ganham o fundo alternado.
+    substituir(corpo, pagina.length ? pagina.flatMap((g, ig) => {
       const rec = recolhido(g);
       const visiveis = rec ? [g[0]] : g;
       return visiveis.map((l, i) => el('tr', {
         class: [
-          aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '',
+          ig % 2 ? 'faixa' : '', aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '',
           grupo && i < visiveis.length - 1 ? 'grupo-continua' : '', rec ? 'grupo-recolhido' : '', classeLinha?.(l) ?? '',
         ].join(' ').trim() || null,
         onclick: aoClicarLinha ? () => aoClicarLinha(l) : null,
