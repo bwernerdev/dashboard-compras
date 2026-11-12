@@ -66,10 +66,22 @@ input[type="search"].campo { min-width: 220px; }
 /* Bloco em tela cheia (lista de SCs em aberto): cobre a janela, a tabela ocupa a altura que sobra. */
 .bloco.tela-cheia {
   position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column;
-  padding: var(--s4) var(--s5); border: 0; border-radius: 0; box-shadow: none; overflow: hidden;
+  padding: var(--s3) 0 0; border: 0; border-radius: 0; box-shadow: none; overflow: hidden;
 }
-.bloco.tela-cheia > .tabela-bloco { flex: 1; min-height: 0; }
-.bloco.tela-cheia .tabela-rolagem { flex: 1; min-height: 0; max-height: none; overscroll-behavior: contain; }
+/* Tabela de borda a borda (sem margem à esquerda, à direita e embaixo); título, recortes e barra
+   com respiro só nas laterais. Paginação sobe para a linha da barra: nada embaixo da tabela. */
+.bloco.tela-cheia > .bloco-cabecalho, .bloco.tela-cheia > .recortes { padding: 0 var(--s4); }
+.bloco.tela-cheia > .tabela-bloco {
+  flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(0, 1fr);
+  column-gap: 0; row-gap: var(--s2);
+}
+.bloco.tela-cheia .tabela-barra { grid-column: 1; grid-row: 1; padding: 0 var(--s4); }
+.bloco.tela-cheia .paginacao { grid-column: 2; grid-row: 1; padding-right: var(--s4); }
+.bloco.tela-cheia .tabela-bloco:has(> .paginacao:not(:empty)) .tabela-barra { padding-right: var(--s3); }
+.bloco.tela-cheia .tabela-rolagem {
+  grid-column: 1 / -1; grid-row: 2; min-height: 0; max-height: none; overscroll-behavior: contain;
+  border-width: 1px 0 0; border-radius: 0;
+}
 .bloco-cabecalho h2 { font-size: var(--fs-lg); font-weight: 650; color: var(--text-strong); }
 .bloco-subtitulo { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-sm); }
 .bloco > * + .tabela-bloco { margin-top: var(--s4); }

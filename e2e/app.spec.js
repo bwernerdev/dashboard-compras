@@ -126,6 +126,11 @@ test('lista de SCs em tela cheia: botão, Esc (depois da lista de marcar) e lemb
   const janela = page.viewportSize();
   expect(Math.round(caixa.width)).toBe(janela.width);
   expect(Math.round(caixa.height)).toBe(janela.height);
+  // Tabela de borda a borda: sem margem à esquerda, à direita e embaixo.
+  const rolagem = await lista.locator('.tabela-rolagem').boundingBox();
+  expect(Math.round(rolagem.x)).toBe(0);
+  expect(Math.round(rolagem.x + rolagem.width)).toBe(janela.width);
+  expect(Math.round(rolagem.y + rolagem.height)).toBe(janela.height);
 
   // Esc com a lista de Status aberta fecha só a lista; o próximo Esc sai da tela cheia.
   await lista.locator('[data-filtro="status"] .filtro-botao').click();
