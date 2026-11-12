@@ -140,6 +140,44 @@ test('lista de SCs em tela cheia: botão, Esc (depois da lista de marcar) e lemb
   await expect(lista.getByRole('button', { name: 'Tela cheia' })).toBeVisible();
 });
 
+test('largura da coluna: arrastar, setas, dois cliques, lembrada e "Larguras originais"', async ({ page }) => {
+  await importarBase(page);
+  const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
+  const th = lista.locator('thead th', { hasText: 'Produto' });
+  const alca = th.locator('.th-alca');
+  const largura = async () => Math.round((await th.boundingBox()).width);
+  const antes = await largura();
+
+  // Arrastar a borda alarga; não reordena a lista.
+  await alca.hover(); // rola até a borda (fora da tela o mouse não chega nela)
+  const caixa = await alca.boundingBox();
+  await page.mouse.move(caixa.x + 3, caixa.y + caixa.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(caixa.x + 123, caixa.y + caixa.height / 2, { steps: 5 });
+  await page.mouse.up();
+  expect(await largura()).toBe(antes + 120);
+  await expect(lista.locator('thead th', { hasText: 'Dias da aprovação' })).toHaveAttribute('aria-sort', 'descending');
+
+  // Setas com o foco na borda: 10 px (Shift: 50).
+  await alca.focus();
+  await page.keyboard.press('Shift+ArrowLeft');
+  expect(await largura()).toBe(antes + 70);
+
+  // Lembrada ao recarregar; "Larguras originais" volta ao automático.
+  await page.reload();
+  expect(await largura()).toBe(antes + 70);
+  await lista.getByRole('button', { name: 'Larguras originais' }).click();
+  expect(await largura()).toBe(antes);
+  await expect(lista.getByRole('button', { name: 'Larguras originais' })).toBeHidden();
+
+  // Estreita com reticências; dois cliques na borda voltam ao automático.
+  await alca.focus();
+  for (let i = 0; i < 4; i++) await page.keyboard.press('Shift+ArrowLeft');
+  expect(await largura()).toBe(Math.max(40, antes - 200));
+  await alca.dblclick();
+  expect(await largura()).toBe(antes);
+});
+
 test('filtro global pela lista; Esc fecha', async ({ page }) => {
   await importarBase(page);
   await page.locator('[data-filtro="prioridade"] .filtro-botao').click();

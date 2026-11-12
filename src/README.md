@@ -6,7 +6,7 @@
 | `analise.js` | Filtros globais (`FILTROS`, `aplicarFiltros`) e agregações puras das telas (SCs em aberto, faixas de dias, pendências e regularização (`ehPendencia`, `ehRegularizacao`), comprador x status, pré-pedidos, participação, saving). Sem DOM. Usado também pelo `scripts/conferir-xlsm.mjs` |
 | `memoria.js` | Memória local do app da equipe: última importação de cada base no IndexedDB (só colunas do ME; `recalcular` refaz os campos calculados) e configuração no localStorage |
 | `atendidas.js` | SCs marcadas como atendidas (olho/duplo clique na lista da Regional): `estaAtendida`, `marcarAtendida`. No localStorage deste navegador, por Solicitação; vence em 120 dias. Só o app da equipe liga (`ligarAtendidas`) |
-| `preferencias.js` | Aba e tema no localStorage, com try/catch (no quadro do SharePoint não há armazenamento). Usado pelo app e pelo painel |
+| `preferencias.js` | Aba, tema, tela cheia e larguras de coluna no localStorage, com try/catch (no quadro do SharePoint não há armazenamento). Usado pelo app e pelo painel |
 | `painel/` | Painel publicado (`painel-compras.html`): dados públicos, entrada, modelo e geração. Ver `painel/README.md` |
 | `importacao.js` | Ponte tela ↔ worker (`importarNoWorker`) |
 | `importacao.worker.js` | Worker: roda `importar` fora da thread da tela e manda o progresso |

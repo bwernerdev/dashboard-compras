@@ -1,6 +1,7 @@
 // Tabela com ordenação por coluna, pesquisa, paginação, linha de total, "Copiar tabela" e exportação CSV.
 import { el, substituir, novoId } from './dom.js';
 import { formatarSerie } from '../datas.js';
+import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
 
 const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
@@ -100,6 +101,9 @@ export function definirExportacao({ csv }) { exportacao.csv = csv; }
  *         recolhido(chave) -> bool: grupo recolhido vira uma linha só, com as `colunasRecolhido`
  *         preenchidas e o resto vazio (como recolher a SC na tabela dinâmica); `nomeRecolhido`:
  *         ['atendida', 'atendidas'] entra na contagem.
+ * Larguras: arrastar a borda direita do cabeçalho (ou setas com o foco nela) muda a largura da
+ * coluna; texto que não cabe fica com reticências. Dois cliques na borda voltam ao automático.
+ * Lembradas neste navegador por `nomeArquivo`.
  */
 export function criarTabela(opcoes) {
   const {
@@ -107,6 +111,10 @@ export function criarTabela(opcoes) {
     aoClicarLinha, aoDuploClique, classeLinha, grupo,
   } = opcoes;
   const pesquisaveis = exportaveis(colunas);
+  const idTabela = novoId('tab');
+  const chaveLarguras = `larguras:${nomeArquivo}`;
+  const larguras = lerLarguras(chaveLarguras);
+  const estiloLarguras = el('style');
   const estado = { linhas: opcoes.linhas ?? [], termo: '', pagina: 0, ordem: opcoes.ordem ?? null };
 
   const idPesquisa = novoId('pesq');
@@ -133,7 +141,7 @@ export function criarTabela(opcoes) {
   const cabeca = el('thead');
   const corpo = el('tbody');
   const pe = el('tfoot');
-  const tabela = el('table', { class: 'tabela' }, el('caption', { class: 'so-leitor' }, titulo), cabeca, corpo, pe);
+  const tabela = el('table', { class: 'tabela', 'data-tabela': idTabela }, el('caption', { class: 'so-leitor' }, titulo), cabeca, corpo, pe);
   const paginacao = el('div', { class: 'paginacao' });
 
   function linhasVisiveis() {
@@ -163,6 +171,7 @@ export function criarTabela(opcoes) {
       const ativa = estado.ordem?.coluna === c.id;
       const sort = ativa ? (estado.ordem.desc ? 'descending' : 'ascending') : 'none';
       return el('th', { scope: 'col', class: classeColuna(c), 'aria-sort': sort, title: c.titulo ?? null },
+        alcaDeLargura(c),
         el('button', {
           type: 'button', class: 'th-botao',
           onclick: () => {
@@ -172,6 +181,66 @@ export function criarTabela(opcoes) {
           },
         }, c.rotulo, el('span', { class: 'th-seta', 'aria-hidden': 'true' }, ativa ? (estado.ordem.desc ? '▼' : '▲') : '')));
     })));
+  }
+
+  // --- Larguras das colunas ---
+  const MIN_LARGURA = 40;
+  const indice = new Map(colunas.map((c, i) => [c, i]));
+
+  /** Regras de largura fixa (uma por coluna ajustada), só desta tabela. */
+  function aplicarLarguras() {
+    estiloLarguras.textContent = colunas.filter((c) => larguras.has(c.id)).map((c) => {
+      const w = larguras.get(c.id);
+      return `[data-tabela="${idTabela}"] .c-${indice.get(c)} { width: ${w}px; min-width: ${w}px; max-width: ${w}px; overflow: hidden; text-overflow: ellipsis; }`;
+    }).join(' ');
+    botaoLarguras.hidden = !larguras.size;
+  }
+
+  function mudarLargura(c, px) {
+    if (px === null) larguras.delete(c.id);
+    else larguras.set(c.id, Math.max(MIN_LARGURA, Math.round(px)));
+    aplicarLarguras();
+  }
+
+  const guardarLarguras = () => salvarPreferencia(chaveLarguras, JSON.stringify(Object.fromEntries(larguras)));
+
+  /** Borda direita do cabeçalho: arrastar, setas (10 px; Shift = 50 px), dois cliques = automático. */
+  function alcaDeLargura(c) {
+    const th = () => alca.parentElement;
+    const atual = () => larguras.get(c.id) ?? th().getBoundingClientRect().width;
+    const alca = el('span', {
+      class: 'th-alca', role: 'separator', 'aria-orientation': 'vertical', tabindex: '0',
+      'aria-label': `Largura da coluna ${c.rotulo}: arraste ou use as setas; dois cliques volta ao automático`,
+      title: 'Arraste para mudar a largura. Dois cliques: largura automática.',
+      onclick: (ev) => ev.stopPropagation(),
+      ondblclick: (ev) => { ev.stopPropagation(); mudarLargura(c, null); guardarLarguras(); },
+      onkeydown: (ev) => {
+        if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+        ev.preventDefault();
+        const passo = (ev.shiftKey ? 50 : 10) * (ev.key === 'ArrowLeft' ? -1 : 1);
+        mudarLargura(c, atual() + passo);
+        guardarLarguras();
+      },
+      onpointerdown: (ev) => {
+        if (ev.button !== 0) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const inicioX = ev.clientX;
+        const inicioL = atual();
+        alca.setPointerCapture(ev.pointerId);
+        alca.classList.add('arrastando');
+        const mover = (e) => mudarLargura(c, inicioL + e.clientX - inicioX);
+        const soltar = () => {
+          alca.removeEventListener('pointermove', mover);
+          alca.classList.remove('arrastando');
+          guardarLarguras();
+        };
+        alca.addEventListener('pointermove', mover);
+        alca.addEventListener('pointerup', soltar, { once: true });
+        alca.addEventListener('pointercancel', soltar, { once: true });
+      },
+    });
+    return alca;
   }
 
   /** Linhas em grupos (cada grupo = array). Sem `grupo`, cada linha é um grupo. */
@@ -188,7 +257,7 @@ export function criarTabela(opcoes) {
 
   /** num: número alinhado à direita; centro: centralizado (vence o num). */
   function classeColuna(c) {
-    return [c.num ? 'num' : '', c.centro ? 'centro' : '', c.controle ? 'col-controle' : ''].join(' ').trim() || null;
+    return [`c-${indice.get(c)}`, c.num ? 'num' : '', c.centro ? 'centro' : '', c.controle ? 'col-controle' : ''].join(' ').trim();
   }
 
   const plural = (n, [um, varios]) => `${n.toLocaleString('pt-BR')} ${n === 1 ? um : varios}`;
@@ -264,8 +333,15 @@ export function criarTabela(opcoes) {
     ] : []);
   }
 
+  const botaoLarguras = el('button', {
+    type: 'button', class: 'botao-link botao-pequeno', title: 'Volta todas as colunas à largura automática',
+    onclick: () => { larguras.clear(); aplicarLarguras(); guardarLarguras(); },
+  }, 'Larguras originais');
+  aplicarLarguras();
+
   const elemento = el('div', { class: 'tabela-bloco' },
-    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, botaoCopiar, botaoCsv),
+    estiloLarguras,
+    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, botaoLarguras, botaoCopiar, botaoCsv),
     el('div', { class: 'tabela-rolagem' }, tabela),
     paginacao);
   render();
@@ -279,4 +355,12 @@ export function criarTabela(opcoes) {
       render();
     },
   };
+}
+
+/** Larguras salvas ({ idColuna: px }); armazenamento bloqueado ou estragado = nenhuma. */
+function lerLarguras(chave) {
+  try {
+    const obj = JSON.parse(lerPreferencia(chave, '{}')) ?? {};
+    return new Map(Object.entries(obj).filter(([, px]) => Number.isFinite(px) && px > 0));
+  } catch { return new Map(); }
 }

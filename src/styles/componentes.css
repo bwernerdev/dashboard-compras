@@ -198,6 +198,16 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
   border: 0; background: none; font-weight: 600; color: var(--text); text-align: inherit;
 }
 .num .th-botao { justify-content: flex-end; }
+/* Borda para mudar a largura da coluna (ui/tabela.js): arrastar, setas ou dois cliques. */
+.th-alca {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 7px; z-index: 2;
+  cursor: col-resize; touch-action: none;
+}
+.th-alca::after { content: ""; position: absolute; top: 20%; bottom: 20%; right: 2px; width: 2px; border-radius: 1px; background: var(--line-strong); opacity: 0; }
+.tabela thead th:hover .th-alca::after { opacity: 1; }
+.th-alca:hover::after, .th-alca.arrastando::after, .th-alca:focus-visible::after { opacity: 1; background: var(--accent); }
+.th-alca:focus-visible { outline: none; }
+body:has(.th-alca.arrastando) { cursor: col-resize; user-select: none; }
 .tabela .centro { text-align: center; }
 
 /* Cores da planilha antiga (ui/cores-planilha.js): selo para status e % saving, marca para prioridade. */
