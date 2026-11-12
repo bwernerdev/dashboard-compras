@@ -180,9 +180,9 @@ export function telaRegional(ctx) {
   function alternarAtendida(r, atendida) {
     marcarAtendida(r.solicitacao, atendida);
     ultimaMarcada = atendida ? r : null;
-    aviso.replaceChildren(...(atendida
-      ? [`SC ${r.sc} marcada como atendida e recolhida. `, botaoDesfazer]
-      : [`SC ${r.sc} expandida de novo.`]));
+    // Expandir não mostra aviso (pedido da equipe): só o recolher, por causa do Desfazer.
+    if (atendida) aviso.replaceChildren(`SC ${r.sc} marcada como atendida e recolhida. `, botaoDesfazer);
+    else aviso.replaceChildren();
     atualizarLista();
   }
 

@@ -88,8 +88,10 @@ test('olho e duplo clique recolhem SC atendida numa linha; desfazer e expandir',
   await expect(lista.getByRole('status')).toContainText('SC 1000002 marcada como atendida e recolhida');
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
 
-  // Desfazer expande.
+  // Desfazer expande, sem aviso.
   await lista.getByRole('button', { name: 'Desfazer' }).click();
+  await expect(lista.locator('.aviso-atendida')).toBeEmpty();
+  await expect(lista.locator('.aviso-atendida')).toBeHidden();
   await expect(linhas).toHaveCount(3);
   await expect(contagem).toHaveText('2 SCs, 3 itens');
 
