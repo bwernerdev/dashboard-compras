@@ -190,6 +190,7 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 | Correção da seção 2 | Aprovada: o painel publica os valores corrigidos (dias em aberto, Data, Serviço, SLA, tempos por etapa) |
 | Públicos (seção 4.7) | Equipe de Suprimentos: app completo. Intranet: painel gerado só com as telas das 8 abas visíveis; Compradores fica de fora do arquivo |
 | Contagem distinta com vazio (fase 2) | Igual à planilha: nos pré-pedidos, SC sem pré-pedido conta como 1 em cada grupo (DISTINCTCOUNT do modelo de dados). Decidido em 11/11/2026 |
+| Filiais das consultas da planilha (12/11/2026) | As consultas do Power Query da planilha filtram as filiais por conta própria: a base (`Relatório (2)`) por uma lista de nomes, sem a 30555 (SP ANHANGUERA - MATRIZ) e sem o código 2751500; o Follow-Up (`Relatório (3)`) por uma lista de códigos, sem 30555, 30910 (Salvador) e 30733 (CD Cambé). O app filtra pelo de-para (26 filiais). Decisão da equipe: **manter** a 555 no app e **manter** Salvador e CD Cambé na Entrega (na lista do Follow-Up da planilha pareciam esquecidas). Comparando com a planilha, essas filiais explicam a diferença: base atual com 1.982 linhas da 555; Follow-Up de 11/11 com 371 (555) + 188 (Salvador) + 67 (Cambé) |
 
 ### Em aberto (nada travando a fase 3)
 1. **Teste da Intranet (resolvido em 11/11/2026):** o anexo `.html` foi **recusado**. Fora planilhas, a Intranet só aceita **endereço web** (link). O painel tem de ficar **atrás do login da empresa** (os dados são internos; nada em endereço público, como GitHub Pages):
