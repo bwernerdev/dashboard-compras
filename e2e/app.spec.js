@@ -85,13 +85,11 @@ test('olho e duplo clique recolhem SC atendida numa linha; desfazer e expandir',
   await expect(recolhida.locator('td').nth(2)).toHaveText('1000002');
   await expect(recolhida.locator('td').nth(1)).not.toHaveText('');
   await expect(recolhida.locator('td').nth(5)).toHaveText(''); // status e o resto vazios
-  await expect(lista.getByRole('status')).toContainText('SC 1000002 marcada como atendida e recolhida');
+  await expect(lista.locator('.aviso-atendida')).toHaveCount(0); // sem aviso
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
 
-  // Desfazer expande, sem aviso.
-  await lista.getByRole('button', { name: 'Desfazer' }).click();
-  await expect(lista.locator('.aviso-atendida')).toBeEmpty();
-  await expect(lista.locator('.aviso-atendida')).toBeHidden();
+  // Olho riscado expande.
+  await lista.getByRole('button', { name: 'Expandir SC 1000002 (desmarcar atendida)' }).click();
   await expect(linhas).toHaveCount(3);
   await expect(contagem).toHaveText('2 SCs, 3 itens');
 

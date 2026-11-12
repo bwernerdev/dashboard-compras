@@ -166,23 +166,13 @@ export function telaRegional(ctx) {
 
   // Atendidas: o olho (ou duplo clique na linha) recolhe a SC numa linha só (Dias da aprovação
   // e SC), como recolher na tabela dinâmica da planilha. Olho riscado (ou duplo clique) expande.
-  // Cartões e gráficos não mudam.
-  const aviso = el('span', { class: 'aviso-atendida', role: 'status' });
-  let ultimaMarcada = null;
-  const botaoDesfazer = el('button', {
-    type: 'button', class: 'botao-link',
-    onclick: () => { if (ultimaMarcada) alternarAtendida(ultimaMarcada, false); },
-  }, 'Desfazer');
+  // Cartões e gráficos não mudam. Sem aviso nem Desfazer (pedido da equipe): o olho riscado desfaz.
 
   const atualizarLista = () => tabela?.atualizar(recortar(), { manterPagina: true });
 
   /** r: um item da SC (a marca vale para a SC inteira, chave `solicitacao`). */
   function alternarAtendida(r, atendida) {
     marcarAtendida(r.solicitacao, atendida);
-    ultimaMarcada = atendida ? r : null;
-    // Expandir não mostra aviso (pedido da equipe): só o recolher, por causa do Desfazer.
-    if (atendida) aviso.replaceChildren(`SC ${r.sc} marcada como atendida e recolhida. `, botaoDesfazer);
-    else aviso.replaceChildren();
     atualizarLista();
   }
 
@@ -232,7 +222,6 @@ export function telaRegional(ctx) {
         : 'Itens agrupados por SC, da mais antiga para a mais nova. CSV e "Copiar tabela" trazem um item por linha.',
     },
     recortes,
-    atendidasLigadas ? aviso : null,
     tabela.elemento,
   );
 
