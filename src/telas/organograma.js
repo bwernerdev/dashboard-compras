@@ -26,7 +26,7 @@ const ARVORE = {
           },
           {
             nome: 'Bruno Werner', cargo: 'Comprador',
-            filiais: ['30.570 - Itajaí - Armazém', '30.572 - Itajaí - Fatiados', '30.573 - Itajaí CD', '30.733 - Cambé - CD'],
+            filiais: ['30.570 - Itajaí - Armazém', '30.572 - Itajaí - Fatiados', '30.573 - Itajaí - CD', '30.733 - Cambé - CD'],
           },
           { nome: 'Sandro Pereira', cargo: 'Assessoria de Suprimentos' },
           {
