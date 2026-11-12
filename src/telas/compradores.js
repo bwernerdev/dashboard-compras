@@ -9,7 +9,7 @@ import { barrasEmpilhadas } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
 import {
-  scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores, OUTROS,
+  scsPorCompradorStatus, prePedidosPorCompradorRegional, OUTROS,
   itensEmAberto, resumoEmAberto,
 } from '../analise.js';
 import { PENDENTE } from '../regras.js';
@@ -98,7 +98,6 @@ export function telaCompradores(ctx) {
 
   const porStatus = scsPorCompradorStatus(regs);
   const pre = prePedidosPorCompradorRegional(regsPre);
-  const part = participacaoCompradores(regs);
   const pendente = porStatus.linhas.find((l) => l.comprador === PENDENTE);
   const aberto = resumoEmAberto(itensEmAberto(regs));
 
@@ -170,26 +169,5 @@ export function telaCompradores(ctx) {
     }).elemento,
   );
 
-  const participacao = bloco(
-    { titulo: 'Participação e SLA por comprador', subtitulo: 'Itens de SC do comprador ÷ itens de SC do período.',
-      ajuda: 'Participação calculada como "% sc’s atendidas" da planilha. O SLA conta itens em aberto.' },
-    criarTabela({
-      titulo: 'Participação e SLA por comprador',
-      linhas: part,
-      pesquisa: false,
-      ordem: { coluna: 'itens', desc: true },
-      nomeArquivo: 'participacao-por-comprador.csv',
-      colunas: [
-        { id: 'comprador', rotulo: 'Comprador', valor: (l) => l.comprador, classe: destacarPendente },
-        { id: 'itens', rotulo: 'Itens', num: true, valor: (l) => l.itens, formato: fmt.inteiro },
-        { id: 'part', rotulo: '% do total', num: true, valor: (l) => l.participacao, formato: fmt.pct },
-        { id: 'abertas', rotulo: 'Em aberto', num: true, valor: (l) => l.abertas, formato: fmt.inteiro },
-        { id: 'noPrazo', rotulo: 'No prazo', num: true, valor: (l) => l.noPrazo, formato: fmt.inteiro },
-        { id: 'fora', rotulo: 'Fora do prazo', num: true, valor: (l) => l.fora, formato: fmt.inteiro },
-        { id: 'pct', rotulo: '% no prazo', num: true, valor: (l) => l.pctNoPrazo, formato: fmt.pct },
-      ],
-    }).elemento,
-  );
-
-  return el('div', { class: 'tela' }, barra, cartoes, prePedidos, grafico, participacao);
+  return el('div', { class: 'tela' }, barra, cartoes, prePedidos, grafico);
 }

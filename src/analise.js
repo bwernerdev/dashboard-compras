@@ -288,33 +288,6 @@ export function prePedidosPorCompradorRegional(registros) {
   return { regionais, linhas, totaisRegional, totalGeral: comPre.length ? new Set(doPainel.map(valor)).size : 0 };
 }
 
-/**
- * Participação de cada comprador nas linhas de SC (tabela dinâmica 2 da aba sc p Compr:
- * contagem de SC, % do total) e SLA dos itens em aberto.
- */
-export function participacaoCompradores(registros) {
-  const total = registros.filter((r) => r.sc !== null).length;
-  const grupos = new Map();
-  for (const r of registros) {
-    const c = nomeOuTraco(r.comprador);
-    if (!grupos.has(c)) grupos.set(c, []);
-    grupos.get(c).push(r);
-  }
-  return [...grupos].map(([comprador, linhas]) => {
-    const itens = linhas.filter((r) => r.sc !== null).length;
-    const aberto = resumoEmAberto(itensEmAberto(linhas));
-    return {
-      comprador,
-      itens,
-      participacao: total ? itens / total : 0,
-      abertas: aberto.scs,
-      noPrazo: aberto.noPrazo,
-      fora: aberto.fora,
-      pctNoPrazo: aberto.pctNoPrazo,
-    };
-  }).sort((a, b) => b.itens - a.itens);
-}
-
 // ---------- Saving ----------
 
 /** % Saving = economia ÷ (total comprado + economia), como na planilha. */

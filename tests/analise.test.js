@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   aplicarFiltros, opcoesDosFiltros, chaveMes, rotuloMes, itensEmAberto, resumoEmAberto, porFaixaDeDias,
-  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorStatus, resumoStatus, resumoDoDia, periodosDePedido, spendPorFilial, resumoSpend, entregasPorStatus, recortarPor, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
+  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorStatus, resumoStatus, resumoDoDia, periodosDePedido, spendPorFilial, resumoSpend, entregasPorStatus, recortarPor, scsPorCompradorStatus, prePedidosPorCompradorRegional,
   pctSaving, resumoSaving, savingPorFilial, savingPorComprador, savingPorMes,
 } from '../src/analise.js';
 import { brutosDe, recalcular, juntarAoHistorico } from '../src/memoria.js';
@@ -165,17 +165,6 @@ test('recortarPeriodo: SCs pela criação, pré-pedidos pela data do pré-pedido
   assert.deepEqual(recortarPeriodo(regs, hoje).map((r) => r.solicitacao), ['S2']);
   assert.deepEqual(recortarPeriodo(regs, hoje, 'dataPrePedido').map((r) => r.solicitacao), ['S1']);
   assert.equal(recortarPeriodo(regs, { de: null, ate: null }, 'dataPrePedido'), regs, 'sem período: tudo, como a planilha');
-});
-
-test('participacaoCompradores: % das linhas de SC e SLA em aberto', () => {
-  const p = participacaoCompradores([
-    reg({ comprador: 'Ana', solicitacao: 'S1', diasEmAberto: 3, sla: 'No Prazo' }),
-    reg({ comprador: 'Ana', solicitacao: 'S2', diasEmAberto: 30, sla: 'Fora do Prazo' }),
-    reg({ comprador: 'Bia', solicitacao: 'S3' }),
-    reg({ comprador: 'Bia', solicitacao: 'S4', sc: null }),
-  ]);
-  assert.deepEqual(p.map((x) => [x.comprador, x.itens, x.participacao, x.abertas, x.noPrazo, x.fora, x.pctNoPrazo]),
-    [['Ana', 2, 2 / 3, 2, 1, 1, 0.5], ['Bia', 1, 1 / 3, 0, 0, 0, null]]);
 });
 
 test('saving: % = economia ÷ (total + economia); por filial, comprador e mês', () => {

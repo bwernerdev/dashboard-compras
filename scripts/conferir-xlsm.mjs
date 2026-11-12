@@ -10,7 +10,7 @@ import { criarConfig } from '../src/config/index.js';
 import { diasUteis, formatarSerie } from '../src/datas.js';
 import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
 import {
-  aplicarFiltros, savingPorFilial, spendPorFilial, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores, OUTROS,
+  aplicarFiltros, savingPorFilial, spendPorFilial, scsPorCompradorStatus, prePedidosPorCompradorRegional, OUTROS,
 } from '../src/analise.js';
 
 const caminho = process.argv[2] ?? 'DASHBOARD COMPRAS 2026.xlsm';
@@ -179,23 +179,6 @@ const abaCompr = await lerAbaInteira(pasta, 'sc p Compr');
   for (const l of calc.linhas.filter((x) => !naPlanilha.has(x.comprador))) {
     falhas++;
     console.log(`DIFERE ${l.comprador.padEnd(16)} só no app (${l.total})`);
-  }
-}
-
-// sc p Compr, tabela 2: "% sc's atendidas" (H8:I9) = contagem de SC (itens) do comprador ÷ total dos
-// compradores visíveis. A planilha foi salva mostrando só a Thayane (100%); o app com o filtro
-// Comprador = Thayane tem de dar o mesmo.
-{
-  const linhas = abaCompr.slice(8, 20).filter((l) => l?.[7] !== undefined && l?.[7] !== null && l?.[7] !== '' && l?.[7] !== 'Total Geral');
-  const visiveis = new Set(linhas.map((l) => String(l[7])));
-  const calc = participacaoCompradores(aplicarFiltros(base.registros, { comprador: visiveis }));
-  console.log(`
-== Tabela dinâmica sc p Compr (% sc's atendidas; compradores visíveis na planilha: ${[...visiveis].join(', ')})`);
-  for (const l of linhas) {
-    const c = calc.find((x) => x.comprador === String(l[7]));
-    const ok = c && Math.abs(c.participacao - l[8]) < 1e-9;
-    if (!ok) falhas++;
-    console.log(`${ok ? 'OK   ' : 'DIFERE'} ${String(l[7]).padEnd(16)} ${(l[8] * 100).toFixed(1)}% x ${c ? (c.participacao * 100).toFixed(1) : '-'}%`);
   }
 }
 
