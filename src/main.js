@@ -14,12 +14,11 @@ import { baixar } from './ui/tabela.js';
 import { caixasDeImportacao } from './telas/importacao.js';
 import { abrirConfiguracao } from './telas/configuracao.js';
 import { TELAS_PUBLICAS, reiniciarTelas } from './telas/publicas.js';
-import { ligarAtendidas, abrirListaEmTelaCheia } from './telas/regional.js';
+import { ligarAtendidas } from './telas/regional.js';
 import { telaCompradores } from './telas/compradores.js';
 import { gerarPainel, NOME_DO_ARQUIVO } from './painel/gerar.js';
 
 ligarAtendidas(); // olho "atendida" na lista de SCs: só no app da equipe, não no painel publicado
-abrirListaEmTelaCheia(); // lista de SCs da Regional abre em tela cheia até a pessoa escolher (só no app)
 
 // Ordem das abas da planilha antiga; SCs por Comprador (interna, não vai para o painel) depois da Regional.
 const TELAS = TELAS_PUBLICAS.flatMap((t) => (t.id === 'regional'

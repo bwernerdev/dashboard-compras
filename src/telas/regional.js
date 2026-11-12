@@ -3,7 +3,6 @@
 import { PRAZO_SLA_DIAS } from '../regras.js';
 import { el, icone } from '../ui/dom.js';
 import { estaAtendida, marcarAtendida } from '../atendidas.js';
-import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
 import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
 import { barras, barraSegmentada } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
@@ -18,15 +17,10 @@ import { listaDeMarcar } from '../ui/filtros.js';
 // Seleções locais da tela (não são filtros globais: só recortam a lista de SCs).
 const local = { faixa: null, status: new Set(), agrupar: 'regional' };
 
-// Lista de SCs em tela cheia (cobre a janela; Esc ou o botão volta). Lembrada neste navegador.
-// No app da equipe a lista abre em tela cheia enquanto a pessoa não escolher (pedido da equipe,
-// 12/11/2026; o painel publicado não). A escolha ("Tela cheia"/"Sair"/Esc) fica lembrada.
-// Chave nova: a antiga guardava "nao" para todo mundo.
-const CHAVE_TELA_CHEIA = 'lista-tela-cheia-2';
-let telaCheia = lerPreferencia(CHAVE_TELA_CHEIA) === 'sim';
-export function abrirListaEmTelaCheia() {
-  if (lerPreferencia(CHAVE_TELA_CHEIA) === null) telaCheia = true;
-}
+// Lista de SCs em tela cheia (cobre a janela; Esc ou o botão volta). Só quando a pessoa clica em
+// "Tela cheia": abrir o app ou importar a base mostra sempre a tela normal (pedido da equipe,
+// 12/11/2026). Vale até sair, recarregar ou importar; não fica salva no navegador.
+let telaCheia = false;
 let sairDaTelaCheia = null;
 document.addEventListener('keydown', (ev) => {
   // Esc fecha antes uma lista de marcar aberta (Status, filtros); só depois sai da tela cheia.
@@ -240,7 +234,6 @@ export function telaRegional(ctx) {
 
   const aplicarTelaCheia = (ligar) => {
     telaCheia = ligar;
-    salvarPreferencia(CHAVE_TELA_CHEIA, ligar ? 'sim' : 'nao');
     blocoLista.classList.toggle('tela-cheia', ligar);
     botaoTelaCheia.textContent = ligar ? 'Sair da tela cheia' : 'Tela cheia';
     botaoTelaCheia.setAttribute('aria-pressed', String(ligar));
@@ -256,6 +249,7 @@ export function telaRegional(ctx) {
 
 /** Zera as seleções locais (ao trocar de bases). */
 export function reiniciarRegional() {
+  telaCheia = false;
   local.faixa = null;
   local.status = new Set();
 }

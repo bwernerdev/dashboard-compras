@@ -5,16 +5,6 @@ import { arquivoBase, arquivoFollowUp, FILIAL_A, FILIAL_B, COMPRADOR } from './a
 
 const valorDoCartao = (page, rotulo) => page.locator('.cartao', { has: page.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
 
-// A lista de SCs da Regional abre em tela cheia na 1ª vez (cobre abas e cartões). Nos demais
-// testes ela começa fora da tela cheia; o teste da tela cheia usa o padrão.
-test.beforeEach(async ({ page }) => {
-  if (test.info().title.startsWith('lista de SCs em tela cheia')) return;
-  await page.addInitScript(() => {
-    const chave = 'dashboard-compras:lista-tela-cheia-2';
-    if (localStorage.getItem(chave) === null) localStorage.setItem(chave, 'nao');
-  });
-});
-
 async function importarBase(page) {
   await page.goto('./');
   await page.locator('input[data-tipo="base"]').setInputFiles(await arquivoBase());
@@ -130,10 +120,12 @@ test('olho e duplo clique recolhem SC atendida numa linha; desfazer e expandir',
   expect((await readFile(await download.path(), 'utf8')).startsWith('﻿Dias da aprovação;')).toBe(true);
 });
 
-test('lista de SCs em tela cheia: abre assim na 1ª vez, Esc (depois da lista de marcar), botão e lembrada', async ({ page }) => {
+test('lista de SCs em tela cheia: só pelo botão, Esc (depois da lista de marcar), não abre sozinha', async ({ page }) => {
   await importarBase(page);
   const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
-  await expect(lista).toHaveClass(/tela-cheia/); // padrão do app da equipe
+  await expect(lista).not.toHaveClass(/tela-cheia/); // importar mostra a tela normal
+  await lista.getByRole('button', { name: 'Tela cheia' }).click();
+  await expect(lista).toHaveClass(/tela-cheia/);
   const caixa = await lista.boundingBox();
   const janela = page.viewportSize();
   expect(Math.round(caixa.width)).toBe(janela.width);
@@ -152,12 +144,10 @@ test('lista de SCs em tela cheia: abre assim na 1ª vez, Esc (depois da lista de
   await page.keyboard.press('Escape');
   await expect(lista).not.toHaveClass(/tela-cheia/);
 
-  await page.reload(); // a escolha fica lembrada neste navegador
-  await expect(lista).not.toHaveClass(/tela-cheia/);
+  // Ligada e recarregada: volta à tela normal (não fica salva).
   await lista.getByRole('button', { name: 'Tela cheia' }).click();
-  await expect(lista).toHaveClass(/tela-cheia/);
   await page.reload();
-  await expect(lista).toHaveClass(/tela-cheia/);
+  await expect(lista).not.toHaveClass(/tela-cheia/);
 });
 
 test('lista de SCs: cabe na largura e oculta colunas (lembrado)', async ({ page }) => {
