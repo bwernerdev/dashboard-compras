@@ -261,10 +261,21 @@ test('filtro global pela lista; Esc fecha', async ({ page }) => {
   await expect(page.locator('[data-filtro="prioridade"] .filtro-painel')).toBeHidden();
 });
 
-test('Compradores e Saving', async ({ page }) => {
+test('SCs por Comprador (com período De/Até) e Saving', async ({ page }) => {
   await importarBase(page);
-  await page.getByRole('tab', { name: 'Compradores' }).click();
+  await page.getByRole('tab', { name: 'SCs por Comprador' }).click();
   await expect(valorDoCartao(page, 'SCs no período')).toHaveText('3');
+
+  // Período pela criação da SC: a SC criada há 100 dias sai; fica salvo; "Limpar período" volta.
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const ha30 = new Date(Date.now() - 30 * 864e5);
+  await page.getByLabel('Período: data inicial (Data Criação solicitação)').fill(iso(ha30));
+  await expect(valorDoCartao(page, 'SCs no período')).toHaveText('2');
+  await page.reload();
+  await expect(valorDoCartao(page, 'SCs no período')).toHaveText('2');
+  await page.getByRole('button', { name: 'Limpar período' }).click();
+  await expect(valorDoCartao(page, 'SCs no período')).toHaveText('3');
+
   await expect(valorDoCartao(page, 'Pré-pedidos')).toHaveText('2'); // PP-1 + vazio (como na planilha)
   const tabela = page.getByRole('table', { name: 'SCs por comprador e status' });
   await expect(tabela.locator('tbody tr', { hasText: COMPRADOR.apelido }).locator('td').last()).toHaveText('3');
@@ -279,7 +290,7 @@ test('Compradores e Saving', async ({ page }) => {
 
 test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', async ({ page }) => {
   await importarBase(page);
-  await expect(page.getByRole('tab')).toHaveText(['Status', 'Entrega', 'Regional', 'Compradores', 'Spend', 'Saving', 'Atendimento', 'Organograma']);
+  await expect(page.getByRole('tab')).toHaveText(['Status', 'Entrega', 'Regional', 'SCs por Comprador', 'Spend', 'Saving', 'Atendimento', 'Organograma']);
   await expect(page.getByRole('tab', { name: 'Regional' })).toHaveAttribute('aria-selected', 'true'); // aba inicial
 
   await page.getByRole('tab', { name: 'Status' }).click();

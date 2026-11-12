@@ -2,7 +2,7 @@
 
 Painel da equipe de Suprimentos que vai substituir o `DASHBOARD COMPRAS 2026.xlsm`.
 
-**Status:** fase 4 concluída. O app lê as duas bases do ME e mostra as telas Status, Entrega, Regional, Compradores, Spend, Saving, Atendimento e Organograma, com filtros, exportação CSV e impressão. O botão "Gerar painel" cria o arquivo para a Intranet. Ver `PROJETO.md`.
+**Status:** fase 4 concluída. O app lê as duas bases do ME e mostra as telas Status, Entrega, Regional, SCs por Comprador, Spend, Saving, Atendimento e Organograma, com filtros, exportação CSV e impressão. O botão "Gerar painel" cria o arquivo para a Intranet. Ver `PROJETO.md`.
 
 ## Como funciona
 1. O favorito do ME baixa a `base.xlsx` e o `Follow-Up.xlsx` (todas as filiais).

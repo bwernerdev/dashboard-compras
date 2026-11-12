@@ -1,5 +1,7 @@
-// Tela Compradores: substitui a aba "sc p Compr".
+// Tela "SCs por Comprador" (id compradores): substitui a aba "sc p Compr".
 // SCs distintas por comprador x status, pré-pedidos por comprador x regional e participação/SLA.
+// Período De/Até (pedido da equipe, 12/11/2026): recorta pela "Data Criação solicitação"; fica
+// salvo neste navegador.
 import { el } from '../ui/dom.js';
 import { cartao, linhaDeCartoes, bloco } from '../ui/cartoes.js';
 import { barrasEmpilhadas } from '../ui/graficos.js';
@@ -11,6 +13,65 @@ import {
 } from '../analise.js';
 import { PENDENTE } from '../regras.js';
 import { corDoStatusNoGrafico } from '../ui/cores-planilha.js';
+import { serie, partesDaSerie, formatarSerie } from '../datas.js';
+import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
+
+// Período em série do Excel (dias inteiros); null = sem limite.
+const CHAVE_PERIODO = 'periodo-compradores';
+const periodo = lerPeriodo();
+function lerPeriodo() {
+  try {
+    const p = JSON.parse(lerPreferencia(CHAVE_PERIODO, '{}')) ?? {};
+    return { de: Number.isFinite(p.de) ? p.de : null, ate: Number.isFinite(p.ate) ? p.ate : null };
+  } catch { return { de: null, ate: null }; }
+}
+const guardarPeriodo = () => salvarPreferencia(CHAVE_PERIODO, JSON.stringify(periodo));
+
+/** Série -> "aaaa-mm-dd" (valor do campo de data) e volta. */
+const paraCampo = (s) => {
+  if (s === null) return '';
+  const { ano, mes, dia } = partesDaSerie(s);
+  return `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+};
+const doCampo = (v) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v ?? '');
+  return m ? serie(Number(m[1]), Number(m[2]), Number(m[3])) : null;
+};
+
+/** Linhas com criação dentro do período (com período, linha sem data de criação sai). */
+export function recortarPeriodo(regs, { de, ate }) {
+  if (de === null && ate === null) return regs;
+  return regs.filter((r) => {
+    if (r.criacao === null || r.criacao === undefined) return false;
+    const d = Math.floor(r.criacao);
+    return (de === null || d >= de) && (ate === null || d <= ate);
+  });
+}
+
+/** Campos De/Até e "Limpar período". Mudou: guarda e redesenha a tela. */
+function barraDePeriodo(ctx) {
+  const datas = ctx.registros.map((r) => r.criacao).filter((v) => Number.isFinite(v)).map(Math.floor);
+  const min = datas.length ? paraCampo(Math.min(...datas)) : null;
+  const max = datas.length ? paraCampo(Math.max(...datas)) : null;
+  const campo = (id, rotulo) => el('label', { class: 'recorte' }, rotulo,
+    el('input', {
+      type: 'date', class: 'campo', value: paraCampo(periodo[id]), min, max,
+      'aria-label': `Período: ${rotulo === 'De' ? 'data inicial' : 'data final'} (Data Criação solicitação)`,
+      onchange: (ev) => { periodo[id] = doCampo(ev.target.value); guardarPeriodo(); ctx.redesenhar(); },
+    }));
+  const ativo = periodo.de !== null || periodo.ate !== null;
+  return el('div', { class: 'recortes', role: 'group', 'aria-label': 'Período' },
+    el('span', { class: 'recorte' }, 'Período (criação da SC):'),
+    campo('de', 'De'),
+    campo('ate', 'Até'),
+    ativo ? el('button', {
+      type: 'button', class: 'botao botao-sec botao-pequeno',
+      onclick: () => { periodo.de = null; periodo.ate = null; guardarPeriodo(); ctx.redesenhar(); },
+    }, 'Limpar período') : null,
+    ativo && periodo.de !== null && periodo.ate !== null && periodo.de > periodo.ate
+      ? el('span', { class: 'recorte', role: 'status' }, '"De" depois de "Até": nenhuma SC no período.') : null);
+}
+const descreverPeriodo = () => [periodo.de !== null ? `de ${formatarSerie(periodo.de)}` : '', periodo.ate !== null ? `até ${formatarSerie(periodo.ate)}` : ''].filter(Boolean).join(' ');
 
 /** Cor fixa por status: a mesma da planilha antiga (ui/cores-planilha.js). */
 export const corDoStatus = (s) => (s === OUTROS ? 'var(--serie-outros)' : corDoStatusNoGrafico(s));
@@ -18,8 +79,12 @@ export const corDoStatus = (s) => (s === OUTROS ? 'var(--serie-outros)' : corDoS
 const destacarPendente = (linha) => (linha.comprador === PENDENTE ? 'linha-destaque' : '');
 
 export function telaCompradores(ctx) {
-  const regs = ctx.registros;
-  if (!regs.length) return el('div', { class: 'estado-vazio' }, 'Nenhuma linha com os filtros atuais.');
+  const barra = barraDePeriodo(ctx);
+  const regs = recortarPeriodo(ctx.registros, periodo);
+  if (!regs.length) {
+    return el('div', { class: 'tela' }, barra, el('div', { class: 'estado-vazio' },
+      descreverPeriodo() ? `Nenhuma SC criada no período (${descreverPeriodo()}) com os filtros atuais.` : 'Nenhuma linha com os filtros atuais.'));
+  }
 
   const porStatus = scsPorCompradorStatus(regs);
   const pre = prePedidosPorCompradorRegional(regs);
@@ -28,7 +93,7 @@ export function telaCompradores(ctx) {
   const aberto = resumoEmAberto(itensEmAberto(regs));
 
   const cartoes = linhaDeCartoes(
-    cartao({ rotulo: 'SCs no período', valor: fmt.inteiro(porStatus.totalGeral), detalhe: `${fmt.inteiro(porStatus.linhas.length)} compradores (inclui "-" e Pendente)` }),
+    cartao({ rotulo: 'SCs no período', valor: fmt.inteiro(porStatus.totalGeral), detalhe: `${descreverPeriodo() ? `Criadas ${descreverPeriodo()}. ` : ''}${fmt.inteiro(porStatus.linhas.length)} compradores (inclui "-" e Pendente)` }),
     cartao({
       rotulo: 'SCs sem comprador (Pendente)', valor: fmt.inteiro(pendente?.total ?? 0), tom: pendente?.total ? 'alerta' : null,
       detalhe: 'Itens sem "Selecionado por" no ME',
@@ -102,5 +167,5 @@ export function telaCompradores(ctx) {
     }).elemento,
   );
 
-  return el('div', { class: 'tela' }, cartoes, grafico, el('div', { class: 'grade-2' }, prePedidos, participacao));
+  return el('div', { class: 'tela' }, barra, cartoes, grafico, el('div', { class: 'grade-2' }, prePedidos, participacao));
 }

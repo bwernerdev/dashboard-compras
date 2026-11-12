@@ -21,9 +21,9 @@ import { gerarPainel, NOME_DO_ARQUIVO } from './painel/gerar.js';
 ligarAtendidas(); // olho "atendida" na lista de SCs: só no app da equipe, não no painel publicado
 abrirListaEmTelaCheia(); // lista de SCs da Regional abre em tela cheia até a pessoa escolher (só no app)
 
-// Ordem das abas da planilha antiga; Compradores (interna, não vai para o painel) depois da Regional.
+// Ordem das abas da planilha antiga; SCs por Comprador (interna, não vai para o painel) depois da Regional.
 const TELAS = TELAS_PUBLICAS.flatMap((t) => (t.id === 'regional'
-  ? [t, { id: 'compradores', rotulo: 'Compradores', desenhar: telaCompradores }]
+  ? [t, { id: 'compradores', rotulo: 'SCs por Comprador', desenhar: telaCompradores }]
   : [t]));
 
 const configSalva = lerConfig();
@@ -178,7 +178,7 @@ async function gerarEBaixarPainel() {
           el('li', {}, 'Abra a pasta do painel no OneDrive/SharePoint.'),
           el('li', {}, `Envie o arquivo e escolha "Substituir" (mesmo nome, ${NOME_DO_ARQUIVO}).`),
           el('li', {}, 'O link da Intranet continua o mesmo; quem abrir vê os números novos.')),
-        el('p', { class: 'texto-fraco' }, 'O painel não leva a tela Compradores, a configuração nem pré-pedidos.'),
+        el('p', { class: 'texto-fraco' }, 'O painel não leva a tela SCs por Comprador, a configuração nem pré-pedidos.'),
       ],
     });
   } catch (erro) {
