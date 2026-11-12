@@ -78,7 +78,7 @@ Chave do item: `Requisição ME` + `Item`. `SC` = 7 caracteres a partir da posi�
 | Filial ajustada | `Código da filial` (sem ponto) → de-para `Base Analitico` → filial ajustada → nome e regional |
 | Comprador | `Selecionado por` sem o prefixo `"FDS - "`; vazio = `Pendente`; nome completo → apelido pelo de-para |
 | Data de referência | Data do pedido, se houver; senão data de criação da SC |
-| Dias em aberto (úteis) | Só SC sem pedido e não cancelada: dias úteis (seg–sex) da criação até hoje, contando os dois extremos |
+| Dias em aberto (úteis) | Só SC sem pedido e não cancelada: dias úteis (seg–sex) da criação até hoje, contando os dois extremos. Mantido como na planilha (equipe, 12/11/2026): SC criada na segunda já tem 4 dias na quinta, então emergencial (máx. 3) fica Fora do Prazo |
 | Horas em aberto | Dias em aberto × 8,8 |
 | Dias da aprovação | Dias corridos da criação até hoje |
 | Serviço | `Unidade` ∈ {UR, SER, SERV} |
