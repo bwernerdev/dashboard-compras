@@ -40,8 +40,8 @@ const COLUNAS_SCS = [
   // Regularização: linha toda em vermelho (classeLinha); o texto escondido diz o mesmo ao leitor de tela.
   // semDuploClique: a equipe dá dois cliques no número para copiar; ali não oculta a SC.
   { id: 'sc', rotulo: 'SC', semDuploClique: true, valor: (r) => r.sc, exibir: (r) => (ehRegularizacao(r) ? [r.sc, el('span', { class: 'so-leitor' }, ' (regularização)')] : r.sc) },
-  // Data = "Data Criação solicitação" (coluna C do Relatório), pedido da equipe (12/11/2026).
-  { id: 'data', rotulo: 'Data', tipo: 'data', valor: (r) => r.criacao, titulo: 'Data Criação solicitação (base do ME)' },
+  // "Data Aprovação" = "Data Criação solicitação" (coluna C do Relatório), pedido da equipe (12/11/2026).
+  { id: 'data', rotulo: 'Data Aprovação', tipo: 'data', valor: (r) => r.criacao, titulo: 'Data Criação solicitação (base do ME)' },
   { id: 'prioridade', rotulo: 'Prioridade', valor: (r) => r.prioridade, exibir: (r) => marcaDaPrioridade(r.prioridade) },
   { id: 'status', rotulo: 'Status', valor: (r) => r.status, exibir: (r) => seloDoStatus(r.status) },
   { id: 'descricao', rotulo: 'Produto', valor: (r) => r.descricao, classe: () => 'texto-longo' },
