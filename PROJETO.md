@@ -350,6 +350,7 @@ Pedido da equipe: tudo o que as abas visíveis da planilha mostram precisa estar
 
 - **Tabelas na altura da janela:** a área rolável vai até o fim da janela (desconta a faixa de filtros fixa, medida em `ui/casca.js`) e encolhe com poucas linhas. Corrigido o espaço vazio embaixo das páginas com lista de SCs: textos só para leitor de tela (`.so-leitor`) escapavam da área rolável e esticavam a página.
 - **Organograma em árvore**, como na planilha: líderes em cadeia, equipe embaixo com as filiais; fotos de Bruno e Vitor recortadas dentro do círculo.
+- **Fontes padronizadas:** uma família (Segoe UI); todos os tamanhos na escala de tokens (setas de 9/10 px, iniciais do organograma e texto de impressão estavam fora); peso 650 virou 700 (a Segoe UI desenhava 700 de qualquer jeito); título do topo subiu para 20 px, acima dos títulos de bloco (16 px).
 - **Listas de marcar como o filtro do Excel** (filtros globais e recortes de status): sem filtro, "Todos" e todas as opções aparecem marcados; desmarcar uma opção tira só ela; desmarcar "Todos" limpa a lista para marcar só o que interessa; marcar "Todos" volta a todas. Antes "Todos" era um botão que só limpava a seleção e ficava desativado sem filtro (parecia não funcionar).
 
 ### Bases de 11/11/2026

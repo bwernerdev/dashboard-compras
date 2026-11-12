@@ -6,7 +6,7 @@
   html[data-theme="dark"] { color-scheme: light; }
   .topo-acoes, .abas, .faixa-filtros, .pular, .tabela-barra .campo, .tabela-barra .botao,
   .paginacao, .recortes, .alternador, .dica, .aviso, .col-controle, dialog { display: none !important; }
-  .so-impressao { display: block; padding: 0 0 6px; font-size: 11px; color: #333; }
+  .so-impressao { display: block; padding: 0 0 6px; font-size: var(--fs-2xs); color: #333; }
   .topo { padding: 0 0 6px; border: 0; }
   .pagina { padding: 0; max-width: none; }
   .bloco, .cartao { box-shadow: none; break-inside: avoid; }

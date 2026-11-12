@@ -46,7 +46,7 @@ input[type="search"].campo { min-width: 220px; }
 }
 .cartao-rotulo { color: var(--text-muted); font-size: var(--fs-xs); font-weight: 600; }
 .cartao-valor {
-  margin-top: 2px; font-size: var(--fs-2xl); font-weight: 650; line-height: 1.2;
+  margin-top: 2px; font-size: var(--fs-2xl); font-weight: 700; line-height: 1.2;
   color: var(--text-strong); font-variant-numeric: tabular-nums;
 }
 .cartao-detalhe { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-xs); }
@@ -82,7 +82,7 @@ input[type="search"].campo { min-width: 220px; }
   grid-column: 1 / -1; grid-row: 2; min-height: 0; max-height: none; overscroll-behavior: contain;
   border-width: 1px 0 0; border-radius: 0;
 }
-.bloco-cabecalho h2 { font-size: var(--fs-lg); font-weight: 650; color: var(--text-strong); }
+.bloco-cabecalho h2 { font-size: var(--fs-lg); font-weight: 700; color: var(--text-strong); }
 .bloco-subtitulo { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-sm); }
 .bloco > * + .tabela-bloco { margin-top: var(--s4); }
 
@@ -105,7 +105,7 @@ input[type="search"].campo { min-width: 220px; }
   background: var(--surface); color: var(--text); font-size: var(--fs-sm);
 }
 .filtro-botao:hover { background: var(--surface-hover); }
-.filtro-botao::after { content: "▾"; color: var(--text-muted); font-size: 10px; }
+.filtro-botao::after { content: "▾"; color: var(--text-muted); font-size: var(--fs-2xs); }
 .filtro-nome { color: var(--text-muted); }
 .filtro-valor { font-weight: 600; max-width: 18ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .filtro-botao.ativo { border-color: var(--accent); background: var(--surface-selected); }
@@ -245,7 +245,7 @@ body:has(.th-alca.arrastando) { cursor: col-resize; user-select: none; }
 .prio-urgente { background: var(--pl-urgente); }
 .prio-emergencial { background: var(--pl-emergencial); }
 .centro .th-botao { justify-content: center; }
-.th-seta { font-size: 9px; color: var(--accent-text); }
+.th-seta { font-size: var(--fs-2xs); color: var(--accent-text); }
 .tabela-vazia { text-align: center !important; color: var(--text-muted); padding: var(--s5) !important; }
 /* Texto longo encolhe com a janela (reticências; texto inteiro no title da célula). */
 .texto-longo { max-width: clamp(140px, 13vw, 420px); overflow: hidden; text-overflow: ellipsis; }
@@ -309,7 +309,7 @@ body:has(.th-alca.arrastando) { cursor: col-resize; user-select: none; }
 .arquivo:hover, .arquivo.arrastando { border-color: var(--accent); background: var(--surface-selected); }
 .arquivo:focus-within { outline: 2px solid var(--ring); outline-offset: 2px; }
 .arquivo input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.arquivo-titulo { font-weight: 650; font-size: var(--fs-lg); color: var(--text-strong); }
+.arquivo-titulo { font-weight: 700; font-size: var(--fs-lg); color: var(--text-strong); }
 .arquivo-dica { color: var(--text-muted); font-size: var(--fs-xs); }
 .arquivo-status { margin-top: var(--s1); font-size: var(--fs-sm); }
 .arquivo[data-estado="ok"] .arquivo-status { color: var(--success-fg); }
@@ -346,15 +346,15 @@ body:has(.th-alca.arrastando) { cursor: col-resize; user-select: none; }
 }
 .org-avatar {
   width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; margin-bottom: var(--s2);
-  background: var(--button-bg); color: var(--text-strong); font-weight: 700; font-size: 1.1rem;
+  background: var(--button-bg); color: var(--text-strong); font-weight: 700; font-size: var(--fs-xl);
 }
 .org-foto { object-fit: cover; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--line-strong); }
 .org-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .org-no-lider { flex-direction: row; width: 280px; text-align: left; gap: var(--s3); padding: var(--s2) var(--s3); }
-.org-no-lider .org-avatar { width: 48px; height: 48px; margin: 0; flex: none; font-size: .95rem; }
+.org-no-lider .org-avatar { width: 48px; height: 48px; margin: 0; flex: none; font-size: var(--fs-lg); }
 .org-nome { color: var(--text-strong); }
 .org-cargo { color: var(--text-muted); font-size: var(--fs-sm); }
 .org-filiais {
   list-style: none; margin: var(--s2) 0 0; padding: var(--s2) 0 0; border-top: 1px solid var(--line);
-  width: 100%; text-align: left; font-size: var(--fs-xs, .78rem); color: var(--text); display: flex; flex-direction: column; gap: 2px;
+  width: 100%; text-align: left; font-size: var(--fs-xs); color: var(--text); display: flex; flex-direction: column; gap: 2px;
 }
