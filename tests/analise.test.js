@@ -89,8 +89,16 @@ test('resumoEmAberto: SCs distintas, SLA, média e máximo', () => {
   assert.equal(abertos.length, 4);
   const r = resumoEmAberto(abertos);
   assert.deepEqual({ ...r }, {
-    scs: 3, itens: 4, noPrazo: 2, fora: 1, semPrazo: 1, pctNoPrazo: 2 / 3, mediaDias: 8, maxDias: 20,
+    scs: 3, scsNoPrazo: 1, scsFora: 1, scsSemPrazo: 1, pctScsNoPrazo: 1 / 2,
+    itens: 4, noPrazo: 2, fora: 1, semPrazo: 1, pctNoPrazo: 2 / 3, mediaDias: 8, maxDias: 20,
   });
+  // SC com itens no prazo, fora e sem prazo conta uma vez, como fora.
+  const mista = resumoEmAberto([
+    reg({ solicitacao: 'S9', diasEmAberto: 31, sla: 'No Prazo' }),
+    reg({ solicitacao: 'S9', diasEmAberto: 31, sla: 'Fora do Prazo' }),
+    reg({ solicitacao: 'S9', diasEmAberto: 31, sla: null }),
+  ]);
+  assert.deepEqual([mista.scsNoPrazo, mista.scsFora, mista.scsSemPrazo, mista.fora], [0, 1, 0, 1]);
   assert.deepEqual(porFaixaDeDias(abertos).map((f) => [f.id, f.scs, f.itens]),
     [['ate5', 1, 2], ['6a10', 1, 1], ['11a15', 0, 0], ['16a30', 1, 1], ['mais30', 0, 0]]);
   const vazio = resumoEmAberto([]);

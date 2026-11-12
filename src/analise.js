@@ -67,13 +67,28 @@ export const faixaDe = (dias) => FAIXAS_DIAS.find((f) => dias <= f.ate).id;
 
 const distintas = (linhas) => new Set(linhas.map((r) => r.solicitacao)).size;
 
-/** Cartões da tela Regional. */
+/** Cartões das telas Regional, Atendimento e SCs por Comprador (contagens por item e por SC). */
 export function resumoEmAberto(abertos) {
   const noPrazo = abertos.filter((r) => r.sla === 'No Prazo').length;
   const fora = abertos.filter((r) => r.sla === 'Fora do Prazo').length;
   const dias = abertos.map((r) => r.diasEmAberto);
+  // Por SC (Atendimento): fora = algum item fora; no prazo = algum no prazo e nenhum fora; o resto, sem prazo.
+  const slaDaSc = new Map();
+  for (const r of abertos) {
+    const atual = slaDaSc.get(r.solicitacao);
+    if (r.sla === 'Fora do Prazo' || atual === 'Fora do Prazo') slaDaSc.set(r.solicitacao, 'Fora do Prazo');
+    else if (r.sla === 'No Prazo' || atual === 'No Prazo') slaDaSc.set(r.solicitacao, 'No Prazo');
+    else slaDaSc.set(r.solicitacao, null);
+  }
+  const scsCom = (sla) => [...slaDaSc.values()].filter((v) => v === sla).length;
+  const scsNoPrazo = scsCom('No Prazo');
+  const scsFora = scsCom('Fora do Prazo');
   return {
     scs: distintas(abertos),
+    scsNoPrazo,
+    scsFora,
+    scsSemPrazo: slaDaSc.size - scsNoPrazo - scsFora,
+    pctScsNoPrazo: scsNoPrazo + scsFora ? scsNoPrazo / (scsNoPrazo + scsFora) : null,
     itens: abertos.length,
     noPrazo,
     fora,

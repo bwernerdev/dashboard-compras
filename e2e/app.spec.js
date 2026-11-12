@@ -306,7 +306,9 @@ test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', asyn
   const atendimento = page.locator('.bloco', { hasText: 'Itens agrupados por SC, da mais antiga' });
   await expect(atendimento.locator('.tabela-contagem')).toHaveText('2 SCs, 3 itens');
   await expect(atendimento.locator('tbody tr.grupo-inicio')).toHaveCount(2);
-  await expect(valorDoCartao(page, 'Fora do prazo')).toHaveText('2');
+  // Cartões de SLA contam SCs: os 2 itens fora são da mesma SC.
+  await expect(valorDoCartao(page, 'SCs fora do prazo')).toHaveText('1');
+  await expect(valorDoCartao(page, 'SCs no prazo')).toHaveText('1');
   await page.getByRole('button', { name: 'No prazo', exact: true }).click();
   await expect(page.getByRole('table', { name: 'Itens em aberto' }).locator('tbody tr')).toHaveCount(1);
 

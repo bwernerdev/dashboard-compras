@@ -43,10 +43,11 @@ export function telaAtendimento(ctx) {
 
   const cartoes = linhaDeCartoes(
     cartao({ rotulo: 'Itens em aberto', valor: fmt.inteiro(resumo.itens), detalhe: `${fmt.inteiro(resumo.scs)} SCs` }),
-    cartao({ rotulo: 'No prazo', valor: fmt.inteiro(resumo.noPrazo), detalhe: `${fmt.pct(resumo.pctNoPrazo)} dos itens com prazo` }),
+    // No prazo e fora do prazo contam SCs (pedido da equipe, 12/11/2026): SC fora = algum item fora.
+    cartao({ rotulo: 'SCs no prazo', valor: fmt.inteiro(resumo.scsNoPrazo), detalhe: `${fmt.pct(resumo.pctScsNoPrazo)} das SCs com prazo` }),
     cartao({
-      rotulo: 'Fora do prazo', valor: fmt.inteiro(resumo.fora), tom: resumo.fora ? 'critico' : null,
-      detalhe: resumo.semPrazo ? `${fmt.inteiro(resumo.semPrazo)} sem prazo definido` : `Mais de ${PRAZO_SLA_DIAS} dias úteis em aberto`,
+      rotulo: 'SCs fora do prazo', valor: fmt.inteiro(resumo.scsFora), tom: resumo.scsFora ? 'critico' : null,
+      detalhe: resumo.scsSemPrazo ? `${fmt.inteiro(resumo.scsSemPrazo)} SCs sem prazo definido` : `Algum item com mais de ${PRAZO_SLA_DIAS} dias úteis em aberto`,
     }),
     cartao({ rotulo: 'Mais antigo', valor: `${fmt.inteiro(resumo.maxDias)} dias`, detalhe: `Média: ${fmt.decimal(resumo.mediaDias)} dias úteis` }),
   );
