@@ -87,6 +87,8 @@ export function definirExportacao({ csv }) { exportacao.csv = csv; }
 /**
  * colunas: [{ id, rotulo, valor(linha), formato?(valor), tipo?: 'data', num?: bool, centro?: bool,
  *            exibir?(linha) -> Node|texto, classe?(linha) -> string, titulo?,
+ *            semDuploClique?: bool (dois cliques nessa coluna não disparam aoDuploClique: servem para
+ *            selecionar o texto e copiar),
  *            controle?: bool (coluna de botão: sem ordenar, fora do CSV, do "Copiar" e da pesquisa;
  *            o rótulo só para leitor de tela) }]
  * opções: titulo (legenda acessível), ordem { coluna, desc }, porPagina, pesquisa, nomeArquivo,
@@ -197,6 +199,7 @@ export function criarTabela(opcoes) {
     const oculta = ocultaNoGrupo(c, l, primeira);
     return el('td', {
       class: [classeColuna(c) ?? '', oculta ? '' : (c.classe?.(l) ?? '')].join(' ').trim() || null,
+      'data-sem-duplo-clique': c.semDuploClique || null,
     }, oculta ? '' : (c.exibir ? c.exibir(l) : (textoDaCelula(c, l) || '-')));
   }
 
@@ -212,7 +215,7 @@ export function criarTabela(opcoes) {
     substituir(corpo, pagina.length ? pagina.flatMap((g) => g.map((l, i) => el('tr', {
       class: [aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '', grupo && i < g.length - 1 ? 'grupo-continua' : '', classeLinha?.(l) ?? ''].join(' ').trim() || null,
       onclick: aoClicarLinha ? () => aoClicarLinha(l) : null,
-      ondblclick: aoDuploClique ? (e) => { if (!e.target.closest('button, a, input')) aoDuploClique(l); } : null,
+      ondblclick: aoDuploClique ? (e) => { if (!e.target.closest('button, a, input, [data-sem-duplo-clique]')) aoDuploClique(l); } : null,
     }, colunas.map((c) => td(c, l, g[0]))))) : el('tr', {}, el('td', { colspan: colunas.length, class: 'tabela-vazia' }, typeof vazio === 'function' ? vazio() : vazio)));
 
     if (rodape && linhas.length) {

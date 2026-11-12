@@ -87,7 +87,12 @@ test('olho e duplo clique ocultam SC atendida; mostrar e desfazer', async ({ pag
   await expect(contagem).toHaveText('2 SCs, 3 itens');
 
   // Duplo clique em qualquer linha do item também oculta.
-  await lista.locator('tbody tr', { hasText: '1000001' }).dblclick();
+  // Dois cliques no número da SC só selecionam (para copiar): a SC fica.
+  const linhaSc = lista.locator('tbody tr', { hasText: '1000001' });
+  await linhaSc.locator('td').nth(2).dblclick();
+  await expect(contagem).toHaveText('2 SCs, 3 itens');
+  await expect(page.evaluate(() => getSelection().toString())).resolves.toContain('1000001');
+  await linhaSc.locator('td').nth(6).dblclick();
   await expect(contagem).toHaveText('1 SC, 2 itens');
 
   // Fica salvo no navegador.

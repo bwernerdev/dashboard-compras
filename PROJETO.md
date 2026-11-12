@@ -292,7 +292,7 @@ Pedido da equipe: SC com "Categoria solicitação" = **REGULARIZAÇÃO** (compra
 - `analise.ehRegularizacao` (sem maiúsculas nem acento). Também no painel publicado: dados versão 3 com o campo `categoria`.
 
 ### SCs atendidas: olho e duplo clique (11/11/2026)
-Pedido da equipe: tirar da lista de SCs em aberto as SCs que o comprador já atendeu (a SC continua sem pedido no ME até a próxima base). Na lista da Regional, cada SC tem um **olho** à esquerda, fora da grade; clicar no olho ou dar **dois cliques** em qualquer linha da SC a oculta (a SC inteira, todos os itens). Aviso com **Desfazer** logo acima da lista. **"Mostrar atendidas (N)"** traz as ocultas de volta, apagadas, com o olho riscado para voltar a SC à lista.
+Pedido da equipe: tirar da lista de SCs em aberto as SCs que o comprador já atendeu (a SC continua sem pedido no ME até a próxima base). Na lista da Regional, cada SC tem um **olho** à esquerda, fora da grade; clicar no olho ou dar **dois cliques** em qualquer linha da SC a oculta (menos na coluna SC: ali dois cliques selecionam o número para copiar, pedido da equipe em 12/11/2026) (a SC inteira, todos os itens). Aviso com **Desfazer** logo acima da lista. **"Mostrar atendidas (N)"** traz as ocultas de volta, apagadas, com o olho riscado para voltar a SC à lista.
 - Só muda a lista: cartões, gráficos e tabelas por regional continuam contando a SC (ela ainda está em aberto no ME).
 - Fica salvo **neste navegador** (`localStorage`, `src/atendidas.js`), por número de Solicitação; cada marca vence em 120 dias. Não vai para outros computadores nem para o painel.
 - Só no app da equipe (`ligarAtendidas()` no `main.js`); o painel publicado mostra a lista inteira, sem olho.

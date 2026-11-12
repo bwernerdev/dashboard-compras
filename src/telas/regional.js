@@ -33,7 +33,8 @@ const SLA_OPCOES = [
 const COLUNAS_SCS = [
   { id: 'aprov', rotulo: 'Dias da aprovação', num: true, centro: true, valor: (r) => r.diasDaAprovacao, formato: fmt.inteiro, titulo: 'Dias corridos desde a criação' },
   // Regularização: linha toda em vermelho (classeLinha); o texto escondido diz o mesmo ao leitor de tela.
-  { id: 'sc', rotulo: 'SC', valor: (r) => r.sc, exibir: (r) => (ehRegularizacao(r) ? [r.sc, el('span', { class: 'so-leitor' }, ' (regularização)')] : r.sc) },
+  // semDuploClique: a equipe dá dois cliques no número para copiar; ali não oculta a SC.
+  { id: 'sc', rotulo: 'SC', semDuploClique: true, valor: (r) => r.sc, exibir: (r) => (ehRegularizacao(r) ? [r.sc, el('span', { class: 'so-leitor' }, ' (regularização)')] : r.sc) },
   { id: 'data', rotulo: 'Data', tipo: 'data', valor: (r) => r.data },
   { id: 'prioridade', rotulo: 'Prioridade', valor: (r) => r.prioridade, exibir: (r) => marcaDaPrioridade(r.prioridade) },
   { id: 'status', rotulo: 'Status', valor: (r) => r.status, exibir: (r) => seloDoStatus(r.status) },
@@ -243,7 +244,7 @@ export function telaRegional(ctx) {
     {
       titulo: 'SCs em aberto',
       subtitulo: atendidasLigadas
-        ? 'Itens agrupados por SC, da mais antiga para a mais nova. Já atendeu? Clique no olho ou dê dois cliques na linha para tirar a SC da lista (fica salvo neste navegador). CSV e "Copiar tabela" trazem um item por linha.'
+        ? 'Itens agrupados por SC, da mais antiga para a mais nova. Já atendeu? Clique no olho ou dê dois cliques na linha (fora do número da SC) para tirar a SC da lista (fica salvo neste navegador). CSV e "Copiar tabela" trazem um item por linha.'
         : 'Itens agrupados por SC, da mais antiga para a mais nova. CSV e "Copiar tabela" trazem um item por linha.',
     },
     recortes,
