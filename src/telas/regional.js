@@ -14,9 +14,20 @@ import {
   recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao,
 } from '../analise.js';
 import { listaDeMarcar } from '../ui/filtros.js';
+import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
 
 // Seleções locais da tela (não são filtros globais: só recortam a lista de SCs).
-const local = { faixa: null, status: new Set(), agrupar: 'regional' };
+// O recorte de Status fica salvo neste navegador (pedido da equipe, 12/11/2026), inclusive ao
+// importar outra base; faixa e agrupar não.
+const CHAVE_STATUS = 'regional-status';
+const local = { faixa: null, status: lerStatus(), agrupar: 'regional' };
+function lerStatus() {
+  try {
+    const v = JSON.parse(lerPreferencia(CHAVE_STATUS, '[]'));
+    return new Set(Array.isArray(v) ? v.filter((s) => typeof s === 'string') : []);
+  } catch { return new Set(); }
+}
+const guardarStatus = () => salvarPreferencia(CHAVE_STATUS, JSON.stringify([...local.status]));
 
 // Lista de SCs em tela cheia (cobre a janela; Esc ou o botão volta). Só quando a pessoa clica em
 // "Tela cheia": abrir o app ou importar a base mostra sempre a tela normal (pedido da equipe,
@@ -159,7 +170,7 @@ export function telaRegional(ctx) {
   const soPendencias = () => local.status.size === statusPendencia.length && statusPendencia.every((s) => local.status.has(s));
   const atalho = el('button', {
     type: 'button', class: 'botao botao-sec botao-pequeno',
-    onclick: () => { local.status = new Set(statusPendencia); ctx.redesenhar(); },
+    onclick: () => { local.status = new Set(statusPendencia); guardarStatus(); ctx.redesenhar(); },
   }, 'Só pendências');
   atalho.hidden = !statusPendencia.length || soPendencias();
 
@@ -172,7 +183,7 @@ export function telaRegional(ctx) {
     rotuloValor: (s) => `${s} (${fmt.inteiro(itensDoStatus.get(s) ?? 0)})`,
     resumoValor: (s) => s,
     selecionados: local.status,
-    aoMudar: () => { tabela.atualizar(recortar()); atalho.hidden = !statusPendencia.length || soPendencias(); },
+    aoMudar: () => { guardarStatus(); tabela.atualizar(recortar()); atalho.hidden = !statusPendencia.length || soPendencias(); },
   });
 
   // Atendidas: o olho (ou duplo clique na linha) recolhe a SC numa linha só (Dias da aprovação
@@ -259,9 +270,8 @@ export function telaRegional(ctx) {
   return el('div', { class: 'tela' }, cartoes, el('div', { class: 'grade-2 grade-2-3' }, graficoFaixas, blocoGrupos), blocoLista);
 }
 
-/** Zera as seleções locais (ao trocar de bases). */
+/** Zera as seleções locais ao trocar de bases (o recorte de Status fica: é salvo no navegador). */
 export function reiniciarRegional() {
   telaCheia = false;
   local.faixa = null;
-  local.status = new Set();
 }

@@ -96,6 +96,10 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   await lista.getByRole('button', { name: 'Só pendências' }).click();
   await expect(lista.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
   await expect(lista.locator('[data-filtro="status"] .filtro-valor')).toHaveText('Em pendências de compra');
+  // O recorte de Status fica salvo neste navegador.
+  await page.reload();
+  await expect(lista.locator('[data-filtro="status"] .filtro-valor')).toHaveText('Em pendências de compra');
+  await expect(lista.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
 
   // Status: marcar as duas = Todos; a lista de marcar continua aberta.
   await lista.locator('[data-filtro="status"] .filtro-botao').click();

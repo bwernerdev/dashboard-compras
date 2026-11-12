@@ -369,6 +369,8 @@ Pedido da equipe: tudo o que as abas visíveis da planilha mostram precisa estar
     - **Comparação de períodos** em Spend e Saving: mês (ou trimestre) atual até o dia de hoje contra o mesmo trecho do anterior, pela data do pedido. Ignora o filtro "Mês do pedido". Painel `VERSAO` 7 (leva `dataPedido`).
     - **Densidade:** botão "Compacta" nas tabelas tira respiro das linhas (todas as tabelas; lembrado no navegador).
     - Colunas fixas ao rolar para o lado: testadas e retiradas (a equipe não gostou).
+    - Clicar na coluna SC não abre o detalhe (serve para selecionar e copiar, como no duplo clique).
+  - Recorte de Status da lista "SCs em aberto" (Regional) salvo no navegador: volta ao abrir o app e continua ao importar outra base.
 - **Lista de SCs da Regional (pedido da equipe):** 200 SCs por página (eram 50); as colunas cabem na largura da janela (as de texto e as alargadas encolhem com reticências, sem rolar para o lado); botão "Colunas" oculta colunas (lembrado no navegador; CSV e "Copiar tabela" seguem com todas); tela cheia só pelo botão: abrir o app ou importar mostra sempre a tela normal (pedido da equipe; antes abria sozinha e ficava lembrada).
 - **Filtros lembrados no navegador:** a seleção dos filtros globais volta na próxima vez que abrir o app (e o painel, onde o navegador deixar guardar). "Limpar filtros" limpa também o que ficou salvo.
 - **SLA com prazo único (pedido da equipe):** fora do prazo só com mais de 30 dias úteis em aberto, qualquer prioridade. Saiu a tabela de SLA da Configuração e a coluna "Prazo máx." do Atendimento; painel `VERSAO` 5 (sem `slaMax`). Bases de 11/11/2026: itens fora do prazo de 149 para 43.
