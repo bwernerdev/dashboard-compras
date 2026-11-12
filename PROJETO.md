@@ -284,6 +284,13 @@ Status do acompanhamento diário. No ME esses itens **nunca** têm "Selecionado 
 ### Lista de SCs em aberto agrupada por SC (11/11/2026)
 Pedido da equipe: igual à tabela dinâmica da aba Regional, cada SC aparece uma vez (Dias da aprovação, SC, Data, Prioridade na 1ª linha) com os itens embaixo (Status, Produto, Código, Qtd., Solicitante, Filial, Nome da filial, Comprador, Regional). A equipe pediu para tirar as colunas Dias em aberto, SLA, Prazo máx. e Item; os recortes de SLA e de faixa de dias continuam. Ordem: Dias da aprovação, do maior para o menor. Dias da aprovação e Qtd. centralizados. O painel publicado deixou de levar `item` e `slaMax` (dados versão 2). Contagem "397 SCs, 622 itens"; paginação por SC. CSV e "Copiar tabela" continuam com um item por linha, tudo preenchido (melhor para filtrar no Excel). Conferido com a SC 7715098: 3 itens, como na planilha.
 
+### SCs de regularização em vermelho (12/11/2026)
+Pedido da equipe: SC com "Categoria solicitação" = **REGULARIZAÇÃO** (compra já feita, SC aberta depois) fica com a **linha toda em vermelho** na lista de SCs em aberto da Regional. A planilha antiga não tinha essa cor: regra nova.
+- Categoria vale para a SC inteira (nenhuma SC mistura categorias na base de 11/11/2026): todos os itens ficam vermelhos. Base de 11/11/2026: 51 SCs em aberto (57 itens) de 397.
+- Cor: vermelho claro com texto vermelho escuro (estilo do Excel: fundo `#ffc7ce`, texto `#9c0006`); tema escuro `#4a1d22` / `#ffb3b8`. Tokens `--linha-reg-*`. A coluna do olho fica sem cor (fora da grade).
+- Cor nunca sozinha: legenda acima da lista ("Linha vermelha: SC de regularização (N SCs em aberto)") e "(regularização)" para leitor de tela na célula da SC.
+- `analise.ehRegularizacao` (sem maiúsculas nem acento). Também no painel publicado: dados versão 3 com o campo `categoria`.
+
 ### SCs atendidas: olho e duplo clique (11/11/2026)
 Pedido da equipe: tirar da lista de SCs em aberto as SCs que o comprador já atendeu (a SC continua sem pedido no ME até a próxima base). Na lista da Regional, cada SC tem um **olho** à esquerda, fora da grade; clicar no olho ou dar **dois cliques** em qualquer linha da SC a oculta (a SC inteira, todos os itens). Aviso com **Desfazer** logo acima da lista. **"Mostrar atendidas (N)"** traz as ocultas de volta, apagadas, com o olho riscado para voltar a SC à lista.
 - Só muda a lista: cartões, gráficos e tabelas por regional continuam contando a SC (ela ainda está em aberto no ME).

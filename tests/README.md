@@ -8,7 +8,7 @@
 | `regras.test.js` | Cada regra de `src/regras.js`: filial, comprador, dias em aberto, SLA (inclusive `#N/D` e texto > número), Saving Real em texto pt-BR, tempos por etapa, Follow-Up |
 | `leitor.test.js` | Leitor de xlsx: tipos de célula, XML picado em pedaços, filtro de colunas, xlsx completo, mensagens de erro |
 | `importar.test.js` | Importação ponta a ponta com xlsx fictício: filtro de filial, conversão de tipos, Dados Gerais, coluna faltando, cancelamento |
-| `analise.test.js` | Agregações e filtros das telas (`src/analise.js`), memória (`brutosDe`, `recalcular`), `validarConfig` e CSV |
+| `analise.test.js` | Agregações e filtros das telas (`src/analise.js`, inclusive `ehPendencia` e `ehRegularizacao`), memória (`brutosDe`, `recalcular`), `validarConfig` e CSV |
 | `painel.test.js` | Dados do painel publicado (`src/painel/dados.js`): só campos públicos, detalhe só de SC em aberto, versão, compactar/descompactar; texto do "Copiar tabela" (`gerarTsv`) |
 | `atendidas.test.js` | SCs atendidas (`src/atendidas.js`): marcar, desmarcar, guardar, vencer em 120 dias, armazenamento estragado (localStorage de mentira) |
 | `cores-planilha.test.js` | Cores da planilha antiga por status, prioridade e % saving; status separados no gráfico |

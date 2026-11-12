@@ -4,7 +4,7 @@ O app da equipe tem o botão **Gerar painel**: baixa um `painel-compras.html` ú
 
 | Arquivo | Conteúdo |
 |---|---|
-| `dados.js` | O que vai dentro do painel: `CAMPOS_PUBLICOS` (só o que Regional e Saving usam; detalhe do item só de SC em aberto), `montarDadosDoPainel`, `registrosDoPainel`, `compactar`/`descompactar` (JSON, gzip, base64). Roda no navegador e no Node |
+| `dados.js` | O que vai dentro do painel: `CAMPOS_PUBLICOS` (só o que Regional e Saving usam; detalhe do item só de SC em aberto, inclusive `categoria` para a linha vermelha de regularização; `VERSAO` 3), `montarDadosDoPainel`, `registrosDoPainel`, `compactar`/`descompactar` (JSON, gzip, base64). Roda no navegador e no Node |
 | `painel.js` | Entrada do painel: lê os dados embutidos, monta abas e filtros (`ui/casca.js`) e as telas Regional e Saving. Dentro de um quadro (`window.top !== window`, caso do SharePoint): sem CSV, sem Imprimir, mostra o aviso |
 | `modelo.html` | Esqueleto do painel com as marcas `/*CSS*/`, `/*JS*/` e `__DADOS_DO_PAINEL__` |
 | `gerar.js` | `gerarPainel({ registros, meta, hoje })`: modelo pronto + dados compactados. `NOME_DO_ARQUIVO` |

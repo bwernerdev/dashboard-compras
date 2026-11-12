@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   aplicarFiltros, opcoesDosFiltros, chaveMes, rotuloMes, itensEmAberto, resumoEmAberto, porFaixaDeDias,
-  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
+  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorCompradorStatus, prePedidosPorCompradorRegional, participacaoCompradores,
   pctSaving, resumoSaving, savingPorFilial, savingPorComprador, savingPorMes,
 } from '../src/analise.js';
 import { brutosDe, recalcular } from '../src/memoria.js';
@@ -211,4 +211,12 @@ test('gerarCsv: ";" como separador, vírgula decimal, aspas quando preciso, BOM'
     { rotulo: 'Data', valor: (l) => l.d, tipo: 'data' },
   ], [{ n: 'A;B', v: 1.5, d: serie(2026, 11, 11) }, { n: 'Diz "oi"', v: null, d: null }]);
   assert.equal(csv, '﻿Nome;Valor;Data\r\n"A;B";1,5;11/11/2026\r\n"Diz ""oi""";;\r\n');
+});
+
+test('ehRegularizacao: categoria REGULARIZAÇÃO, sem maiúsculas nem acento', () => {
+  assert.equal(ehRegularizacao({ categoria: 'REGULARIZAÇÃO' }), true);
+  assert.equal(ehRegularizacao({ categoria: ' regularizacao ' }), true);
+  assert.equal(ehRegularizacao({ categoria: 'NORMAL' }), false);
+  assert.equal(ehRegularizacao({ categoria: null }), false);
+  assert.equal(ehRegularizacao({}), false);
 });

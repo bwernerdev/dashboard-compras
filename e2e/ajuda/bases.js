@@ -38,7 +38,7 @@ const linha = (x) => ({
 
 /**
  * Base: 3 SCs, 4 itens nas filiais do de-para + 1 linha de outra filial (descartada).
- * Em aberto: SC 1000001 (NORMAL, 1 dia: no prazo) e SC 1000002 (URGENTE, 2 itens, ~70 dias: fora;
+ * Em aberto: SC 1000001 (NORMAL, REGULARIZAÇÃO, 1 dia: no prazo) e SC 1000002 (URGENTE, 2 itens, ~70 dias: fora;
  * item 2 em pendência de compra).
  * Com pedido: SC 1000003 (total 900, saving 10 x 10 = 100, pré-pedido PP-1).
  */
