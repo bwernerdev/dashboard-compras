@@ -105,8 +105,8 @@ function trocarDensidade() {
 /**
  * colunas: [{ id, rotulo, valor(linha), formato?(valor), tipo?: 'data', num?: bool, centro?: bool,
  *            exibir?(linha) -> Node|texto, classe?(linha) -> string, titulo?,
- *            semDuploClique?: bool (dois cliques nessa coluna não disparam aoDuploClique: servem para
- *            selecionar o texto e copiar),
+ *            semDuploClique?: bool (clique e dois cliques nessa coluna não disparam aoClicarLinha nem
+ *            aoDuploClique: servem para selecionar o texto e copiar),
  *            controle?: bool (coluna de botão: sem ordenar, fora do CSV, do "Copiar" e da pesquisa;
  *            o rótulo só para leitor de tela) }]
  * opções: titulo (legenda acessível), ordem { coluna, desc }, porPagina, pesquisa, nomeArquivo,
@@ -345,8 +345,8 @@ export function criarTabela(opcoes) {
           ig % 2 ? 'faixa' : '', aoClicarLinha ? 'clicavel' : '', grupo && i === 0 ? 'grupo-inicio' : '',
           grupo && i < visiveis.length - 1 ? 'grupo-continua' : '', rec ? 'grupo-recolhido' : '', classeLinha?.(l) ?? '',
         ].join(' ').trim() || null,
-        // Clique em botão/link/campo da linha (olho, copiar) não conta como clique na linha.
-        onclick: aoClicarLinha ? (e) => { if (!e.target.closest('button, a, input')) aoClicarLinha(l); } : null,
+        // Clique em botão/link/campo da linha (olho, copiar) ou na coluna semDuploClique (SC) não conta como clique na linha.
+        onclick: aoClicarLinha ? (e) => { if (!e.target.closest('button, a, input, [data-sem-duplo-clique]')) aoClicarLinha(l); } : null,
         ondblclick: aoDuploClique ? (e) => { if (!e.target.closest('button, a, input, [data-sem-duplo-clique]')) aoDuploClique(l); } : null,
       }, colunas.map((c) => (rec && !(grupo.colunasRecolhido ?? grupo.colunas).includes(c.id)
         ? el('td', { class: classeColuna(c) })

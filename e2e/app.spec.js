@@ -43,6 +43,10 @@ test('Hoje, detalhe da SC ao clicar, densidade compacta e comparação de perío
   await expect(detalhe.locator('.detalhe-itens li')).toHaveCount(2);
   await page.keyboard.press('Escape');
   await expect(detalhe).toBeHidden();
+  // Coluna SC: clique serve para selecionar e copiar, não abre o detalhe.
+  await lista.locator('tbody tr', { hasText: '1000002' }).first().locator('td[data-sem-duplo-clique]').click();
+  await page.waitForTimeout(400);
+  await expect(detalhe).toBeHidden();
 
   await lista.getByRole('button', { name: 'Compacta' }).click();
   await expect(page.locator('html')).toHaveClass(/densidade-compacta/);

@@ -11,7 +11,7 @@ import { marcaDaPrioridade } from '../ui/cores-planilha.js';
 import { itensEmAberto, resumoDoDia } from '../analise.js';
 
 const COLUNAS = [
-  { id: 'sc', rotulo: 'SC', valor: (s) => s.sc },
+  { id: 'sc', rotulo: 'SC', semDuploClique: true, valor: (s) => s.sc },
   { id: 'dias', rotulo: 'Dias úteis', num: true, valor: (s) => s.dias, formato: fmt.inteiro },
   { id: 'nomeFilial', rotulo: 'Filial', valor: (s) => s.nomeFilial, classe: () => 'texto-medio' },
   { id: 'prioridade', rotulo: 'Prioridade', valor: (s) => s.prioridade, exibir: (s) => marcaDaPrioridade(s.prioridade) },

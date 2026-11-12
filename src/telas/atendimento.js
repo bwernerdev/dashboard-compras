@@ -26,7 +26,7 @@ function seloSla(sla) {
 
 const COLUNAS = [
   { id: 'dias', rotulo: 'Dias em aberto', num: true, centro: true, valor: (r) => r.diasEmAberto, formato: fmt.inteiro, titulo: 'Dias úteis desde a criação (ou do pedido, se posterior)' },
-  { id: 'sc', rotulo: 'SC', valor: (r) => r.sc, exibir: (r) => (ehRegularizacao(r) ? [r.sc, el('span', { class: 'so-leitor' }, ' (regularização)')] : r.sc) },
+  { id: 'sc', rotulo: 'SC', semDuploClique: true, valor: (r) => r.sc, exibir: (r) => (ehRegularizacao(r) ? [r.sc, el('span', { class: 'so-leitor' }, ' (regularização)')] : r.sc) },
   { id: 'nomeFilial', rotulo: 'Nome da filial', valor: (r) => r.nomeFilial, classe: () => 'texto-medio' },
   { id: 'regional', rotulo: 'Regional', valor: (r) => r.regional },
   { id: 'filial', rotulo: 'Filial', valor: (r) => r.filial },
