@@ -15,7 +15,7 @@ import {
 import { listaDeMarcar } from '../ui/filtros.js';
 
 // Seleções locais da tela (não são filtros globais: só recortam a lista de SCs).
-const local = { faixa: null, sla: 'todos', status: new Set(), agrupar: 'regional' };
+const local = { faixa: null, status: new Set(), agrupar: 'regional' };
 
 // Lista de SCs em tela cheia (cobre a janela; Esc ou o botão volta). Lembrada neste navegador.
 let telaCheia = lerPreferencia('lista-tela-cheia') === 'sim';
@@ -26,20 +26,13 @@ document.addEventListener('keydown', (ev) => {
   sairDaTelaCheia();
 }, true); // captura: roda antes do Esc da lista de marcar, que fecharia a lista primeiro
 
-// "Atendida" (olho / duplo clique tira a SC da lista): só no app da equipe. O painel publicado
+// "Atendida" (olho / duplo clique recolhe a SC numa linha): só no app da equipe. O painel publicado
 // não chama ligarAtendidas e mostra a lista inteira.
 let atendidasLigadas = false;
 export function ligarAtendidas() { atendidasLigadas = true; }
 
-const SLA_OPCOES = [
-  { id: 'todos', rotulo: 'Todos' },
-  { id: 'Fora do Prazo', rotulo: 'Fora do prazo' },
-  { id: 'No Prazo', rotulo: 'No prazo' },
-  { id: 'sem', rotulo: 'Sem prazo' },
-];
-
-// Sem "Dias em aberto", "SLA", "Prazo máx." e "Item" (pedido da equipe, 11/11/2026): o recorte
-// de SLA acima da lista continua valendo.
+// Sem "Dias em aberto", "SLA", "Prazo máx." e "Item" (pedido da equipe, 11/11/2026). O recorte
+// de SLA acima da lista também saiu (12/11/2026); o SLA segue nos cartões e na tabela por regional.
 const COLUNAS_SCS = [
   { id: 'aprov', rotulo: 'Dias da aprovação', num: true, centro: true, valor: (r) => r.diasDaAprovacao, formato: fmt.inteiro, titulo: 'Dias corridos desde a criação', classe: () => 'col-dias' },
   // Regularização: linha toda em vermelho (classeLinha); o texto escondido diz o mesmo ao leitor de tela.
@@ -146,8 +139,6 @@ export function telaRegional(ctx) {
   const recortar = () => {
     let lista = recortarPorStatus(abertos, local.status);
     if (local.faixa) lista = lista.filter((r) => faixaDe(r.diasEmAberto) === local.faixa);
-    if (local.sla === 'sem') lista = lista.filter((r) => r.sla !== 'No Prazo' && r.sla !== 'Fora do Prazo');
-    else if (local.sla !== 'todos') lista = lista.filter((r) => r.sla === local.sla);
     return lista;
   };
   const vazio = () => ([...local.status].some((s) => ehPendencia({ status: s }))
@@ -210,10 +201,6 @@ export function telaRegional(ctx) {
   const recortes = el('div', { class: 'recortes' },
     filtroStatus,
     atalho,
-    el('label', { class: 'recorte' }, 'SLA ',
-      el('select', {
-        class: 'campo', onchange: (ev) => { local.sla = ev.target.value; ctx.redesenhar(); },
-      }, SLA_OPCOES.map((o) => el('option', { value: o.id, selected: local.sla === o.id }, o.rotulo)))),
     local.faixa ? el('button', {
       type: 'button', class: 'chip', onclick: () => { local.faixa = null; ctx.redesenhar(); },
       'aria-label': `Remover recorte ${FAIXAS_DIAS.find((f) => f.id === local.faixa).rotulo}`,
@@ -278,6 +265,5 @@ function legendaRegularizacao(abertos) {
 /** Zera as seleções locais (ao trocar de bases). */
 export function reiniciarRegional() {
   local.faixa = null;
-  local.sla = 'todos';
   local.status = new Set();
 }
