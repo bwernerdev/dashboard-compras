@@ -1,7 +1,8 @@
 // Tela "SCs por Comprador" (id compradores): substitui a aba "sc p Compr".
 // SCs distintas por comprador x status, pré-pedidos por comprador x regional e participação/SLA.
-// Período De/Até (pedido da equipe, 12/11/2026): recorta pela "Data Criação solicitação"; fica
-// salvo neste navegador.
+// Período De/Até (pedido da equipe, 12/11/2026), salvo neste navegador: as SCs pela "Data Criação
+// solicitação"; os pré-pedidos pela "Data Criação do Pré-Pedido" (pré-pedido feito hoje numa SC
+// antiga conta hoje: antes o período recortava os pré-pedidos pela criação da SC e eles sumiam).
 import { el } from '../ui/dom.js';
 import { cartao, linhaDeCartoes, bloco, estadoVazio } from '../ui/cartoes.js';
 import { barrasEmpilhadas } from '../ui/graficos.js';
@@ -38,30 +39,30 @@ const doCampo = (v) => {
   return m ? serie(Number(m[1]), Number(m[2]), Number(m[3])) : null;
 };
 
-/** Linhas com criação dentro do período (com período, linha sem data de criação sai). */
-export function recortarPeriodo(regs, { de, ate }) {
+/** Linhas com a data (`campo`: criacao ou dataPrePedido) dentro do período (com período, linha sem a data sai). */
+export function recortarPeriodo(regs, { de, ate }, campo = 'criacao') {
   if (de === null && ate === null) return regs;
   return regs.filter((r) => {
-    if (r.criacao === null || r.criacao === undefined) return false;
-    const d = Math.floor(r.criacao);
+    if (!Number.isFinite(r[campo])) return false;
+    const d = Math.floor(r[campo]);
     return (de === null || d >= de) && (ate === null || d <= ate);
   });
 }
 
 /** Campos De/Até e "Limpar período". Mudou: guarda e redesenha a tela. */
 function barraDePeriodo(ctx) {
-  const datas = ctx.registros.map((r) => r.criacao).filter((v) => Number.isFinite(v)).map(Math.floor);
+  const datas = ctx.registros.flatMap((r) => [r.criacao, r.dataPrePedido]).filter((v) => Number.isFinite(v)).map(Math.floor);
   const min = datas.length ? paraCampo(Math.min(...datas)) : null;
   const max = datas.length ? paraCampo(Math.max(...datas)) : null;
   const campo = (id, rotulo) => el('label', { class: 'recorte' }, rotulo,
     el('input', {
       type: 'date', class: 'campo', value: paraCampo(periodo[id]), min, max,
-      'aria-label': `Período: ${rotulo === 'De' ? 'data inicial' : 'data final'} (Data Criação solicitação)`,
+      'aria-label': `Período: ${rotulo === 'De' ? 'data inicial' : 'data final'}`,
       onchange: (ev) => { periodo[id] = doCampo(ev.target.value); guardarPeriodo(); ctx.redesenhar(); },
     }));
   const ativo = periodo.de !== null || periodo.ate !== null;
   return el('div', { class: 'recortes', role: 'group', 'aria-label': 'Período' },
-    el('span', { class: 'recorte' }, 'Período (criação da SC):'),
+    el('span', { class: 'recorte' }, 'Período:'),
     campo('de', 'De'),
     campo('ate', 'Até'),
     ativo ? el('button', {
@@ -69,7 +70,8 @@ function barraDePeriodo(ctx) {
       onclick: () => { periodo.de = null; periodo.ate = null; guardarPeriodo(); ctx.redesenhar(); },
     }, 'Limpar período') : null,
     ativo && periodo.de !== null && periodo.ate !== null && periodo.de > periodo.ate
-      ? el('span', { class: 'recorte', role: 'status' }, '"De" depois de "Até": nenhuma SC no período.') : null);
+      ? el('span', { class: 'recorte', role: 'status' }, '"De" depois de "Até": nenhuma SC no período.') : null,
+    el('span', { class: 'recorte texto-fraco' }, 'SCs pela criação da SC; pré-pedidos pela criação do pré-pedido.'));
 }
 const descreverPeriodo = () => [periodo.de !== null ? `de ${formatarSerie(periodo.de)}` : '', periodo.ate !== null ? `até ${formatarSerie(periodo.ate)}` : ''].filter(Boolean).join(' ');
 
@@ -88,13 +90,14 @@ const corDaRegional = (r) => {
 export function telaCompradores(ctx) {
   const barra = barraDePeriodo(ctx);
   const regs = recortarPeriodo(ctx.registros, periodo);
-  if (!regs.length) {
+  const regsPre = recortarPeriodo(ctx.registros, periodo, 'dataPrePedido');
+  if (!regs.length && !regsPre.length) {
     return el('div', { class: 'tela' }, barra, estadoVazio(
       descreverPeriodo() ? `Nenhuma SC criada no período (${descreverPeriodo()}) com os filtros atuais.` : 'Nenhuma linha com os filtros atuais.', ctx));
   }
 
   const porStatus = scsPorCompradorStatus(regs);
-  const pre = prePedidosPorCompradorRegional(regs);
+  const pre = prePedidosPorCompradorRegional(regsPre);
   const part = participacaoCompradores(regs);
   const pendente = porStatus.linhas.find((l) => l.comprador === PENDENTE);
   const aberto = resumoEmAberto(itensEmAberto(regs));
@@ -102,7 +105,11 @@ export function telaCompradores(ctx) {
   // Destaque igual à planilha (pedido da equipe, 12/11/2026): o topo da aba sc p Compr é a tabela
   // "QTD Pré-Pedido" (pré-pedidos por comprador e regional); as SCs por status vêm depois.
   const cartoes = linhaDeCartoes(
-    cartao({ icone: 'pacote', rotulo: 'Pré-pedidos', valor: fmt.inteiro(pre.totalGeral), detalhe: 'Distintos, só compradores do de-para, como na planilha (SC sem pré-pedido conta 1)' }),
+    cartao({
+      icone: 'pacote', rotulo: 'Pré-pedidos', valor: fmt.inteiro(pre.totalGeral),
+      detalhe: descreverPeriodo() ? `Criados ${descreverPeriodo()} (data do pré-pedido). Só compradores do de-para`
+        : 'Distintos, só compradores do de-para, como na planilha (SC sem pré-pedido conta 1)',
+    }),
     cartao({ icone: 'documento', rotulo: 'SCs no período', valor: fmt.inteiro(porStatus.totalGeral), detalhe: `${descreverPeriodo() ? `Criadas ${descreverPeriodo()}. ` : ''}${fmt.inteiro(porStatus.linhas.length)} compradores (inclui "-" e Pendente)` }),
     cartao({
       icone: 'usuario', rotulo: 'SCs sem comprador (Pendente)', valor: fmt.inteiro(pendente?.total ?? 0), tom: pendente?.total ? 'alerta' : null,
@@ -142,7 +149,7 @@ export function telaCompradores(ctx) {
 
   const prePedidos = bloco(
     { titulo: 'Pré-pedidos por comprador e regional', subtitulo: 'QTD Pré-Pedido da planilha: números de pré-pedido distintos.',
-      ajuda: 'Como na planilha: só os compradores do de-para ("-" e Pendente ficam de fora) e as SCs sem pré-pedido contam como 1 em cada grupo. O número ao lado da barra é o total do comprador: um pré-pedido em duas regionais conta uma vez.' },
+      ajuda: 'Como na planilha: só os compradores do de-para ("-" e Pendente ficam de fora) e as SCs sem pré-pedido contam como 1 em cada grupo. O número ao lado da barra é o total do comprador: um pré-pedido em duas regionais conta uma vez. Com período, conta os pré-pedidos criados nas datas (pela data do pré-pedido, não da SC); aí a SC sem pré-pedido não entra.' },
     pre.linhas.length ? barrasEmpilhadas({
       series: pre.regionais.map((r) => ({ id: r, rotulo: r, cor: corDaRegional(r) })),
       categorias: pre.linhas.map((l) => ({ rotulo: l.comprador, partes: l.porRegional, total: l.total })),

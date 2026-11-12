@@ -314,7 +314,7 @@ test('SCs por Comprador (com período De/Até) e Saving', async ({ page }) => {
   // Período pela criação da SC: a SC criada há 100 dias sai; fica salvo; "Limpar período" volta.
   const iso = (d) => d.toISOString().slice(0, 10);
   const ha30 = new Date(Date.now() - 30 * 864e5);
-  await page.getByLabel('Período: data inicial (Data Criação solicitação)').fill(iso(ha30));
+  await page.getByLabel('Período: data inicial').fill(iso(ha30));
   await expect(valorDoCartao(page, 'SCs no período')).toHaveText('2');
   await page.reload();
   await expect(valorDoCartao(page, 'SCs no período')).toHaveText('2');

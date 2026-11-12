@@ -262,6 +262,7 @@ As colunas da seção 2 (dias em aberto, Data, Serviço, SLA, tempos por etapa) 
   - % sc's atendidas: contagem de SC (itens) do comprador ÷ total dos compradores visíveis. A planilha foi salva filtrada só na Thayane (100%); o app com o filtro Comprador = Thayane dá 100%. Sem filtro, o app mostra todos.
   - `npm run conferir` passou a conferir também a linha Total Geral, comprador que só o app mostra e a % sc's atendidas.
   - Destaque da aba igual à planilha (pedido da equipe): pré-pedidos por comprador e regional em primeiro (cartão, gráfico empilhado por regional e tabela), SCs por status depois.
+  - Período De/Até: os pré-pedidos agora são recortados pela **data de criação do pré-pedido** (antes, pela criação da SC). Com o período só em 12/11, o Bruno W. tinha 4 (pré-pedidos das 4 SCs criadas nesse dia); pela data do pré-pedido são 23. As SCs continuam pela criação da SC. Sem período, nada muda (igual à planilha, que não tem período).
   - Planilha atualizada com a base de 12/11 (consultas apontando para a pasta `dashboard`): `npm run conferir` deu tudo igual. O app com a `base.xlsx` só difere pela filial 555, mantida por decisão da equipe (1.702 SCs: 1.489 em "-", 212 Pendente, 1 da Thayane).
 
 ### Base de 11/11/2026 na tela

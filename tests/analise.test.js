@@ -9,6 +9,7 @@ import {
 } from '../src/analise.js';
 import { brutosDe, recalcular, juntarAoHistorico } from '../src/memoria.js';
 import { validarConfig } from '../src/telas/configuracao.js';
+import { recortarPeriodo } from '../src/telas/compradores.js';
 import { gerarCsv } from '../src/ui/tabela.js';
 import { criarConfig, CONFIG_PADRAO } from '../src/config/index.js';
 import { calcularLinhaBase } from '../src/regras.js';
@@ -152,6 +153,18 @@ test('prePedidosPorCompradorRegional: distintos, vazio conta 1 como na planilha 
   assert.equal(r.totalGeral, 4, 'P1, P2, P3 e o vazio');
   assert.deepEqual(r.totaisRegional, { Norte: 1, Sul: 3 }, 'Sul: P1, P3 e o vazio');
   assert.equal(prePedidosPorCompradorRegional([reg({ numeroPrePedido: null })]).totalGeral, 0);
+});
+
+test('recortarPeriodo: SCs pela criação, pré-pedidos pela data do pré-pedido', () => {
+  const regs = [
+    reg({ solicitacao: 'S1', criacao: 46300, dataPrePedido: 46338.6, numeroPrePedido: 'P1' }), // SC antiga, pré-pedido hoje
+    reg({ solicitacao: 'S2', criacao: 46338, dataPrePedido: null, numeroPrePedido: null }), // SC de hoje, sem pré-pedido
+    reg({ solicitacao: 'S3', criacao: 46337, dataPrePedido: 46337, numeroPrePedido: 'P3' }),
+  ];
+  const hoje = { de: 46338, ate: 46338 };
+  assert.deepEqual(recortarPeriodo(regs, hoje).map((r) => r.solicitacao), ['S2']);
+  assert.deepEqual(recortarPeriodo(regs, hoje, 'dataPrePedido').map((r) => r.solicitacao), ['S1']);
+  assert.equal(recortarPeriodo(regs, { de: null, ate: null }, 'dataPrePedido'), regs, 'sem período: tudo, como a planilha');
 });
 
 test('participacaoCompradores: % das linhas de SC e SLA em aberto', () => {
