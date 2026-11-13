@@ -52,6 +52,7 @@ test('painel aberto como arquivo: telas públicas (sem Compradores), sem dados i
   await expect(cartao(painel, 'OFs não entregues')).toHaveText('1');
   await painel.getByRole('tab', { name: 'Status' }).click();
   await expect(cartao(painel, 'SCs no período')).toHaveText('3');
+  await expect(painel.locator('.cartao-rotulo', { hasText: 'SCs no período' })).toHaveText('SCs no período 12/09/2026 até 11/11/2026');
 
   // Dados embutidos: só campos públicos; nada de pré-pedido nem de-para.
   const dados = await painel.evaluate(async () => {

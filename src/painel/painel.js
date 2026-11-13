@@ -75,6 +75,7 @@ async function iniciar() {
   });
   nav.definirRegistros(registrosDoPainel(dados));
   nav.definirFollowUp(followUpDoPainel(dados));
+  nav.definirPeriodo(dados.periodo);
   mostrarPeriodo(dados);
   nav.desenhar();
 }

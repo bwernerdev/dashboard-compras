@@ -32,7 +32,8 @@ export function descreverFiltros(selecao, tela) {
  * chaveFiltros: preferência onde a seleção dos filtros globais fica salva neste navegador (volta na
  * próxima vez que abrir; pedido da equipe, 12/11/2026). Sem ela, os filtros começam vazios.
  * ctx de cada tela: { registros, followUp (null sem a base Follow-Up), anteriores, redesenhar, filtrar,
- * limparFiltros (null sem filtro ativo; botão dos estados vazios), historico (pontos anteriores, null com filtro) }.
+ * limparFiltros (null sem filtro ativo; botão dos estados vazios), historico (pontos anteriores, null com filtro),
+ * periodo ({ inicio, fim } do relatório do ME, séries do Excel, ou null) }.
  * anteriores: { registros (base anterior, mesmos filtros), rotulo ('10/11') } ou null; só o app da
  * equipe guarda a base anterior (variação nos cartões), o painel não.
  * Os filtros globais valem para as duas bases; as opções vêm só da base principal.
@@ -45,6 +46,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     followUp: null,
     anteriores: null,
     historico: null,
+    periodo: null,
     opcoes: null,
   };
   let pedido = 0;
@@ -90,6 +92,11 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
   /** historico: pontos de bases de dias anteriores ({ dia, status, aberto }), sem filtros. */
   function definirHistorico(pontos) {
     estado.historico = pontos?.length ? pontos : null;
+  }
+
+  /** periodo: { inicio, fim } do relatório do ME (séries do Excel) ou null. */
+  function definirPeriodo(periodo) {
+    estado.periodo = periodo?.inicio && periodo?.fim ? { inicio: periodo.inicio, fim: periodo.fim } : null;
   }
 
   /** anteriores: { registros, rotulo } ou null. */
@@ -164,6 +171,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
       anteriores: estado.anteriores
         ? { registros: aplicarFiltros(estado.anteriores.registros, estado.selecao, estado.aba), rotulo: estado.anteriores.rotulo }
         : null,
+      periodo: estado.periodo,
       redesenhar: desenharTela,
       /** Registros com todos os filtros menos um (ex.: comparação de períodos ignora "Mês do pedido"). */
       registrosSem: (idFiltro) => aplicarFiltros(estado.registros, { ...estado.selecao, [idFiltro]: new Set() }, estado.aba),
@@ -192,7 +200,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     desenharTela();
   }
 
-  return { estado, definirRegistros, definirFollowUp, definirAnteriores, definirHistorico, desenhar, desenharTela, observador };
+  return { estado, definirRegistros, definirFollowUp, definirAnteriores, definirHistorico, definirPeriodo, desenhar, desenharTela, observador };
 }
 
 /**

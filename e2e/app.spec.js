@@ -336,6 +336,7 @@ test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', asyn
 
   await page.getByRole('tab', { name: 'Status' }).click();
   await expect(valorDoCartao(page, 'SCs no período')).toHaveText('3'); // filial fora do de-para descartada
+  await expect(page.locator('.cartao-rotulo', { hasText: 'SCs no período' })).toHaveText('SCs no período 12/09/2026 até 11/11/2026');
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
   await expect(valorDoCartao(page, 'SCs em pedido')).toHaveText('1');
   const lista = page.locator('.bloco', { hasText: 'Lista de SCs' });

@@ -70,7 +70,10 @@ const nav = criarNavegador({
 
 function definirBase(tipo, dados) {
   estado[tipo] = dados;
-  if (tipo === 'base') nav.definirRegistros(dados.registros);
+  if (tipo === 'base') {
+    nav.definirRegistros(dados.registros);
+    nav.definirPeriodo(dados.meta?.dadosGerais);
+  }
   else nav.definirFollowUp(dados.registros);
 }
 
