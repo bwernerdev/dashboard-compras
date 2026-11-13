@@ -385,7 +385,7 @@ export function criarTabela(opcoes) {
   }
 
   const botaoLarguras = el('button', {
-    type: 'button', class: 'botao-link botao-pequeno', title: 'Volta todas as colunas à largura automática',
+    type: 'button', class: 'botao botao-sec botao-pequeno', title: 'Volta todas as colunas à largura automática',
     onclick: () => { larguras.clear(); aplicarLarguras(); guardarLarguras(); },
   }, 'Larguras originais');
 

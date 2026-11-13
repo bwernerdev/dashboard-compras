@@ -191,6 +191,12 @@ input[type="search"].campo { min-width: 220px; }
 .filtro-valor { font-weight: 600; max-width: 18ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .filtro-botao.ativo { border-color: var(--accent); background: var(--surface-selected); }
 .filtro-botao.ativo .filtro-valor { color: var(--accent-text); }
+/* Dentro dos blocos (Status, Colunas na barra da tabela): mesmo formato dos botões ao lado
+   (botao-sec pequeno: canto de 6 px, fundo cinza, texto 600). A pílula fica só na faixa de filtros do topo. */
+.bloco .filtro-botao { border-radius: var(--r-sm); background: var(--button-bg); font-weight: 600; padding: 0 var(--s2); }
+.bloco .filtro-botao:hover { background: var(--button-hover); }
+.bloco .filtro-botao .filtro-nome { font-weight: 400; }
+.bloco .filtro-botao.ativo { background: var(--surface-selected); }
 .filtro-painel {
   position: absolute; top: calc(100% + 4px); left: 0; z-index: 30;
   display: flex; flex-direction: column; gap: var(--s2);
