@@ -42,8 +42,8 @@ button:disabled { cursor: default; }
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
-/* Logo completo num cartão branco (como no Teams): o texto azul-escuro some no tema escuro. */
-.topo-emblema { grid-area: emblema; display: block; width: auto; height: 76px; box-sizing: content-box; padding: 3px 6px; background: #fff; border-radius: var(--r-md); box-shadow: 0 0 0 1px var(--line); }
+/* Logo completo com fundo transparente; no tema escuro, cartão branco (o texto azul-escuro some no fundo escuro). */
+.topo-emblema { grid-area: emblema; display: block; width: auto; height: 76px; box-sizing: content-box; padding: 3px 6px; background: var(--emblema-fundo); border-radius: var(--r-md); box-shadow: var(--emblema-borda); }
 .topo-marca { grid-area: marca; display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
 .topo h1 { font-size: var(--fs-xl); font-weight: 700; color: var(--text-strong); white-space: nowrap; }
 .selo {

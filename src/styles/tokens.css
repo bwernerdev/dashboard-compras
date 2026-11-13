@@ -3,6 +3,8 @@
    Séries dos gráficos: paleta categórica validada (skill de visualização), uma cor por status,
    em ordem fixa. Status bom/crítico são reservados para SLA (no prazo / fora do prazo). */
 :root {
+  --emblema-fundo: transparent; /* logo do topo: transparente no claro, cartão branco no escuro */
+  --emblema-borda: none;
   color-scheme: light;
 
   --font-body: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
@@ -114,6 +116,8 @@
 }
 
 html[data-theme="dark"] {
+  --emblema-fundo: #fff;
+  --emblema-borda: 0 0 0 1px var(--line);
   color-scheme: dark;
 
   --bg: #17191e;
