@@ -38,8 +38,8 @@ test('painel aberto como arquivo: telas públicas (sem Compradores), sem dados i
   await expect(cartao(painel, 'SCs em aberto')).toHaveText('2');
   await expect(painel.locator('#periodo')).toContainText('dados de');
   // Emblema embutido no arquivo (data URI): aparece sem rede e também é o ícone da aba.
-  await expect(painel.locator('.topo-emblema')).toBeVisible();
-  expect(await painel.locator('.topo-emblema').evaluate((img) => img.src.startsWith('data:image/webp') && img.naturalWidth > 0)).toBe(true);
+  await expect(painel.locator('.topo-emblema').locator('visible=true')).toBeVisible();
+  expect(await painel.locator('.topo-emblema').locator('visible=true').evaluate((img) => img.src.startsWith('data:image/webp') && img.naturalWidth > 0)).toBe(true);
   await expect(painel.locator('link[rel="icon"]')).toHaveCount(1);
   await expect(painel.locator('#aviso-quadro')).toBeHidden();
   await expect(painel.locator('#acao-imprimir')).toBeVisible();

@@ -42,8 +42,10 @@ button:disabled { cursor: default; }
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
-/* Logo completo com fundo transparente; no tema escuro, cartão branco (o texto azul-escuro some no fundo escuro). */
-.topo-emblema { grid-area: emblema; display: block; width: auto; height: 76px; box-sizing: content-box; padding: 3px 6px; background: var(--emblema-fundo); border-radius: var(--r-md); box-shadow: var(--emblema-borda); }
+/* Logo completo, fundo transparente; no tema escuro, a versão com texto clareado (ui/marca.js). */
+.topo-emblema { grid-area: emblema; display: block; width: auto; height: 76px; box-sizing: content-box; padding: 3px 0; }
+.topo-emblema-escuro, html[data-theme="dark"] .topo-emblema-claro { display: none; }
+html[data-theme="dark"] .topo-emblema-escuro { display: block; }
 .topo-marca { grid-area: marca; display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
 .topo h1 { font-size: var(--fs-xl); font-weight: 700; color: var(--text-strong); white-space: nowrap; }
 .selo {
@@ -67,7 +69,7 @@ html.topo-compacto .topo {
   grid-template-columns: auto auto minmax(0, 1fr); grid-template-areas: "emblema marca abas";
   padding-top: var(--s1); padding-bottom: var(--s1); row-gap: 0; box-shadow: var(--shadow-1);
 }
-html.topo-compacto .topo-emblema { height: 32px; padding: 2px 3px; }
+html.topo-compacto .topo-emblema { height: 32px; padding: 2px 0; }
 html.topo-compacto .topo h1 { font-size: var(--fs-md); }
 html.topo-compacto .topo-acoes, html.topo-compacto #periodo:not(.selo-alerta) { display: none; }
 html.topo-compacto .abas { margin-left: 0; flex-wrap: nowrap; overflow-x: auto; }
