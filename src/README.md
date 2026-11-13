@@ -2,7 +2,7 @@
 
 | Arquivo / pasta | Conteúdo |
 |---|---|
-| `assets/` | Imagens: emblema da Controladoria (`marca.webp`). Mapa em `assets/README.md` |
+| `assets/` | Imagens: logo da Controladoria (`marca.webp`). Mapa em `assets/README.md` |
 | `main.js` | App da equipe: estado (bases, config), período, ações do topo (Atualizar bases, Gerar painel, Configuração, Imprimir, tema). Abas, filtros e tela vêm de `ui/casca.js`. Recalcula ao mudar config ou virar o dia. Troca a base anterior quando chega base de outro dia do ME; selo do período em amarelo com base de 2+ dias úteis. Aba salva que não existe mais (Hoje, removida) abre a Regional. Guarda um ponto do histórico (`pontoDe`) a cada base de outro dia para os mini gráficos |
 | `analise.js` | Filtros globais (`FILTROS`, `aplicarFiltros`) e agregações puras das telas (SCs em aberto, faixas de dias, pendências e regularização (`ehPendencia`, `ehRegularizacao`), comprador x status, pré-pedidos, saving, spend por filial, SCs por status, OFs por status de entrega, itens aguardando aprovação do pré-pedido (`aguardandoAprovacao`), períodos da comparação (`periodosDePedido`)). Sem DOM. Usado também pelo `scripts/conferir-xlsm.mjs` |
 | `memoria.js` | Memória local do app da equipe: última importação de cada base no IndexedDB (só colunas do ME; `recalcular` refaz os campos calculados) e configuração no localStorage. Guarda também a base anterior (`salvarAnterior`, tipo `base-anterior`) para a variação nos cartões e o histórico (`salvarHistorico`, `juntarAoHistorico`: até 30 pontos, tipo `historico`) para os mini gráficos |

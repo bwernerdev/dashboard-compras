@@ -22,7 +22,7 @@ Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configura�
 | `src/ui/` | Componentes: casca (abas, filtros, tema), tabela, gráficos, filtros, cartões, dica, formatos |
 | `src/leitor/` | Leitor de `.xlsx` por fluxo (zip + XML, sem dependência) |
 | `src/config/` | De-para de filiais e compradores (o SLA é fixo: 30 dias úteis, `src/regras.js`) |
-| `src/assets/` | Emblema da Controladoria (topo e ícone da aba, app e painel) |
+| `src/assets/` | Logo da Controladoria (topo e ícone da aba, app e painel) |
 | `src/styles/` | CSS em camadas: tokens (tema escuro, paleta dos gráficos), base, componentes, impressão |
 | `tests/`, `tests/ajuda/` | Testes unitários e gerador de xlsx fictício |
 | `e2e/`, `e2e/ajuda/` | Testes Playwright e bases fictícias |
