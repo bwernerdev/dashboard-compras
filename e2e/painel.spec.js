@@ -4,6 +4,7 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { arquivoBase, arquivoFollowUp, COMPRADOR } from './ajuda/bases.js';
+import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
 
 const TELAS = ['Status', 'Entrega', 'Regional', 'Spend', 'Saving', 'Atendimento', 'Organograma'];
 const cartao = (raiz, rotulo) => raiz.locator('.tela > .cartoes > .cartao', { has: raiz.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
@@ -46,6 +47,17 @@ test('painel aberto como arquivo: telas públicas (sem Compradores), sem dados i
   await expect(painel.getByRole('button', { name: 'Exportar CSV' }).first()).toBeVisible();
   await expect(painel.locator('.olho')).toHaveCount(0); // "atendida" é só do app da equipe
 
+  // Atendimento: "Exportar .xlsx" baixa uma planilha do Excel com os itens em aberto, um por linha.
+  await painel.getByRole('tab', { name: 'Atendimento' }).click();
+  const [planilha] = await Promise.all([painel.waitForEvent('download'), painel.getByRole('button', { name: 'Exportar .xlsx' }).click()]);
+  expect(planilha.suggestedFilename()).toBe('atendimento.xlsx');
+  const pasta = await abrirPasta(new Blob([await readFile(await planilha.path())]));
+  expect(pasta.abas.map((a) => a.nome)).toEqual(['Atendimento']);
+  const linhas = await lerAbaInteira(pasta, 'Atendimento');
+  expect(linhas[0]).toEqual(['Dias em aberto', 'SC', 'Nome da filial', 'Regional', 'Filial', 'Solicitante', 'SLA', 'Produto', 'Status', 'Status Pré-Pedido', 'Comprador']);
+  expect(linhas.length - 1).toBe(Number((await painel.locator('.tabela-contagem').textContent()).match(/(\d+) ite/)[1]));
+  expect(typeof linhas[1][0]).toBe('number');
+
   await painel.getByRole('tab', { name: 'Saving' }).click();
   await expect(cartao(painel, '% Saving')).toHaveText('10,00%');
   await painel.getByRole('tab', { name: 'Entrega' }).click();
@@ -65,7 +77,7 @@ test('painel aberto como arquivo: telas públicas (sem Compradores), sem dados i
   expect(erros).toEqual([]);
 });
 
-test('painel no quadro isolado do SharePoint: aviso, sem CSV e sem imprimir, telas funcionam', async ({ page, context }, info) => {
+test('painel no quadro isolado do SharePoint: aviso, sem CSV/.xlsx e sem imprimir, telas funcionam', async ({ page, context }, info) => {
   const { html } = await gerarPainel(page, info);
   const host = await context.newPage();
   const erros = [];
@@ -78,6 +90,9 @@ test('painel no quadro isolado do SharePoint: aviso, sem CSV e sem imprimir, tel
   await expect(quadro.locator('#aviso-quadro')).toBeVisible();
   await expect(quadro.locator('#acao-imprimir')).toBeHidden();
   await expect(quadro.getByRole('button', { name: 'Exportar CSV' })).toHaveCount(0);
+  await quadro.getByRole('tab', { name: 'Atendimento' }).click();
+  await expect(quadro.getByRole('button', { name: 'Copiar tabela', exact: true })).toBeVisible();
+  await expect(quadro.getByRole('button', { name: 'Exportar .xlsx' })).toHaveCount(0);
   await expect(quadro.getByRole('button', { name: 'Copiar tabela' }).first()).toBeVisible();
 
   // Tema e filtros funcionam sem armazenamento.

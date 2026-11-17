@@ -12,6 +12,7 @@
 | `painel.test.js` | Dados do painel publicado (`src/painel/dados.js`): só campos públicos, detalhe só de SC em aberto, versão, compactar/descompactar; texto do "Copiar tabela" (`gerarTsv`) |
 | `atendidas.test.js` | SCs atendidas (`src/atendidas.js`): marcar, desmarcar, guardar, vencer em 120 dias, armazenamento estragado (localStorage de mentira) |
 | `preferencias.test.js` | Estado lembrado das telas (`src/preferencias.js`): `lerJson`, `lerEscolha` (só opções válidas), `lerConjunto`, armazenamento bloqueado |
+| `tabela-xlsx.test.js` | "Exportar .xlsx" (`src/ui/tabela-xlsx.js`): a planilha abre no leitor do app, número e data como número, sem coluna de controle, cabeçalho congelado com filtro, nome de aba aceito pelo Excel |
 | `cores-planilha.test.js` | Cores da planilha antiga por status, prioridade e % saving; status separados no gráfico |
 | `ajuda/` | Gerador de `.xlsx` em memória para os testes (também usado pelo `e2e/`) |
 

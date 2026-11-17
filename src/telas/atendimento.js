@@ -91,13 +91,14 @@ export function telaAtendimento(ctx) {
     grupo: { chave: (r) => r.solicitacao, colunas: ['dias', 'sc', 'nomeFilial', 'regional', 'filial', 'solicitante'], nome: ['SC', 'SCs'] },
     classeLinha: classeDaLinhaSc,
     nomeArquivo: 'atendimento.csv',
+    xlsx: 'Atendimento',
     aoClicarLinha: cliqueDeDetalhe((r) => ctx.registros.filter((x) => x.solicitacao === r.solicitacao)).aoClicarLinha,
     vazio: 'Nenhum item com esse recorte.',
   });
 
   return el('div', { class: 'tela' }, cartoes, bloco(
     { titulo: 'Itens em aberto', subtitulo: 'Itens agrupados por SC, da mais antiga para a mais nova.',
-      ajuda: 'Pesquise por SC, produto, solicitante ou filial. CSV e "Copiar tabela" trazem um item por linha.' },
+      ajuda: 'Pesquise por SC, produto, solicitante ou filial. CSV, .xlsx e "Copiar tabela" trazem um item por linha.' },
     alternar,
     tabela.elemento,
   ));

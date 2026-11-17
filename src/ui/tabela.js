@@ -1,8 +1,9 @@
 // Tabela com ordenação por coluna, pesquisa, paginação, linha de total, "Copiar tabela" e exportação CSV.
-// Partes em módulos próprios: tabela-exportar.js (CSV, copiar, baixar), tabela-larguras.js (larguras e
+// Partes em módulos próprios: tabela-exportar.js (CSV, copiar, baixar), tabela-xlsx.js (Excel), tabela-larguras.js (larguras e
 // caber na largura), tabela-colunas.js (colunas ocultas), tabela-densidade.js (botão "Compacta").
 import { el, substituir, novoId } from './dom.js';
 import { textoDaCelula, exportaveis, gerarCsv, gerarTsv, baixar, copiarTexto, podeExportarCsv } from './tabela-exportar.js';
+import { gerarXlsx, TIPO_XLSX } from './tabela-xlsx.js';
 import { criarLarguras, criarAjuste } from './tabela-larguras.js';
 import { criarColunasOcultas } from './tabela-colunas.js';
 import { botaoDensidade } from './tabela-densidade.js';
@@ -33,11 +34,13 @@ const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '
  * largura salva) encolhem na proporção (com reticências) para a tabela caber sem rolar para o lado; refaz ao mudar a janela ou as linhas.
  * escolherColunas: botão "Colunas" (lista de marcar) para ocultar colunas; lembrado por `nomeArquivo`.
  * Colunas ocultas só saem da tela: CSV e "Copiar tabela" continuam com todas.
+ * xlsx: nome da aba; mostra "Exportar .xlsx" (planilha do Excel com número, data e filtro; tabela-xlsx.js),
+ * com as mesmas linhas do CSV. Só onde download funciona, como o CSV.
  */
 export function criarTabela(opcoes) {
   const {
     colunas, titulo, porPagina = 50, pesquisa = true, nomeArquivo = 'tabela.csv', rodape, vazio = 'Nada para mostrar.',
-    aoClicarLinha, aoDuploClique, classeLinha, grupo, caberNaLargura = false, escolherColunas = false,
+    aoClicarLinha, aoDuploClique, classeLinha, grupo, caberNaLargura = false, escolherColunas = false, xlsx,
   } = opcoes;
   const pesquisaveis = exportaveis(colunas);
   const idTabela = novoId('tab');
@@ -55,6 +58,17 @@ export function criarTabela(opcoes) {
     type: 'button', class: 'botao botao-sec botao-pequeno',
     onclick: () => baixar(nomeArquivo, gerarCsv(colunas, linhasVisiveis())),
   }, 'Exportar CSV') : null;
+  const botaoXlsx = xlsx && podeExportarCsv() ? el('button', {
+    type: 'button', class: 'botao botao-sec botao-pequeno', title: 'Baixa as linhas filtradas numa planilha do Excel',
+    onclick: async () => {
+      botaoXlsx.disabled = true;
+      try {
+        baixar(nomeArquivo.replace(/\.csv$/i, '') + '.xlsx', await gerarXlsx(colunas, linhasVisiveis(), { aba: xlsx }), TIPO_XLSX);
+      } finally {
+        botaoXlsx.disabled = false;
+      }
+    },
+  }, 'Exportar .xlsx') : null;
   const botaoCopiar = el('button', {
     type: 'button', class: 'botao botao-sec botao-pequeno', title: 'Copia as linhas filtradas para colar no Excel',
     onclick: async () => {
@@ -212,7 +226,7 @@ export function criarTabela(opcoes) {
 
   const elemento = el('div', { class: 'tabela-bloco' },
     larguras.estilo, ocultas.estilo, ajuste.estilo,
-    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, larguras.botao, ocultas.botao, botaoDensidade(), botaoCopiar, botaoCsv),
+    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, larguras.botao, ocultas.botao, botaoDensidade(), botaoCopiar, botaoCsv, botaoXlsx),
     ajuste.rolagem,
     paginacao);
   render();
