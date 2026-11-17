@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { criarConfig, normalizarCodigoFilial } from '../src/config/index.js';
+import { criarConfig, normalizarCodigoFilial, atualizarConfigSalva } from '../src/config/index.js';
 import {
   calcularLinhaBase, calcularLinhaFollowUp, extrairNumero, savingReal, numeroExcel, ehServico, PRAZO_SLA_DIAS, aprovacaoPrePedido,
 } from '../src/regras.js';
@@ -215,6 +215,20 @@ test('Status Pré-Pedido nível 1: nome do aprovador GA da filial (Configuraçã
   assert.equal(calcularLinhaBase(linha({ ...nivel1, codigoFilial: '30.998' }), cfg, HOJE).aprovacao, 'Ag. aprovação Beltrano');
   assert.equal(calcularLinhaBase(linha(nivel1), cfg, HOJE).aprovacao, 'Ag. aprovação GA');
   assert.equal(calcularLinhaBase(linha(), cfg, HOJE).aprovacao, null);
+});
+
+test('Itajaí separada: HUB (570), Fatiados (572) e CD (573); configuração salva com o nome antigo é atualizada', () => {
+  const cfg = criarConfig();
+  assert.deepEqual(['570', '572', '573'].map((a) => cfg.dadosFilial(a).nome), ['Itajaí - HUB', 'Itajaí - Fatiados', 'Itajaí - CD']);
+  const salva = { filiais: [
+    { codigo: '30570', ajustada: '570', nome: 'Itajai', regional: 'R' },
+    { codigo: '30.572', ajustada: '572', nome: 'ITAJAI ', regional: 'R' },
+    { codigo: '30573', ajustada: '573', nome: 'Itajaí Centro', regional: 'R' }, // editado pela equipe: fica
+    { codigo: '30901', ajustada: '901', nome: 'Itajai', regional: 'R' }, // outra filial: fica
+  ], compradores: [] };
+  assert.deepEqual(atualizarConfigSalva(salva).filiais.map((f) => f.nome), ['Itajaí - HUB', 'Itajaí - Fatiados', 'Itajaí Centro', 'Itajai']);
+  assert.equal(salva.filiais[0].nome, 'Itajai'); // não altera o objeto lido
+  assert.equal(atualizarConfigSalva(null), null);
 });
 
 test('aprovador GA: configuração salva sem o campo usa o padrão; campo apagado fica sem nome', () => {

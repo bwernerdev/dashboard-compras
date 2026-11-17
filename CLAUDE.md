@@ -53,7 +53,7 @@ PÚBLICO `github.com/bwernerdev/dashboard-compras` (branch `main`), por decisão
 - Textos de interface e documentação em português do Brasil.
 - Seguir o padrão do `../giro-estoque` (tokens CSS, `node --test`, Playwright na fase 2).
 - Regras de negócio só em `src/regras.js`; contas das telas só em `src/analise.js`; a UI não as reimplementa. Mudou regra: teste em `tests/regras.test.js`, `npm run conferir` e `PROJETO.md` seção 3.
-- Fidelidade à planilha antiga: célula vazia = 0 em conta; `""` não é vazia; comparação de texto sem maiúsculas; texto > número. Única correção aprovada: o erro de referência (PROJETO.md seção 2).
+- Fidelidade à planilha antiga: célula vazia = 0 em conta; `""` não é vazia; comparação de texto sem maiúsculas; texto > número. Única correção aprovada: o erro de referência (PROJETO.md seção 2). Diferença de de-para pedida: Itajaí em HUB/Fatiados/CD (`NOMES_ANTIGOS` em `src/config/index.js`; o `conferir` usa os nomes antigos).
 - Testes só com dados fictícios. Dados reais só em scripts locais.
 - Cores de status, prioridade e % saving vêm da planilha antiga (`src/ui/cores-planilha.js`). Nas tabelas usam o fundo exato (`--pl-*`): selo para status e % saving, marca para prioridade. No gráfico, a mesma família de cor em tons validados (`--graf-*`). Pedido da equipe; não trocar pela paleta. Detalhes: `PROJETO.md`, "Cores da planilha".
 - Gráficos: padrão da skill de visualização (paleta validada em `tokens.css`, cor fixa por status, legenda com 2+ séries, sempre uma tabela com os mesmos números). Contagem de SC = distinta por Solicitação. Pré-pedidos: vazio conta 1 por grupo, igual à planilha (`PROJETO.md` seção 9).

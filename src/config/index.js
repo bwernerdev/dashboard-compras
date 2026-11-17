@@ -20,6 +20,23 @@ function primeiraOcorrencia(lista, fnChave) {
 
 const padraoPorCodigo = primeiraOcorrencia(CONFIG_PADRAO.filiais, (f) => normalizarCodigoFilial(f.codigo));
 
+/** Nomes de filial que mudaram no padrão: código -> nome antigo (o novo é o do padrão). */
+export const NOMES_ANTIGOS = { 30570: 'Itajai', 30572: 'Itajai', 30573: 'Itajai' };
+
+/**
+ * Configuração salva no navegador antes de um nome mudar no padrão: troca o nome antigo pelo novo
+ * (Itajaí separada em HUB, Fatiados e CD, 17/11/2026). Nome editado pela equipe fica como está.
+ */
+export function atualizarConfigSalva(config) {
+  if (!config?.filiais) return config;
+  const filiais = config.filiais.map((f) => {
+    const k = normalizarCodigoFilial(f.codigo);
+    const antigo = NOMES_ANTIGOS[k];
+    return antigo && chave(f.nome).trim() === chave(antigo) ? { ...f, nome: padraoPorCodigo.get(k).nome } : f;
+  });
+  return { ...config, filiais };
+}
+
 /**
  * Monta as tabelas de busca a partir da configuração (padrão ou editada).
  * Cada busca reproduz um PROCV exato da planilha: primeira linha que bate.

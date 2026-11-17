@@ -3,7 +3,7 @@
 // Abas, filtros, tema e impressão vêm da casca comum (ui/casca.js), a mesma do painel publicado.
 
 import { importarNoWorker } from './importacao.js';
-import { criarConfig, CONFIG_PADRAO } from './config/index.js';
+import { criarConfig, CONFIG_PADRAO, atualizarConfigSalva } from './config/index.js';
 import { hojeSerie, formatarSerie } from './datas.js';
 import {
   brutosDe, recalcular, salvarImportacao, salvarAnterior, salvarHistorico, juntarAoHistorico, lerImportacoes, lerConfig, salvarConfig, apagarConfig,
@@ -30,7 +30,7 @@ const TELAS = [...TELAS_PUBLICAS.flatMap((t) => (t.id === 'regional'
   ? [t, { id: 'compradores', rotulo: 'SCs por Comprador', desenhar: telaCompradores }]
   : [t]))];
 
-const configSalva = lerConfig();
+const configSalva = atualizarConfigSalva(lerConfig());
 const estado = {
   config: configSalva ?? CONFIG_PADRAO,
   personalizada: !!configSalva,

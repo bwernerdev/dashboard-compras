@@ -5,10 +5,11 @@
 export const CONFIG_PADRAO = {
   // Código da filial (como vem do ME, sem ponto) -> filial ajustada, nome e regional.
   // aprovadorGA: nome do "Ag. aprovação" do nível 1 do pré-pedido (passado pela equipe em 12/11/2026; não existe na planilha).
+  // Itajaí separada em HUB (570), Fatiados (572) e CD (573) a pedido da equipe (17/11/2026); na planilha as três eram "Itajai".
   filiais: [
-    { codigo: '30570', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - ARMAZEM', ajustada: '570', nome: 'Itajai', regional: 'Filiais Bruno', aprovadorGA: 'FABIANO LECHINSKI' },
-    { codigo: '30573', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - CD', ajustada: '573', nome: 'Itajai', regional: 'Filiais Bruno', aprovadorGA: 'FABIANO LECHINSKI' },
-    { codigo: '30572', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - FATIADOS', ajustada: '572', nome: 'Itajai', regional: 'Filiais Bruno', aprovadorGA: 'MARANA BORGES' },
+    { codigo: '30570', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - ARMAZEM', ajustada: '570', nome: 'Itajaí - HUB', regional: 'Filiais Bruno', aprovadorGA: 'FABIANO LECHINSKI' },
+    { codigo: '30573', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - CD', ajustada: '573', nome: 'Itajaí - CD', regional: 'Filiais Bruno', aprovadorGA: 'FABIANO LECHINSKI' },
+    { codigo: '30572', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - FATIADOS', ajustada: '572', nome: 'Itajaí - Fatiados', regional: 'Filiais Bruno', aprovadorGA: 'MARANA BORGES' },
     { codigo: '178716', descricao: 'SEARA COMERCIO DE ALIMENTOS LT  -  BAURU - CD', ajustada: '716', nome: 'CDA', regional: 'Central Compras - Itajaí' },
     { codigo: '30901', descricao: 'SEARA ALIMENTOS LTDA  -  CAMPINAS - CD', ajustada: '901', nome: 'Campinas', regional: 'Filiais Thayane', aprovadorGA: 'BRUNO SOUSA MELO' },
     { codigo: '178692', descricao: 'SEARA COMERCIO DE ALIMENTOS LT  -  CAMPINAS - CD', ajustada: '692', nome: 'Campinas', regional: 'Filiais Thayane', aprovadorGA: 'BRUNO SOUSA MELO' },

@@ -6,7 +6,7 @@
 
 import { openAsBlob } from 'node:fs';
 import { importar } from '../src/importar.js';
-import { criarConfig } from '../src/config/index.js';
+import { criarConfig, CONFIG_PADRAO, NOMES_ANTIGOS, normalizarCodigoFilial } from '../src/config/index.js';
 import { diasUteis, formatarSerie } from '../src/datas.js';
 import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
 import {
@@ -15,7 +15,11 @@ import {
 
 const caminho = process.argv[2] ?? 'DASHBOARD COMPRAS 2026.xlsm';
 const blob = await openAsBlob(caminho);
-const cfg = criarConfig();
+// Nomes de filial como na planilha (o app separou Itajaí em HUB, Fatiados e CD em 17/11/2026).
+const cfg = criarConfig({
+  ...CONFIG_PADRAO,
+  filiais: CONFIG_PADRAO.filiais.map((f) => ({ ...f, nome: NOMES_ANTIGOS[normalizarCodigoFilial(f.codigo)] ?? f.nome })),
+});
 let falhas = 0;
 
 const traco = (v) => (v === null || v === undefined ? '-' : v);
