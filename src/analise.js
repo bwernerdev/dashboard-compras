@@ -212,6 +212,16 @@ export function scsPorCompradorStatus(registros) {
   return { status, linhas, totaisStatus, totalGeral };
 }
 
+/** Linhas com a data (`campo`: criacao ou dataPrePedido) dentro do período (com período, linha sem a data sai). */
+export function recortarPeriodo(regs, { de, ate }, campo = 'criacao') {
+  if (de === null && ate === null) return regs;
+  return regs.filter((r) => {
+    if (!Number.isFinite(r[campo])) return false;
+    const d = Math.floor(r[campo]);
+    return (de === null || d >= de) && (ate === null || d <= ate);
+  });
+}
+
 const temPrePedido = (r) => r.numeroPrePedido !== null && r.numeroPrePedido !== undefined && r.numeroPrePedido !== '';
 const VAZIO = Symbol('vazio');
 

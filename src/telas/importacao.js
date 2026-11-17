@@ -24,7 +24,7 @@ export function caixasDeImportacao({ estado, aoImportar }) {
   return el('section', { class: 'importacao', 'aria-label': 'Arquivos do ME' }, ARQUIVOS.map((a) => {
     const situacao = situacaoDaBase(estado[a.tipo]);
     const status = el('span', { class: 'arquivo-status', 'aria-live': 'polite' },
-      situacao ?? (a.obrigatorio ? 'Escolha ou arraste o arquivo' : 'Opcional por enquanto: as telas atuais usam só a Base'));
+      situacao ?? (a.obrigatorio ? 'Escolha ou arraste o arquivo' : 'Opcional: sem ele, a aba Entrega fica vazia'));
     const barra = el('progress', { max: '1', value: '0', hidden: true });
     const entrada = el('input', { type: 'file', accept: '.xlsx', dataset: { tipo: a.tipo } });
     const caixa = el('label', { class: 'arquivo', dataset: { tipo: a.tipo, estado: situacao ? 'ok' : '' } },

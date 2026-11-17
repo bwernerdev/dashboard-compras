@@ -7,7 +7,7 @@
 // 2: sem item e slaMax; 3: + categoria (linha vermelha de regularização);
 // 4: telas Status, Entrega, Spend, Atendimento (detalhe em toda linha, numeroPedido, slaMax, Follow-Up);
 // 5: sem slaMax (SLA com prazo único de 30 dias úteis, 12/11/2026); 6: + criacao (Data da Regional);
-// 7: + dataPedido (comparação de períodos em Spend e Saving)
+// 7: + dataPedido (comparação de períodos em Spend e Saving); 8: + aprovacao (Status Pré-Pedido, Atendimento)
 export const VERSAO = 8;
 
 /** Campos de toda linha: filtros, contagens, saving, spend e a lista da tela Status. */

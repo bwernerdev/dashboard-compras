@@ -2,7 +2,7 @@
 
 Substituir o `DASHBOARD COMPRAS 2026.xlsm` por um app web que lê as duas bases do ME, aplica as regras de negócio em um só lugar e gera um painel leve para a equipe de Suprimentos abrir pela Intranet.
 
-Status: **fase 3 concluída** ("Gerar painel" para o SharePoint; resultado na seção 10); fase 2 na seção 9, fase 1 na seção 8. Falta publicar o primeiro painel e cadastrar o link na Intranet. Próxima é a fase 4.
+Status: **fase 4 concluída** (demais telas públicas, seção 11); fase 3 na seção 10, fase 2 na seção 9, fase 1 na seção 8. Fase 5 (favorito abre o app) é opcional. Painel publicado no OneDrive/SharePoint com link na Intranet (seção 7); ajustes pedidos pela equipe seguem nas seções finais.
 
 ---
 

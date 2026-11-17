@@ -10,7 +10,7 @@ import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
 import {
   scsPorCompradorStatus, prePedidosPorCompradorRegional, OUTROS,
-  itensEmAberto, resumoEmAberto,
+  itensEmAberto, resumoEmAberto, recortarPeriodo,
 } from '../analise.js';
 import { PENDENTE } from '../regras.js';
 import { corDoStatusNoGrafico } from '../ui/cores-planilha.js';
@@ -38,16 +38,6 @@ const doCampo = (v) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v ?? '');
   return m ? serie(Number(m[1]), Number(m[2]), Number(m[3])) : null;
 };
-
-/** Linhas com a data (`campo`: criacao ou dataPrePedido) dentro do período (com período, linha sem a data sai). */
-export function recortarPeriodo(regs, { de, ate }, campo = 'criacao') {
-  if (de === null && ate === null) return regs;
-  return regs.filter((r) => {
-    if (!Number.isFinite(r[campo])) return false;
-    const d = Math.floor(r[campo]);
-    return (de === null || d >= de) && (ate === null || d <= ate);
-  });
-}
 
 /** Campos De/Até e "Limpar período". Mudou: guarda e redesenha a tela. */
 function barraDePeriodo(ctx) {

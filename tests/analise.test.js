@@ -4,12 +4,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   aplicarFiltros, opcoesDosFiltros, chaveMes, rotuloMes, itensEmAberto, resumoEmAberto, porFaixaDeDias,
-  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorStatus, resumoStatus, periodosDePedido, spendPorFilial, resumoSpend, entregasPorStatus, recortarPor, scsPorCompradorStatus, prePedidosPorCompradorRegional, aguardandoAprovacao,
+  faixaDe, emAbertoPor, recortarPorStatus, itensPorStatus, ehPendencia, ehRegularizacao, scsPorStatus, resumoStatus, periodosDePedido, spendPorFilial, resumoSpend, entregasPorStatus, recortarPor, scsPorCompradorStatus, prePedidosPorCompradorRegional, aguardandoAprovacao, recortarPeriodo,
   pctSaving, resumoSaving, savingPorFilial, savingPorComprador, savingPorMes,
 } from '../src/analise.js';
 import { brutosDe, recalcular, juntarAoHistorico } from '../src/memoria.js';
 import { validarConfig, lerConfigExportada } from '../src/telas/configuracao.js';
-import { recortarPeriodo } from '../src/telas/compradores.js';
 import { gerarCsv } from '../src/ui/tabela.js';
 import { criarConfig, CONFIG_PADRAO } from '../src/config/index.js';
 import { calcularLinhaBase } from '../src/regras.js';

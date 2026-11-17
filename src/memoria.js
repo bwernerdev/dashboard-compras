@@ -111,12 +111,6 @@ export async function lerImportacoes() {
   }
 }
 
-export async function apagarImportacoes() {
-  try {
-    await transacao('readwrite', (loja) => loja.clear());
-  } catch { /* nada a apagar */ }
-}
-
 // ---------- Configuração (localStorage) ----------
 
 export function lerConfig() {

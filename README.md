@@ -12,7 +12,7 @@ Painel da equipe de Suprimentos que vai substituir o `DASHBOARD COMPRAS 2026.xls
 5. Quem abre pela Intranet vê o painel dentro do SharePoint, com filtros e "Copiar tabela". Para imprimir ou exportar CSV: baixar o arquivo e abrir no computador.
 
 ## Uso
-`npm run dev` abre o app da equipe. Na primeira vez, escolha ou arraste a `base.xlsx` (o Follow-Up é opcional por enquanto). A base fica salva neste navegador: ao abrir de novo, o painel já aparece, com os dias recalculados para hoje. "Atualizar bases" troca os arquivos; "Configuração" edita filiais, compradores e SLA; "Gerar painel" baixa o arquivo para publicar.
+A equipe abre o app em https://bwernerdev.github.io/dashboard-compras/ (ou `npm run dev` neste computador). Na primeira vez, escolha ou arraste a `base.xlsx` e o `Follow-Up.xlsx` (sem ele, a aba Entrega fica vazia). As bases ficam salvas só neste navegador: ao abrir de novo, o app já aparece, com os dias recalculados para hoje. "Atualizar bases" troca os arquivos; "Configuração" edita filiais (com o aprovador GA do pré-pedido) e compradores, e exporta/importa o arquivo para passar à equipe (o SLA é fixo: 30 dias úteis); "Gerar painel" baixa o arquivo para publicar.
 
 ## Pastas
 | Pasta | Conteúdo |
