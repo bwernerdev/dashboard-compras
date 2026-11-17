@@ -70,6 +70,19 @@ export async function salvarImportacao(tipo, registros, meta) {
   }
 }
 
+/**
+ * Referência ao arquivo importado de cada tipo (FileSystemFileHandle do Chrome/Edge), para "Reimportar
+ * bases" ler de novo o mesmo arquivo. Tipo 'alca-<tipo>'. null apaga (importado sem referência).
+ */
+export async function salvarAlca(tipo, alca) {
+  try {
+    await transacao('readwrite', (loja) => (alca ? loja.put({ tipo: `alca-${tipo}`, alca }) : loja.delete(`alca-${tipo}`)));
+    return true;
+  } catch {
+    return false; // referência de mentira (testes) ou navegador sem o recurso: fica só na memória da página
+  }
+}
+
 /** Anexo de contratos (planilha CONTROLE DE CONTRATOS já lida): { abas, meta }. Tipo 'contratos' na mesma loja. */
 export async function salvarContratos({ abas, meta }) {
   try {
@@ -111,7 +124,7 @@ export function juntarAoHistorico(pontos, ponto, max = 30) {
   return [...(pontos ?? []).filter((p) => p.dia !== ponto.dia), ponto].sort((a, b) => a.dia - b.dia).slice(-max);
 }
 
-/** { base?, followUp?, 'base-anterior'?, historico?, contratos? } com { brutos, meta, salvoEm }; vazio se não houver nada ou o navegador bloquear. */
+/** { base?, followUp?, 'base-anterior'?, historico?, contratos?, 'alca-<tipo>'? } com { brutos, meta, salvoEm }; vazio se não houver nada ou o navegador bloquear. */
 export async function lerImportacoes() {
   try {
     const todas = await transacao('readonly', (loja) => loja.getAll());

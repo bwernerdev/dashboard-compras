@@ -7,7 +7,7 @@ import { criarConfig, CONFIG_PADRAO, atualizarConfigSalva } from './config/index
 import { hojeSerie, formatarSerie } from './datas.js';
 import {
   brutosDe, recalcular, salvarImportacao, salvarAnterior, salvarHistorico, juntarAoHistorico, lerImportacoes, lerConfig, salvarConfig, apagarConfig,
-  salvarContratos,
+  salvarContratos, salvarAlca,
 } from './memoria.js';
 import { lerContratos } from './contratos/ler.js';
 import { filialAjustadaDoContrato } from './contratos/dados.js';
@@ -19,7 +19,7 @@ import { esqueleto } from './ui/cartoes.js';
 import { criarNavegador, ligarTema, ligarImpressao, ligarTopoCompacto, diasDesdeABase, BASE_ANTIGA_DIAS } from './ui/casca.js';
 import { aplicarMarca } from './ui/marca.js';
 import { baixar } from './ui/tabela-exportar.js';
-import { caixasDeImportacao } from './telas/importacao.js';
+import { caixasDeImportacao, escolherComPastaLembrada } from './telas/importacao.js';
 import { abrirConfiguracao } from './telas/configuracao.js';
 import { TELAS_PUBLICAS, reiniciarTelas } from './telas/publicas.js';
 import { ligarAtendidas } from './telas/regional.js';
@@ -45,6 +45,7 @@ const estado = {
   anterior: null, // base de outro dia do ME { brutos, meta, salvoEm }: variação nos cartões
   historico: [], // [{ dia, status, aberto }]: mini gráficos dos cartões (ver memoria.js)
   contratos: null, // anexo opcional (CONTROLE DE CONTRATOS): { abas, meta, salvoEm }, janela Contratos
+  alcas: {}, // referência ao último arquivo de cada tipo (Chrome/Edge): "Reimportar bases" lê de novo
   carregando: true, // lendo as bases salvas ao abrir: esqueleto no lugar da tela de importação
 };
 
@@ -122,7 +123,70 @@ async function importarContratos(arquivo) {
   return estado.contratos;
 }
 
-async function importar(tipo, arquivo, aoAvancar) {
+/** Guarda (ou esquece) a referência ao arquivo importado deste tipo. */
+function lembrarArquivo(tipo, alca) {
+  estado.alcas[tipo] = alca ?? null;
+  salvarAlca(tipo, alca ?? null);
+}
+
+async function importar(tipo, arquivo, aoAvancar, alca = null) {
+  const dados = await importarSemLembrar(tipo, arquivo, aoAvancar);
+  lembrarArquivo(tipo, alca);
+  return dados;
+}
+
+const ROTULOS = { base: 'Base', followUp: 'Follow-Up' };
+
+/** Arquivo de novo pela referência guardada (pede permissão de leitura se preciso); sem ela, o seletor do tipo. */
+async function arquivoDeNovo(tipo) {
+  const alca = estado.alcas[tipo];
+  if (alca) {
+    const permissao = await alca.queryPermission?.({ mode: 'read' }) ?? 'granted';
+    if (permissao !== 'granted' && (await alca.requestPermission({ mode: 'read' })) !== 'granted') {
+      throw new Error('o navegador não liberou a leitura do arquivo: clique de novo e escolha "Permitir"');
+    }
+    try {
+      return { arquivo: await alca.getFile(), alca };
+    } catch {
+      throw new Error('o arquivo não está mais no mesmo lugar: importe pela caixa em "Atualizar bases"');
+    }
+  }
+  const escolhido = await escolherComPastaLembrada(tipo);
+  if (escolhido) return escolhido;
+  if (escolhido === undefined) return null; // cancelou
+  throw new Error('este navegador não lembra o arquivo: importe pela caixa em "Atualizar bases"');
+}
+
+/**
+ * "Reimportar bases" (Configuração): lê de novo a Base e o Follow-Up (se houver) dos mesmos arquivos,
+ * para trazer as linhas de filial nova do de-para. Primeiro pega os arquivos (permissões e seletor, com
+ * o clique ainda valendo), depois importa. Devolve um texto por base.
+ */
+async function reimportarBases(aoAvancar) {
+  const tipos = ['base', 'followUp'].filter((t) => t === 'base' || estado[t] || estado.alcas[t]);
+  const arquivos = [];
+  const resultado = [];
+  for (const tipo of tipos) {
+    try {
+      const a = await arquivoDeNovo(tipo);
+      if (a) arquivos.push({ tipo, ...a });
+      else resultado.push(`${ROTULOS[tipo]}: cancelado.`);
+    } catch (erro) {
+      resultado.push(`${ROTULOS[tipo]}: ${erro.message}.`);
+    }
+  }
+  for (const { tipo, arquivo, alca } of arquivos) {
+    try {
+      const dados = await importar(tipo, arquivo, (fracao, fase) => aoAvancar(`${ROTULOS[tipo]}: ${fase} ${Math.round(fracao * 100)}%`), alca);
+      resultado.push(`${ROTULOS[tipo]}: ${arquivo.name}, ${dados.registros.length.toLocaleString('pt-BR')} linhas das filiais do de-para.`);
+    } catch (erro) {
+      resultado.push(`${ROTULOS[tipo]}: ${erro.message}`);
+    }
+  }
+  return resultado;
+}
+
+async function importarSemLembrar(tipo, arquivo, aoAvancar) {
   if (tipo === 'contratos') return importarContratos(arquivo);
   const hoje = hojeSerie();
   const resultado = await importarNoWorker(tipo, arquivo, { hoje, config: estado.config, aoAvancar });
@@ -157,6 +221,7 @@ async function restaurar() {
     const s = salvas[tipo];
     if (s?.brutos) definirBase(tipo, { brutos: s.brutos, meta: s.meta, salvoEm: s.salvoEm, registros: recalcular(tipo, s.brutos, estado.cfg, estado.hoje) });
   }
+  for (const tipo of ['base', 'followUp', 'contratos']) if (salvas[`alca-${tipo}`]?.alca) estado.alcas[tipo] = salvas[`alca-${tipo}`].alca;
   if (salvas.contratos?.abas) estado.contratos = { abas: salvas.contratos.abas, meta: salvas.contratos.meta, salvoEm: salvas.contratos.salvoEm };
   const a = salvas['base-anterior'];
   if (a?.brutos && estado.base && diaDaBase(a.meta) < diaDaBase(estado.base.meta)) {
@@ -184,7 +249,7 @@ function aplicarConfig(config, personalizada) {
   desenharTudo();
   const novas = [...estado.cfg.codigosFiliais].filter((c) => !codigosAntes.has(c));
   return novas.length && estado.base
-    ? `Filial nova no de-para (${novas.join(', ')}): importe a Base de novo para trazer as linhas dela.`
+    ? `Filial nova no de-para (${novas.join(', ')}): use "Reimportar bases" na Configuração para trazer as linhas dela.`
     : null;
 }
 
@@ -292,10 +357,12 @@ document.getElementById('acao-importar').addEventListener('click', abrirImportac
 document.getElementById('acao-config').addEventListener('click', () => abrirConfiguracao({
   config: estado.config,
   personalizada: estado.personalizada,
+  temBase: !!estado.base,
   aoSalvar(config) {
     salvarConfig(config);
     return aplicarConfig(config, true);
   },
+  aoReimportar: reimportarBases,
   aoRestaurar() {
     apagarConfig();
     return aplicarConfig(CONFIG_PADRAO, false);

@@ -10,7 +10,7 @@ export const NOME_ARQUIVO_CONFIG = 'configuracao-compras.json';
 
 const SECOES = [
   {
-    id: 'filiais', titulo: 'Filiais', ajuda: 'Código como vem do ME (sem ponto). Linhas de filiais fora desta lista são descartadas na importação.',
+    id: 'filiais', titulo: 'Filiais', ajuda: 'Código como vem do ME (sem ponto). Linhas de filiais fora desta lista são descartadas na importação: incluiu filial, use "Reimportar bases".',
     campos: [
       { id: 'codigo', rotulo: 'Código ME', largura: '8em' },
       { id: 'ajustada', rotulo: 'Filial', largura: '5em' },
@@ -95,12 +95,15 @@ function editorDeLista(secao, linhas) {
 /**
  * Abre o diálogo. config: configuração atual (objeto simples).
  * aoSalvar(novaConfig) e aoRestaurar() devolvem um texto de aviso (ou null).
+ * aoReimportar(aoAvancar(texto)) -> Promise<[texto]>: "Reimportar bases" (salva as edições, se houver, e lê a
+ * Base e o Follow-Up de novo dos mesmos arquivos; traz as linhas de filial nova). temBase: liga o botão.
  */
-export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar }) {
+export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar, aoReimportar = null, temBase = false }) {
   const rascunho = copiar(config);
   // Configuração salva antes do campo "Aprovador GA": mostra (e salva) o nome do padrão, que já vale no app.
   const padrao = new Map(CONFIG_PADRAO.filiais.map((f) => [normalizarCodigoFilial(f.codigo), f.aprovadorGA ?? '']));
   for (const f of rascunho.filiais) if (!('aprovadorGA' in f)) f.aprovadorGA = padrao.get(normalizarCodigoFilial(f.codigo)) ?? '';
+  const comoAbriu = JSON.stringify(rascunho);
   const avisos = el('div', { class: 'config-avisos', role: 'alert' });
   const dialogo = el('dialog', { class: 'dialogo dialogo-largo', 'aria-labelledby': 'titulo-config' });
 
@@ -135,6 +138,29 @@ export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar
     if (aviso) window.alert(aviso);
   };
 
+  const botaoReimportar = aoReimportar ? el('button', {
+    type: 'button', class: 'botao botao-sec', disabled: !temBase,
+    title: temBase ? 'Salva as edições e lê a Base e o Follow-Up de novo dos mesmos arquivos (traz as linhas de filial nova)' : 'Importe a Base primeiro',
+    onclick: async () => {
+      const erros = validarConfig(rascunho);
+      if (erros.length) { substituir(avisos, el('ul', {}, erros.map((e) => el('li', {}, e)))); return; }
+      // Só salva se mudou algo (sem edição, a configuração padrão continua padrão). O aviso de filial
+      // nova não precisa: a reimportação traz as linhas.
+      if (JSON.stringify(rascunho) !== comoAbriu) aoSalvar(copiar(rascunho));
+      botaoReimportar.disabled = true;
+      const textoAntes = botaoReimportar.textContent;
+      botaoReimportar.textContent = 'Reimportando...';
+      substituir(avisos, el('p', {}, 'Lendo os arquivos...'));
+      try {
+        const linhas = await aoReimportar((texto) => substituir(avisos, el('p', {}, texto)));
+        substituir(avisos, el('p', {}, 'Configuração salva e bases reimportadas:'), el('ul', {}, linhas.map((t) => el('li', {}, t))));
+      } finally {
+        botaoReimportar.textContent = textoAntes;
+        botaoReimportar.disabled = false;
+      }
+    },
+  }, 'Reimportar bases') : null;
+
   dialogo.append(
     el('header', { class: 'dialogo-cabecalho' },
       el('h2', { id: 'titulo-config' }, 'Configuração'),
@@ -160,6 +186,7 @@ export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar
       }, 'Exportar'),
       el('button', { type: 'button', class: 'botao botao-sec', title: 'Carrega um arquivo exportado; confira e clique em Salvar', onclick: () => arquivo.click() }, 'Importar'),
       arquivo,
+      botaoReimportar,
       el('span', { class: 'espaco' }),
       el('button', { type: 'button', class: 'botao botao-sec', onclick: fechar }, 'Cancelar'),
       el('button', { type: 'button', class: 'botao', onclick: salvar }, 'Salvar')));

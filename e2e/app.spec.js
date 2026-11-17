@@ -515,6 +515,33 @@ test('configuração: editar o de-para recalcula; restaurar padrão volta', asyn
   await expect(conteudo.getByText('Regional Editada')).toHaveCount(0);
 });
 
+test('configuração: "Reimportar bases" lê o mesmo arquivo de novo e traz a filial incluída', async ({ page }) => {
+  // Seletor e referência ao arquivo simulados (a janela do sistema não abre no teste); conta as leituras.
+  const base = await arquivoBase();
+  await page.addInitScript((bytes) => {
+    window.leituras = 0;
+    const alca = { kind: 'file', queryPermission: async () => 'granted', getFile: async () => { window.leituras++; return new File([new Uint8Array(bytes)], 'base.xlsx'); } };
+    window.showOpenFilePicker = async () => [alca];
+  }, [...base.buffer]);
+  await page.goto('./');
+  await page.locator('.arquivo[data-tipo="base"]').click();
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
+
+  // Filial 99999 (está na base fictícia, fora do de-para): incluída e reimportada sem escolher arquivo.
+  await page.getByRole('button', { name: 'Configuração' }).click();
+  await page.getByRole('button', { name: 'Adicionar em Filiais' }).click();
+  const n = await page.locator('input[aria-label$="Código ME"]').count();
+  await page.getByLabel(`Filiais, linha ${n}, Código ME`).fill('99999');
+  await page.getByLabel(`Filiais, linha ${n}, Filial`).fill('999');
+  await page.getByLabel(`Filiais, linha ${n}, Nome`).fill('Filial Nova');
+  await page.getByLabel(`Filiais, linha ${n}, Regional`).fill('Regional Nova');
+  await page.getByRole('button', { name: 'Reimportar bases' }).click();
+  await expect(page.locator('.config-avisos')).toContainText('Base: base.xlsx, 5 linhas das filiais do de-para');
+  expect(await page.evaluate(() => window.leituras)).toBe(2);
+  await page.getByRole('button', { name: 'Fechar configuração' }).click();
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('3');
+});
+
 test('configuração: exportar e importar o arquivo da equipe', async ({ page }) => {
   await importarBase(page);
   const conteudo = page.locator('#conteudo');

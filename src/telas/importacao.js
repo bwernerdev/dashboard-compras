@@ -19,12 +19,13 @@ const TIPOS_XLSX = [{
  * pasta da última importação daquele tipo (Base de um lugar, Follow-Up de outro, Contratos de outro).
  * A página nunca vê o caminho; quem lembra a pasta é o navegador. Sem o recurso (outros navegadores):
  * null, e vale o seletor comum do <input type="file">. Cancelar: undefined.
+ * Escolheu: { arquivo, alca } (alca: referência ao arquivo no disco, para "Reimportar bases" ler de novo).
  */
-async function escolherComPastaLembrada(tipo) {
+export async function escolherComPastaLembrada(tipo) {
   if (typeof window.showOpenFilePicker !== 'function') return null;
   try {
-    const [arquivo] = await window.showOpenFilePicker({ id: `importar-${tipo}`, types: TIPOS_XLSX, multiple: false });
-    return arquivo.getFile();
+    const [alca] = await window.showOpenFilePicker({ id: `importar-${tipo}`, types: TIPOS_XLSX, multiple: false });
+    return { arquivo: await alca.getFile(), alca };
   } catch (erro) {
     return erro?.name === 'AbortError' ? undefined : null;
   }
@@ -43,7 +44,8 @@ export function situacaoDaBase(dados) {
 
 /**
  * estado: { base?, followUp?, contratos? } (dados atuais, para mostrar a situação).
- * aoImportar(tipo, arquivo, aoAvancar) -> Promise (rejeita com a mensagem de erro).
+ * aoImportar(tipo, arquivo, aoAvancar, alca) -> Promise (rejeita com a mensagem de erro). alca: referência
+ * ao arquivo no disco (seletor do navegador ou arrastar, Chrome/Edge), ou null (seletor comum).
  */
 export function caixasDeImportacao({ estado, aoImportar }) {
   return el('section', { class: 'importacao', 'aria-label': 'Arquivos do ME' }, ARQUIVOS.map((a) => {
@@ -57,7 +59,7 @@ export function caixasDeImportacao({ estado, aoImportar }) {
       el('span', { class: 'arquivo-dica' }, a.dica),
       entrada, status, barra);
 
-    const carregar = async (arquivo) => {
+    const carregar = async (arquivo, alca = null) => {
       caixa.dataset.estado = 'lendo';
       status.textContent = `Lendo ${arquivo.name}...`;
       barra.hidden = false;
@@ -66,7 +68,7 @@ export function caixasDeImportacao({ estado, aoImportar }) {
         const dados = await aoImportar(a.tipo, arquivo, (fracao, fase) => {
           barra.value = fracao;
           status.textContent = `${fase}: ${Math.round(fracao * 100)}%`;
-        });
+        }, alca);
         caixa.dataset.estado = 'ok';
         status.textContent = `${situacaoDaBase(dados)} · ${(dados.meta.duracaoMs / 1000).toFixed(1)} s`;
       } catch (erro) {
@@ -84,9 +86,9 @@ export function caixasDeImportacao({ estado, aoImportar }) {
     entrada.addEventListener('click', async (ev) => {
       if (seletorComum || typeof window.showOpenFilePicker !== 'function') { seletorComum = false; return; }
       ev.preventDefault();
-      const arquivo = await escolherComPastaLembrada(a.tipo);
-      if (arquivo) carregar(arquivo);
-      else if (arquivo === null) { seletorComum = true; entrada.click(); }
+      const escolhido = await escolherComPastaLembrada(a.tipo);
+      if (escolhido) carregar(escolhido.arquivo, escolhido.alca);
+      else if (escolhido === null) { seletorComum = true; entrada.click(); }
     });
     caixa.addEventListener('dragover', (ev) => { ev.preventDefault(); caixa.classList.add('arrastando'); });
     caixa.addEventListener('dragleave', () => caixa.classList.remove('arrastando'));
@@ -94,7 +96,11 @@ export function caixasDeImportacao({ estado, aoImportar }) {
       ev.preventDefault();
       caixa.classList.remove('arrastando');
       const arquivo = ev.dataTransfer.files[0];
-      if (arquivo) carregar(arquivo);
+      if (!arquivo) return;
+      // Arrastar também dá a referência ao arquivo (Chrome/Edge); pedida ainda dentro do evento.
+      const item = ev.dataTransfer.items?.[0];
+      const pedido = typeof item?.getAsFileSystemHandle === 'function' ? item.getAsFileSystemHandle().catch(() => null) : Promise.resolve(null);
+      pedido.then((alca) => carregar(arquivo, alca?.kind === 'file' ? alca : null));
     });
     return caixa;
   }));
