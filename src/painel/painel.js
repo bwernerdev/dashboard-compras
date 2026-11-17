@@ -10,7 +10,9 @@ import '../styles/tokens.css';
 import '../styles/base.css';
 import '../styles/componentes.css';
 import '../styles/impressao.css';
-import { descompactar, registrosDoPainel, followUpDoPainel } from './dados.js';
+import { descompactar, registrosDoPainel, followUpDoPainel, contratosDoPainel } from './dados.js';
+import { abrirContratos } from '../telas/contratos.js';
+import { filialAjustadaDoContrato } from '../contratos/dados.js';
 import { criarNavegador, ligarTema, ligarImpressao, ligarTopoCompacto, diasDesdeABase, BASE_ANTIGA_DIAS } from '../ui/casca.js';
 import { aplicarMarca } from '../ui/marca.js';
 import { definirExportacao } from '../ui/tabela-exportar.js';
@@ -56,6 +58,17 @@ function mostrarPeriodo(dados) {
   raiz.periodo.hidden = false;
 }
 
+/** Botão Contratos: só se o painel foi gerado com a planilha. Nome da filial pelos próprios registros. */
+function ligarContratos(contratos, registros) {
+  const botao = document.getElementById('acao-contratos');
+  if (!contratos || !botao) return;
+  const nomes = new Map(registros.map((r) => [r.filial, r.nomeFilial]));
+  botao.hidden = false;
+  botao.addEventListener('click', () => abrirContratos({
+    contratos, hoje: hojeSerie(), nomeDaFilial: (filial) => nomes.get(filialAjustadaDoContrato(filial))?.trim() || null,
+  }));
+}
+
 async function iniciar() {
   substituir(raiz.conteudo, esqueleto('Abrindo os dados do painel...'));
   let dados;
@@ -73,7 +86,9 @@ async function iniciar() {
     chaveFiltros: 'filtros-painel',
     telaVazia: () => el('div', { class: 'estado-vazio' }, 'O painel não tem linhas.'),
   });
-  nav.definirRegistros(registrosDoPainel(dados));
+  const registros = registrosDoPainel(dados);
+  nav.definirRegistros(registros);
+  ligarContratos(contratosDoPainel(dados), registros);
   nav.definirFollowUp(followUpDoPainel(dados));
   nav.definirPeriodo(dados.periodo);
   mostrarPeriodo(dados);

@@ -70,6 +70,16 @@ export async function salvarImportacao(tipo, registros, meta) {
   }
 }
 
+/** Anexo de contratos (planilha CONTROLE DE CONTRATOS já lida): { abas, meta }. Tipo 'contratos' na mesma loja. */
+export async function salvarContratos({ abas, meta }) {
+  try {
+    await transacao('readwrite', (loja) => loja.put({ tipo: 'contratos', abas, meta, salvoEm: Date.now() }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Base anterior (outro dia do ME), para a variação nos cartões: { brutos, meta, salvoEm } já em brutos.
  * Fica na mesma loja, com tipo 'base-anterior'.
@@ -101,7 +111,7 @@ export function juntarAoHistorico(pontos, ponto, max = 30) {
   return [...(pontos ?? []).filter((p) => p.dia !== ponto.dia), ponto].sort((a, b) => a.dia - b.dia).slice(-max);
 }
 
-/** { base?, followUp?, 'base-anterior'?, historico? } com { brutos, meta, salvoEm }; vazio se não houver nada ou o navegador bloquear. */
+/** { base?, followUp?, 'base-anterior'?, historico?, contratos? } com { brutos, meta, salvoEm }; vazio se não houver nada ou o navegador bloquear. */
 export async function lerImportacoes() {
   try {
     const todas = await transacao('readonly', (loja) => loja.getAll());

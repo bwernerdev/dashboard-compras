@@ -1,7 +1,8 @@
 // Fluxo completo no navegador com bases fictícias (e2e/ajuda/bases.js).
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { arquivoBase, arquivoBaseAnterior, arquivoFollowUp, FILIAL_A, FILIAL_B, COMPRADOR } from './ajuda/bases.js';
+import { arquivoBase, arquivoBaseAnterior, arquivoFollowUp, arquivoContratos, FILIAL_A, FILIAL_B, COMPRADOR } from './ajuda/bases.js';
+import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
 
 const valorDoCartao = (page, rotulo) => page.locator('.tela > .cartoes > .cartao', { has: page.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
 
@@ -412,6 +413,49 @@ test('Entrega: sem Follow-Up avisa; com Follow-Up mostra OFs por status', async 
   await page.getByRole('checkbox', { name: FILIAL_B.regional }).check();
   await expect(valorDoCartao(page, /^OFs$/)).toHaveText('1');
   await page.keyboard.press('Escape');
+});
+
+test('Contratos: anexo opcional abre numa janela separada, com as abas da planilha (lembrado)', async ({ page }) => {
+  await importarBase(page);
+  const botao = page.locator('#acao-contratos');
+  await expect(botao).toBeDisabled();
+  await page.locator('#acao-importar').click();
+  await page.locator('dialog input[data-tipo="contratos"]').setInputFiles(await arquivoContratos());
+  await expect(page.locator('dialog .arquivo[data-tipo="contratos"] .arquivo-status')).toContainText('7 linhas em 4 abas');
+  await page.locator('dialog').getByRole('button', { name: 'Fechar' }).last().click();
+  await expect(botao).toBeEnabled();
+
+  await botao.click();
+  const janela = page.getByRole('dialog', { name: 'Contratos' });
+  await expect(janela).toBeVisible();
+  await expect(janela.getByRole('tab')).toHaveText(['Contratos 4', 'Pequeno porte 1', 'ME 1', 'Inativos 1']); // sem Renovações
+  const cartao = (rotulo) => janela.locator('.cartao').filter({ has: page.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
+  await expect(cartao('Vencem em até 30 dias')).toHaveText('1');
+  await expect(cartao('Fim já passou')).toHaveText('2');
+  // Ordenada pelo prazo (o que venceu primeiro no topo); nome da filial pelo de-para.
+  const primeira = janela.locator('tbody tr').first();
+  await expect(primeira).toContainText('FORNECEDOR D');
+  await expect(janela.locator('tbody tr', { hasText: 'FORNECEDOR A' })).toContainText('Itajaí - HUB');
+  await expect(janela.locator('tbody tr', { hasText: 'FORNECEDOR A' })).toContainText('111'); // nº Projuris
+  await expect(janela.locator('tbody tr', { hasText: 'FORNECEDOR A' })).toContainText('222'); // nº ME
+
+  // .xlsx da aba: todas as colunas, uma linha por contrato.
+  const [planilha] = await Promise.all([page.waitForEvent('download'), janela.getByRole('button', { name: 'Exportar .xlsx' }).click()]);
+  expect(planilha.suggestedFilename()).toBe('contratos-contratos.xlsx');
+  const linhas = await lerAbaInteira(await abrirPasta(new Blob([await readFile(await planilha.path())])), 'Contratos');
+  expect(linhas.length).toBe(5);
+  expect(linhas[0]).toContain('Contrato Projuris');
+
+  await janela.getByRole('tab', { name: /Inativos/ }).click();
+  await expect(janela.locator('tbody tr')).toContainText(['FORNECEDOR G']);
+  await page.keyboard.press('Escape');
+  await expect(janela).toBeHidden();
+
+  // Fica salvo no navegador, com a aba da janela.
+  await page.reload();
+  await expect(botao).toBeEnabled();
+  await botao.click();
+  await expect(janela.getByRole('tab', { name: /Inativos/ })).toHaveAttribute('aria-selected', 'true');
 });
 
 test('bases ficam salvas no navegador e a aba é lembrada', async ({ page }) => {

@@ -1,6 +1,7 @@
 // Bases fictícias para o e2e: mesmas colunas do ME, poucas linhas, datas relativas a hoje.
 // Filiais e comprador vêm da configuração padrão (para o app aceitar as linhas); nenhum dado real.
 import { criarXlsx } from '../../tests/ajuda/xlsx-ficticio.js';
+import { criarContratosFicticios } from '../../tests/ajuda/contratos-ficticio.js';
 import { BASE, FOLLOW_UP } from '../../src/esquema.js';
 import { CONFIG_PADRAO } from '../../src/config/index.js';
 import { hojeSerie } from '../../src/datas.js';
@@ -86,4 +87,9 @@ export async function arquivoBaseAnterior() {
 
 export async function arquivoFollowUp() {
   return { name: 'Follow-Up.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: await paraBuffer(await criarXlsx([DADOS_GERAIS, relatorio(FOLLOW_UP, LINHAS_FOLLOW_UP)])) };
+}
+
+/** Planilha de contratos fictícia (tests/ajuda/contratos-ficticio.js): 7 linhas nas 4 abas lidas, prazos relativos a hoje. */
+export async function arquivoContratos() {
+  return { name: 'CONTROLE DE CONTRATOS.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: await paraBuffer(await criarContratosFicticios(HOJE)) };
 }

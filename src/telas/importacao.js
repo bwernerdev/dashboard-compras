@@ -1,11 +1,12 @@
-// Caixas de importação das duas bases (escolher ou arrastar o arquivo).
+// Caixas de importação das bases do ME e do anexo de contratos (escolher ou arrastar o arquivo).
 // Usadas na tela vazia e no diálogo "Atualizar bases".
 import { el } from '../ui/dom.js';
 import * as fmt from '../ui/formatos.js';
 
 const ARQUIVOS = [
-  { tipo: 'base', titulo: 'Base', dica: 'base.xlsx (Relatório de Requisição - Friboi V2)', obrigatorio: true },
-  { tipo: 'followUp', titulo: 'Follow-Up', dica: 'Follow-Up.xlsx (Follow-up - Friboi)', obrigatorio: false },
+  { tipo: 'base', titulo: 'Base', dica: 'base.xlsx (Relatório de Requisição - Friboi V2)', vazio: 'Escolha ou arraste o arquivo' },
+  { tipo: 'followUp', titulo: 'Follow-Up', dica: 'Follow-Up.xlsx (Follow-up - Friboi)', vazio: 'Opcional: sem ele, a aba Entrega fica vazia' },
+  { tipo: 'contratos', titulo: 'Contratos (anexo)', dica: 'CONTROLE DE CONTRATOS.xlsx', vazio: 'Opcional: abre na janela Contratos (botão no topo)' },
 ];
 
 /** Texto de situação de uma base já carregada. */
@@ -13,18 +14,21 @@ export function situacaoDaBase(dados) {
   if (!dados) return null;
   const m = dados.meta;
   const quando = dados.salvoEm ? new Date(dados.salvoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : null;
-  return `${m.arquivo ?? 'arquivo'}: ${fmt.inteiro(dados.registros.length)} linhas das filiais do de-para${quando ? ` · importado em ${quando}` : ''}`;
+  const linhas = m.tipo === 'contratos'
+    ? `${fmt.inteiro(m.linhas)} linhas em ${Object.keys(dados.abas).length} abas`
+    : `${fmt.inteiro(dados.registros.length)} linhas das filiais do de-para`;
+  return `${m.arquivo ?? 'arquivo'}: ${linhas}${quando ? ` · importado em ${quando}` : ''}`;
 }
 
 /**
- * estado: { base?, followUp? } (dados atuais, para mostrar a situação).
+ * estado: { base?, followUp?, contratos? } (dados atuais, para mostrar a situação).
  * aoImportar(tipo, arquivo, aoAvancar) -> Promise (rejeita com a mensagem de erro).
  */
 export function caixasDeImportacao({ estado, aoImportar }) {
   return el('section', { class: 'importacao', 'aria-label': 'Arquivos do ME' }, ARQUIVOS.map((a) => {
     const situacao = situacaoDaBase(estado[a.tipo]);
     const status = el('span', { class: 'arquivo-status', 'aria-live': 'polite' },
-      situacao ?? (a.obrigatorio ? 'Escolha ou arraste o arquivo' : 'Opcional: sem ele, a aba Entrega fica vazia'));
+      situacao ?? a.vazio);
     const barra = el('progress', { max: '1', value: '0', hidden: true });
     const entrada = el('input', { type: 'file', accept: '.xlsx', dataset: { tipo: a.tipo } });
     const caixa = el('label', { class: 'arquivo', dataset: { tipo: a.tipo, estado: situacao ? 'ok' : '' } },

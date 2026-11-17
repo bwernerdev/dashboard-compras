@@ -410,6 +410,20 @@ body:has(.th-alca.arrastando) { cursor: col-resize; user-select: none; }
 /* SLA na tela Atendimento: marca quadrada + texto (mesmo formato da prioridade). */
 .sla-bom { background: var(--st-bom); }
 .sla-fora { background: var(--st-critico); }
+.contrato-aviso { background: var(--warning-fg); }
+.contrato-inativo { background: var(--text-muted); }
+
+/* Janela Contratos: tela cheia por cima do dashboard (telas/contratos.js) */
+.dialogo.janela {
+  width: calc(100vw - 32px); max-width: none; height: calc(100vh - 32px); max-height: none;
+  display: flex; flex-direction: column; padding: var(--s4) var(--s5) 0; overflow: hidden;
+}
+.dialogo.janela:not([open]) { display: none; }
+.janela-cabecalho { gap: var(--s4); }
+.janela-titulo { display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap; min-width: 0; }
+.janela-abas { margin: 0 0 var(--s3); padding-bottom: var(--s2); border-bottom: 1px solid var(--line); }
+.aba-contagem { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.janela-conteudo { flex: 1; min-height: 0; overflow: auto; padding-bottom: var(--s5); }
 
 /* Organograma: árvore de cima para baixo (listas aninhadas). Linhas: cada <li> desenha metade da
    linha horizontal acima dele (::before à esquerda, ::after à direita, com a descida até o cartão);

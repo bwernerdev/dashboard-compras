@@ -1,9 +1,13 @@
 // Dados que vão DENTRO do painel publicado (PROJETO.md, seção 4.7): só os campos que as telas
 // públicas (telas/publicas.js) usam. Nada da configuração (de-para, nomes completos), nada de
 // pré-pedido (tela Compradores, interna). Alguns campos só para SCs em aberto (Regional, Atendimento).
-// Formato: { versao, geradoEm, hoje, periodo, arquivo, campos, linhas, followUp: { campos, linhas } | null }
+// Contratos (anexo opcional, janela Contratos): vão inteiros, por decisão do usuário (17/11/2026).
+// Formato: { versao, geradoEm, hoje, periodo, arquivo, campos, linhas, followUp: { campos, linhas } | null,
+// contratos: { abas, meta: { arquivo, salvoEm } } | null }
 // em JSON, gzip, base64. Roda no navegador e no Node (testes).
 // @ts-check
+
+import { ABAS } from '../contratos/dados.js';
 
 /** @typedef {import('../tipos').Registro} Registro */
 /** @typedef {import('../tipos').RegistroFollowUp} RegistroFollowUp */
@@ -11,8 +15,9 @@
 // 2: sem item e slaMax; 3: + categoria (linha vermelha de regularização);
 // 4: telas Status, Entrega, Spend, Atendimento (detalhe em toda linha, numeroPedido, slaMax, Follow-Up);
 // 5: sem slaMax (SLA com prazo único de 30 dias úteis, 12/11/2026); 6: + criacao (Data da Regional);
-// 7: + dataPedido (comparação de períodos em Spend e Saving); 8: + aprovacao (Status Pré-Pedido, Atendimento)
-export const VERSAO = 8;
+// 7: + dataPedido (comparação de períodos em Spend e Saving); 8: + aprovacao (Status Pré-Pedido, Atendimento);
+// 9: + contratos (janela Contratos)
+export const VERSAO = 9;
 
 /**
  * Campos de toda linha: filtros, contagens, saving, spend e a lista da tela Status.
@@ -42,13 +47,16 @@ export const CAMPOS_FOLLOW_UP = [
   'fornecedor', 'cnpj', 'statusEntrega',
 ];
 
+/** Só as abas que a janela Contratos mostra (importação antiga podia trazer Renovações). */
+const abasDaJanela = (abas) => Object.fromEntries(ABAS.filter((a) => abas[a.id]).map((a) => [a.id, abas[a.id]]));
+
 const valorOuNulo = (v) => (v === undefined || (typeof v === 'number' && Number.isNaN(v)) ? null : v);
 
 /**
  * Monta o objeto de dados do painel a partir dos registros calculados do app.
- * @param {{ registros: Registro[], followUp?: RegistroFollowUp[] | null, meta: any, hoje: number, geradoEm: string }} entrada
+ * @param {{ registros: Registro[], followUp?: RegistroFollowUp[] | null, meta: any, hoje: number, geradoEm: string, contratos?: any }} entrada
  */
-export function montarDadosDoPainel({ registros, followUp = null, meta, hoje, geradoEm }) {
+export function montarDadosDoPainel({ registros, followUp = null, meta, hoje, geradoEm, contratos = null }) {
   const g = meta?.dadosGerais ?? {};
   return {
     versao: VERSAO,
@@ -68,6 +76,7 @@ export function montarDadosDoPainel({ registros, followUp = null, meta, hoje, ge
       campos: CAMPOS_FOLLOW_UP,
       linhas: followUp.map((r) => CAMPOS_FOLLOW_UP.map((c) => valorOuNulo(r[c]))),
     } : null,
+    contratos: contratos?.abas ? { abas: abasDaJanela(contratos.abas), meta: { arquivo: contratos.meta?.arquivo ?? null, salvoEm: contratos.salvoEm ?? null } } : null,
   };
 }
 
@@ -85,6 +94,11 @@ export function registrosDoPainel(dados) {
 
 /** Registros do Follow-Up, ou null se o painel foi gerado sem ele. */
 export const followUpDoPainel = (dados) => (dados.followUp ? paraObjetos(dados.followUp) : null);
+
+/** Contratos ({ abas, meta, salvoEm }) para a janela, ou null se o painel foi gerado sem a planilha. */
+export const contratosDoPainel = (dados) => (dados.contratos?.abas
+  ? { abas: dados.contratos.abas, meta: dados.contratos.meta, salvoEm: dados.contratos.meta?.salvoEm ?? null }
+  : null);
 
 function paraBase64(bytes) {
   let texto = '';

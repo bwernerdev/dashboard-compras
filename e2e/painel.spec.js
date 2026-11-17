@@ -3,7 +3,7 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
-import { arquivoBase, arquivoFollowUp, COMPRADOR } from './ajuda/bases.js';
+import { arquivoBase, arquivoFollowUp, arquivoContratos, COMPRADOR } from './ajuda/bases.js';
 import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
 
 const TELAS = ['Status', 'Entrega', 'Regional', 'Spend', 'Saving', 'Atendimento', 'Organograma'];
@@ -17,10 +17,13 @@ async function gerarPainel(page, info) {
   await page.locator('#acao-importar').click();
   await page.locator('dialog input[data-tipo="followUp"]').setInputFiles(await arquivoFollowUp());
   await expect(page.locator('dialog .arquivo[data-tipo="followUp"] .arquivo-status')).toContainText('3 linhas');
+  await page.locator('dialog input[data-tipo="contratos"]').setInputFiles(await arquivoContratos());
+  await expect(page.locator('dialog .arquivo[data-tipo="contratos"] .arquivo-status')).toContainText('7 linhas');
   await page.locator('dialog').getByRole('button', { name: 'Fechar' }).last().click();
   const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#acao-painel').click()]);
   expect(download.suggestedFilename()).toBe('painel-compras.html');
   await expect(page.getByRole('heading', { name: 'Painel gerado' })).toBeVisible();
+  await expect(page.getByText('Leva também a planilha de contratos')).toBeVisible();
   // Com extensão .html (o download.path() não tem), senão o navegador abre como texto.
   const caminho = info.outputPath('painel-compras.html');
   await download.saveAs(caminho);
@@ -46,6 +49,14 @@ test('painel aberto como arquivo: telas públicas (sem Compradores), sem dados i
   await expect(painel.locator('#acao-imprimir')).toBeVisible();
   await expect(painel.getByRole('button', { name: 'Exportar CSV' }).first()).toBeVisible();
   await expect(painel.locator('.olho')).toHaveCount(0); // "atendida" é só do app da equipe
+
+  // Contratos (anexo): mesmo botão e mesma janela do app.
+  await painel.locator('#acao-contratos').click();
+  const janela = painel.getByRole('dialog', { name: 'Contratos' });
+  await expect(janela.getByRole('tab')).toHaveText(['Contratos 4', 'Pequeno porte 1', 'ME 1', 'Inativos 1']);
+  await expect(janela.locator('tbody tr', { hasText: 'FORNECEDOR A' })).toContainText('Itajaí - HUB');
+  await janela.getByRole('button', { name: 'Fechar' }).click();
+  await expect(janela).toBeHidden();
 
   // Atendimento: "Exportar .xlsx" baixa uma planilha do Excel com os itens em aberto, um por linha.
   await painel.getByRole('tab', { name: 'Atendimento' }).click();
@@ -94,6 +105,12 @@ test('painel no quadro isolado do SharePoint: aviso, sem CSV/.xlsx e sem imprimi
   await expect(quadro.getByRole('button', { name: 'Copiar tabela', exact: true })).toBeVisible();
   await expect(quadro.getByRole('button', { name: 'Exportar .xlsx' })).toHaveCount(0);
   await expect(quadro.getByRole('button', { name: 'Copiar tabela' }).first()).toBeVisible();
+
+  // Contratos abrem na janela também dentro do quadro (sem .xlsx/CSV lá dentro).
+  await quadro.locator('#acao-contratos').click();
+  await expect(quadro.getByRole('dialog', { name: 'Contratos' }).getByRole('tab')).toHaveCount(4);
+  await expect(quadro.getByRole('dialog', { name: 'Contratos' }).getByRole('button', { name: 'Exportar .xlsx' })).toHaveCount(0);
+  await quadro.getByRole('dialog', { name: 'Contratos' }).getByRole('button', { name: 'Fechar' }).click();
 
   // Tema e filtros funcionam sem armazenamento.
   await quadro.locator('#acao-tema').click();

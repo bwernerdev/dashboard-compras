@@ -33,6 +33,7 @@ const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '
  * caberNaLargura: se as colunas passam da largura da área, as de texto (texto-longo/medio e as com
  * largura salva) encolhem na proporção (com reticências) para a tabela caber sem rolar para o lado; refaz ao mudar a janela ou as linhas.
  * escolherColunas: botão "Colunas" (lista de marcar) para ocultar colunas; lembrado por `nomeArquivo`.
+ * Coluna com `ocultaPadrao: true` começa oculta até a pessoa escolher.
  * Colunas ocultas só saem da tela: CSV e "Copiar tabela" continuam com todas.
  * xlsx: nome da aba; mostra "Exportar .xlsx" (planilha do Excel com número, data e filtro; tabela-xlsx.js),
  * com as mesmas linhas do CSV. Só onde download funciona, como o CSV.

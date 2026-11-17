@@ -5,7 +5,7 @@
 | `assets/` | Imagens: logo da Controladoria (`marca.webp`). Mapa em `assets/README.md` |
 | `main.js` | App da equipe: estado (bases, config), período, ações do topo (Atualizar bases, Gerar painel, Configuração, Imprimir, tema). Abas, filtros e tela vêm de `ui/casca.js`. Recalcula ao mudar config ou virar o dia. Troca a base anterior quando chega base de outro dia do ME; selo do período em amarelo com base de 2+ dias úteis. Aba salva que não existe mais (Hoje, removida) abre a Regional. Guarda um ponto do histórico (`pontoDe`) a cada base de outro dia para os mini gráficos |
 | `analise.js` | Filtros globais (`FILTROS`, `aplicarFiltros`) e agregações puras das telas (SCs em aberto, faixas de dias, pendências e regularização (`ehPendencia`, `ehRegularizacao`), comprador x status, pré-pedidos, saving, spend por filial, SCs por status, OFs por status de entrega, itens aguardando aprovação do pré-pedido (`aguardandoAprovacao`), recorte por período De/Até (`recortarPeriodo`, SCs por Comprador), períodos da comparação (`periodosDePedido`)). Sem DOM. Usado também pelo `scripts/conferir-xlsm.mjs` |
-| `memoria.js` | Memória local do app da equipe: última importação de cada base no IndexedDB (só colunas do ME; `recalcular` refaz os campos calculados) e configuração no localStorage. Guarda também a base anterior (`salvarAnterior`, tipo `base-anterior`) para a variação nos cartões e o histórico (`salvarHistorico`, `juntarAoHistorico`: até 30 pontos, tipo `historico`) para os mini gráficos |
+| `memoria.js` | Memória local do app da equipe: última importação de cada base no IndexedDB (só colunas do ME; `recalcular` refaz os campos calculados) e configuração no localStorage. Guarda também a base anterior (`salvarAnterior`, tipo `base-anterior`) para a variação nos cartões e o histórico (`salvarHistorico`, `juntarAoHistorico`: até 30 pontos, tipo `historico`) para os mini gráficos. Anexo de contratos já lido: `salvarContratos` (tipo `contratos`) |
 | `atendidas.js` | SCs marcadas como atendidas (olho/duplo clique na lista da Regional): `estaAtendida`, `marcarAtendida`. No localStorage deste navegador, por Solicitação; vence em 120 dias. Só o app da equipe liga (`ligarAtendidas`) |
 | `preferencias.js` | Estado lembrado no localStorage (aba, tema, filtros, larguras e colunas das tabelas, recortes das telas): `lerPreferencia`/`salvarPreferencia` (texto), `lerEscolha` (alternadores: só vale opção válida), `lerConjunto`/`salvarConjunto` (recortes de Status), `lerJson`/`salvarJson` (objetos). Com try/catch: inválido, estragado ou sem armazenamento (quadro do SharePoint) = padrão. Usado pelo app e pelo painel |
 | `painel/` | Painel publicado (`painel-compras.html`): dados públicos, entrada, modelo e geração. Ver `painel/README.md` |
@@ -19,6 +19,7 @@
 | `telas/` | As telas e os diálogos (importação, configuração) |
 | `ui/` | Componentes sem regra de negócio: DOM, formatos, tabela, gráficos, filtros, cartões, dica |
 | `leitor/` | Leitor de `.xlsx` por fluxo (zip + XML) |
+| `contratos/` | Planilha de contratos (anexo opcional): `dados.js` (abas, colunas, prazo, cartões; entra no painel) e `ler.js` (lê o .xlsx; só no app). Ver `contratos/README.md` |
 | `config/` | De-para de filiais e apelidos de compradores (padrão) |
 | `styles/` | CSS em camadas |
 

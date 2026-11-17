@@ -1,11 +1,12 @@
 // Colunas ocultas de uma tabela (ui/tabela.js): botão "Colunas" (lista de marcar), lembrado por `nomeArquivo`.
 // Colunas ocultas só saem da tela: CSV e "Copiar tabela" continuam com todas.
 import { el } from './dom.js';
-import { lerConjunto, salvarConjunto } from '../preferencias.js';
+import { lerJson, salvarConjunto } from '../preferencias.js';
 import { listaDeMarcar } from './filtros.js';
 
 /**
- * `escolher`: mostra o botão "Colunas" (sem ele, nenhuma coluna fica oculta).
+ * `escolher`: mostra o botão "Colunas" (sem ele, nenhuma coluna fica oculta). Coluna com `ocultaPadrao`
+ * começa oculta enquanto nada foi salvo para a tabela.
  * `aoMudar`: chamado depois de aplicar (a tabela refaz o encaixe na largura).
  * Devolve { estilo (<style>), botao (ou null), oculta(id), aplicar() }.
  */
@@ -13,7 +14,9 @@ export function criarColunasOcultas({ colunas, idTabela, indice, nomeArquivo, es
   const chave = `colunas-ocultas:${nomeArquivo}`;
   const escolhiveis = colunas.filter((c) => !c.controle);
   const estilo = el('style');
-  let ocultas = new Set(escolher ? [...lerConjunto(chave)].filter((id) => escolhiveis.some((c) => c.id === id)) : []);
+  const salvas = lerJson(chave, null);
+  const iniciais = Array.isArray(salvas) ? salvas : escolhiveis.filter((c) => c.ocultaPadrao).map((c) => c.id);
+  let ocultas = new Set(escolher ? iniciais.filter((id) => escolhiveis.some((c) => c.id === id)) : []);
 
   function aplicar() {
     estilo.textContent = colunas.filter((c) => ocultas.has(c.id))

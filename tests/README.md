@@ -13,6 +13,7 @@
 | `atendidas.test.js` | SCs atendidas (`src/atendidas.js`): marcar, desmarcar, guardar, vencer em 120 dias, armazenamento estragado (localStorage de mentira) |
 | `preferencias.test.js` | Estado lembrado das telas (`src/preferencias.js`): `lerJson`, `lerEscolha` (só opções válidas), `lerConjunto`, armazenamento bloqueado |
 | `tabela-xlsx.test.js` | "Exportar .xlsx" (`src/ui/tabela-xlsx.js`): a planilha abre no leitor do app, número e data como número, sem coluna de controle, cabeçalho congelado com filtro, nome de aba aceito pelo Excel |
+| `contratos.test.js` | Planilha de contratos (`src/contratos/`): cabeçalho abaixo do título, quadros com título, Renovações ignorada, vencimento da aba ME, prazo, cartões (sem INATIVO), filial ajustada, abas que faltam e arquivo errado |
 | `cores-planilha.test.js` | Cores da planilha antiga por status, prioridade e % saving; status separados no gráfico |
 | `ajuda/` | Gerador de `.xlsx` em memória para os testes (também usado pelo `e2e/`) |
 

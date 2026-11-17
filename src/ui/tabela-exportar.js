@@ -6,7 +6,7 @@ import { formatarSerie } from '../datas.js';
 export function textoDaCelula(col, linha) {
   const v = col.valor(linha);
   if (v === null || v === undefined || v === '') return '';
-  if (col.tipo === 'data') return formatarSerie(v);
+  if (col.tipo === 'data') return typeof v === 'number' ? formatarSerie(v) : String(v); // data digitada como texto fica como veio
   return col.formato ? col.formato(v) : String(v);
 }
 
@@ -17,7 +17,7 @@ export const exportaveis = (colunas) => colunas.filter((c) => !c.controle);
 function valorDeSaida(col, linha) {
   const v = col.valor(linha);
   if (v === null || v === undefined) return '';
-  if (col.tipo === 'data') return formatarSerie(v);
+  if (col.tipo === 'data' && typeof v === 'number') return formatarSerie(v);
   if (typeof v === 'number') return String(Math.round(v * 1e6) / 1e6).replace('.', ',');
   return v;
 }

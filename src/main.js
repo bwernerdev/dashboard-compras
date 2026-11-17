@@ -1,5 +1,5 @@
 // App da equipe: topo (abas, período, ações), barra de filtros e a tela ativa.
-// Estado: bases importadas (registros calculados + brutos para recalcular) e configuração.
+// Estado: bases importadas (registros calculados + brutos para recalcular), anexo de contratos e configuração.
 // Abas, filtros, tema e impressão vêm da casca comum (ui/casca.js), a mesma do painel publicado.
 
 import { importarNoWorker } from './importacao.js';
@@ -7,7 +7,11 @@ import { criarConfig, CONFIG_PADRAO, atualizarConfigSalva } from './config/index
 import { hojeSerie, formatarSerie } from './datas.js';
 import {
   brutosDe, recalcular, salvarImportacao, salvarAnterior, salvarHistorico, juntarAoHistorico, lerImportacoes, lerConfig, salvarConfig, apagarConfig,
+  salvarContratos,
 } from './memoria.js';
+import { lerContratos } from './contratos/ler.js';
+import { filialAjustadaDoContrato } from './contratos/dados.js';
+import { abrirContratos } from './telas/contratos.js';
 import { resumoStatus, resumoEmAberto, itensEmAberto } from './analise.js';
 import { lerPreferencia, salvarPreferencia } from './preferencias.js';
 import { el } from './ui/dom.js';
@@ -40,6 +44,7 @@ const estado = {
   followUp: null,
   anterior: null, // base de outro dia do ME { brutos, meta, salvoEm }: variação nos cartões
   historico: [], // [{ dia, status, aberto }]: mini gráficos dos cartões (ver memoria.js)
+  contratos: null, // anexo opcional (CONTROLE DE CONTRATOS): { abas, meta, salvoEm }, janela Contratos
   carregando: true, // lendo as bases salvas ao abrir: esqueleto no lugar da tela de importação
 };
 
@@ -108,7 +113,17 @@ function guardarPonto(meta, registros) {
   definirHistorico();
 }
 
+/** Anexo de contratos: lido aqui mesmo (arquivo pequeno), sem worker e sem regras. */
+async function importarContratos(arquivo) {
+  const lidos = await lerContratos(arquivo);
+  estado.contratos = { ...lidos, salvoEm: Date.now() };
+  salvarContratos(lidos);
+  desenharTudo();
+  return estado.contratos;
+}
+
 async function importar(tipo, arquivo, aoAvancar) {
+  if (tipo === 'contratos') return importarContratos(arquivo);
   const hoje = hojeSerie();
   const resultado = await importarNoWorker(tipo, arquivo, { hoje, config: estado.config, aoAvancar });
   const dados = { registros: resultado.registros, brutos: brutosDe(tipo, resultado.registros), meta: resultado.meta, salvoEm: Date.now() };
@@ -142,6 +157,7 @@ async function restaurar() {
     const s = salvas[tipo];
     if (s?.brutos) definirBase(tipo, { brutos: s.brutos, meta: s.meta, salvoEm: s.salvoEm, registros: recalcular(tipo, s.brutos, estado.cfg, estado.hoje) });
   }
+  if (salvas.contratos?.abas) estado.contratos = { abas: salvas.contratos.abas, meta: salvas.contratos.meta, salvoEm: salvas.contratos.salvoEm };
   const a = salvas['base-anterior'];
   if (a?.brutos && estado.base && diaDaBase(a.meta) < diaDaBase(estado.base.meta)) {
     estado.anterior = { brutos: a.brutos, meta: a.meta, salvoEm: a.salvoEm };
@@ -193,6 +209,8 @@ function desenharPeriodo() {
 function desenharTudo() {
   desenharPeriodo();
   botaoPainel.disabled = !estado.base;
+  botaoContratos.disabled = !estado.contratos;
+  botaoContratos.title = estado.contratos ? 'Abre a planilha de contratos numa janela separada' : 'Importe a planilha de contratos em Atualizar bases';
   nav.desenhar();
 }
 
@@ -217,7 +235,7 @@ function abrirImportacao() {
     id: 'titulo-importar',
     titulo: 'Atualizar bases',
     corpo: [
-      el('p', { class: 'texto-fraco' }, 'Escolha os arquivos novos baixados do ME. A base anterior é substituída.'),
+      el('p', { class: 'texto-fraco' }, 'Escolha os arquivos novos baixados do ME. A base anterior é substituída. A planilha de contratos é opcional.'),
       caixasDeImportacao({ estado, aoImportar: importar }),
     ],
   });
@@ -235,6 +253,7 @@ async function gerarEBaixarPainel() {
   try {
     const html = await gerarPainel({
       registros: estado.base.registros, followUp: estado.followUp?.registros ?? null, meta: estado.base.meta, hoje: estado.hoje,
+      contratos: estado.contratos,
     });
     baixar(NOME_DO_ARQUIVO, html, 'text/html;charset=utf-8');
     abrirDialogo({
@@ -243,6 +262,9 @@ async function gerarEBaixarPainel() {
       corpo: [
         el('p', {}, `Baixado: ${NOME_DO_ARQUIVO} (${tamanho(new Blob([html]).size)}), com as telas ${TELAS_PUBLICAS.map((t) => t.rotulo).join(', ')} e os dados de hoje.`),
         estado.followUp ? null : el('p', { class: 'texto-fraco' }, 'Sem a base Follow-Up: a tela Entrega do painel fica vazia. Importe o Follow-Up e gere de novo.'),
+        el('p', { class: 'texto-fraco' }, estado.contratos
+          ? 'Leva também a planilha de contratos (botão Contratos no topo): quem abrir o painel vê os contratos.'
+          : 'Sem a planilha de contratos: o painel não tem o botão Contratos.'),
         el('ol', { class: 'lista-passos' },
           el('li', {}, 'Abra a pasta do painel no OneDrive/SharePoint.'),
           el('li', {}, `Envie o arquivo e escolha "Substituir" (mesmo nome, ${NOME_DO_ARQUIVO}).`),
@@ -260,6 +282,12 @@ async function gerarEBaixarPainel() {
 
 const botaoPainel = document.getElementById('acao-painel');
 botaoPainel.addEventListener('click', gerarEBaixarPainel);
+const botaoContratos = document.getElementById('acao-contratos');
+botaoContratos.addEventListener('click', () => estado.contratos && abrirContratos({
+  contratos: estado.contratos,
+  hoje: hojeSerie(),
+  nomeDaFilial: (filial) => estado.cfg.dadosFilial(filialAjustadaDoContrato(filial))?.nome?.trim() || null,
+}));
 document.getElementById('acao-importar').addEventListener('click', abrirImportacao);
 document.getElementById('acao-config').addEventListener('click', () => abrirConfiguracao({
   config: estado.config,

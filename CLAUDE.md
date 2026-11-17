@@ -1,6 +1,6 @@
 # dashboard — mapa rápido
 
-App web (Vite, JS puro, sem framework) que substitui o `DASHBOARD COMPRAS 2026.xlsm`: lê `base.xlsx` e `Follow-Up.xlsx` exportados do ME (favorito do navegador baixa as duas), aplica as regras de Compras no navegador e mostra as telas Status, Entrega, Regional, SCs por Comprador, Spend, Saving, Atendimento e Organograma para a equipe de Suprimentos. "Gerar painel" baixa `painel-compras.html` (as mesmas telas sem Compradores, só dados públicos) para o SharePoint, com link na Intranet.
+App web (Vite, JS puro, sem framework) que substitui o `DASHBOARD COMPRAS 2026.xlsm`: lê `base.xlsx` e `Follow-Up.xlsx` exportados do ME (favorito do navegador baixa as duas) e, opcional, a planilha `CONTROLE DE CONTRATOS.xlsx` (botão Contratos: janela separada), aplica as regras de Compras no navegador e mostra as telas Status, Entrega, Regional, SCs por Comprador, Spend, Saving, Atendimento e Organograma para a equipe de Suprimentos. "Gerar painel" baixa `painel-compras.html` (as mesmas telas sem Compradores, só dados públicos) para o SharePoint, com link na Intranet.
 
 Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configuração, e2e), 3 (painel publicado) e 4 (demais telas públicas) concluídas; fase 5 (favorito abre o app) é opcional. Decisões, regras de negócio e fases: `PROJETO.md`.
 
@@ -23,6 +23,7 @@ Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configura�
 | `src/telas/` | Telas (públicas em `publicas.js` + SCs por Comprador, `compradores.js`); diálogos de importação e configuração |
 | `src/ui/` | Componentes: casca (abas, filtros, tema), tabela, gráficos, filtros, cartões, dica, formatos |
 | `src/leitor/` | Leitor de `.xlsx` por fluxo (zip + XML, sem dependência) |
+| `src/contratos/` | Planilha de contratos (anexo opcional da importação): leitura e contas da janela Contratos (`telas/contratos.js`); vai também para o painel |
 | `src/config/` | De-para de filiais e compradores (o SLA é fixo: 30 dias úteis, `src/regras.js`) |
 | `src/assets/` | Logo da Controladoria (topo e ícone da aba, app e painel) |
 | `src/styles/` | CSS em camadas: tokens (tema escuro, paleta dos gráficos), base, componentes, impressão |

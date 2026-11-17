@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  montarDadosDoPainel, registrosDoPainel, followUpDoPainel, compactar, descompactar, CAMPOS_PUBLICOS, CAMPOS_FOLLOW_UP, VERSAO,
+  montarDadosDoPainel, registrosDoPainel, followUpDoPainel, contratosDoPainel, compactar, descompactar, CAMPOS_PUBLICOS, CAMPOS_FOLLOW_UP, VERSAO,
 } from '../src/painel/dados.js';
 import { gerarTsv } from '../src/ui/tabela-exportar.js';
 
@@ -62,6 +62,15 @@ test('Follow-Up: só os campos da tela Entrega', () => {
   assert.equal(r.statusEntrega, 'ENTREGUE');
   assert.equal(r.fornecedor, 'Fornecedor X');
   assert.equal(r.qtdPendente, undefined);
+});
+
+test('contratos: vão só as abas da janela (sem Renovações de importação antiga); sem a planilha, null', () => {
+  const quadro = { titulo: null, campos: [{ id: 'fornecedor', rotulo: 'Fornecedor' }], linhas: [{ fornecedor: 'F' }] };
+  const contratos = { abas: { contratos: [quadro], renovacoes: [quadro] }, meta: { arquivo: 'c.xlsx', linhas: 2 }, salvoEm: 5 };
+  const d = montarDadosDoPainel({ registros: [aberto], meta, hoje: 46001, geradoEm: 'x', contratos });
+  assert.deepEqual(Object.keys(d.contratos.abas), ['contratos']);
+  assert.deepEqual(contratosDoPainel(d), { abas: { contratos: [quadro] }, meta: { arquivo: 'c.xlsx', salvoEm: 5 }, salvoEm: 5 });
+  assert.equal(contratosDoPainel(montarDadosDoPainel({ registros: [aberto], meta, hoje: 46001, geradoEm: 'x' })), null);
 });
 
 test('registrosDoPainel recusa versão desconhecida', () => {
