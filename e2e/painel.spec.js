@@ -20,7 +20,8 @@ async function gerarPainel(page, info) {
   await page.locator('dialog input[data-tipo="contratos"]').setInputFiles(await arquivoContratos());
   await expect(page.locator('dialog .arquivo[data-tipo="contratos"] .arquivo-status')).toContainText('7 linhas');
   await page.locator('dialog').getByRole('button', { name: 'Fechar' }).last().click();
-  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#acao-painel').click()]);
+  await page.getByRole('button', { name: 'Exportar', exact: true }).click(); // Gerar painel fica no menu Exportar
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('menuitem', { name: 'Gerar painel' }).click()]);
   expect(download.suggestedFilename()).toBe('painel-compras.html');
   await expect(page.getByRole('heading', { name: 'Painel gerado' })).toBeVisible();
   await expect(page.getByText('Leva também a planilha de contratos')).toBeVisible();

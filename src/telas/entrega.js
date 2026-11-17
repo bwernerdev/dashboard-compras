@@ -95,7 +95,7 @@ export function telaEntrega(ctx) {
       aoClicar: (s) => { local.status = local.status.size === 1 && local.status.has(s) ? new Set() : new Set([s]); guardarStatus(); ctx.redesenhar(); },
     }),
     criarTabela({
-      titulo: 'OFs por status de entrega', linhas: porStatus, pesquisa: false, nomeArquivo: 'ofs-por-status-de-entrega.csv',
+      titulo: 'OFs por status de entrega', linhas: porStatus, pesquisa: false, nomeArquivo: 'ofs-por-status-de-entrega.csv', recolhida: true,
       colunas: [
         { id: 'status', rotulo: 'Status da entrega', valor: (s) => s.status, exibir: (s) => marcaEntrega(s.status) },
         { id: 'ofs', rotulo: 'OFs', num: true, valor: (s) => s.ofs, formato: fmt.inteiro },

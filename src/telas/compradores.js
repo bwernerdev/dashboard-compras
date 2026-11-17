@@ -122,7 +122,7 @@ export function telaCompradores(ctx) {
       linhas: porStatus.linhas,
       pesquisa: false,
       ordem: { coluna: 'total', desc: true },
-      nomeArquivo: 'scs-por-comprador-e-status.csv',
+      nomeArquivo: 'scs-por-comprador-e-status.csv', recolhida: true,
       colunas: [
         { id: 'comprador', rotulo: 'Comprador', valor: (l) => l.comprador, classe: destacarPendente },
         ...porStatus.status.map((s) => ({
@@ -147,7 +147,7 @@ export function telaCompradores(ctx) {
       linhas: pre.linhas,
       pesquisa: false,
       ordem: { coluna: 'total', desc: true },
-      nomeArquivo: 'pre-pedidos-por-comprador-e-regional.csv',
+      nomeArquivo: 'pre-pedidos-por-comprador-e-regional.csv', recolhida: pre.linhas.length > 0,
       colunas: [
         { id: 'comprador', rotulo: 'Comprador', valor: (l) => l.comprador },
         ...pre.regionais.map((r) => ({ id: `r-${r}`, rotulo: r, num: true, valor: (l) => l.porRegional[r] || null, formato: fmt.inteiro })),

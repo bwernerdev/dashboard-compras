@@ -43,9 +43,11 @@ function ligarFechamento() {
  * aparecem marcados. Desmarcar uma opção tira só ela; desmarcar "Todos" desmarca tudo para marcar
  * só as que interessam (enquanto nada estiver marcado, o filtro não muda); marcar "Todos" volta a
  * todas. Marcar todas uma a uma também vira "Todos".
+ * limpavel: com algo marcado, um "×" no fim do botão volta o filtro a Todos (barra de filtros globais).
  */
 export function listaDeMarcar({
   id, rotulo, valores, rotuloValor = (v) => v, resumoValor = rotuloValor, resumoVarios = (n) => `${n} selecionados`, selecionados, aoMudar,
+  limpavel = false,
 }) {
   ligarFechamento();
   const idPainel = novoId('filtro');
@@ -66,9 +68,14 @@ export function listaDeMarcar({
     if (selecionados.size === 1) return resumoValor([...selecionados][0]);
     return resumoVarios(selecionados.size);
   };
+  const botaoLimpar = limpavel ? el('button', {
+    type: 'button', class: 'filtro-limpar', 'aria-label': `Limpar filtro ${rotulo}`, title: `Limpar filtro ${rotulo}`,
+    onclick: () => { fecharAberto(); nenhum = false; selecionados.clear(); mudou(); botao.focus(); },
+  }, '×') : null;
   const mostrar = () => {
     valorBotao.textContent = resumo();
     botao.classList.toggle('ativo', selecionados.size > 0 || nenhum);
+    if (botaoLimpar) botaoLimpar.hidden = selecionados.size === 0;
   };
   const lista = el('div', { class: 'filtro-lista', role: 'group', 'aria-label': rotulo });
 
@@ -130,7 +137,7 @@ export function listaDeMarcar({
   // Fechou sem marcar nada: volta a mostrar o filtro que vale (Todos).
   const aoFechar = () => { if (nenhum) { nenhum = false; redesenhar(); } };
 
-  const raiz = el('div', { class: 'filtro', dataset: { filtro: id } }, botao, painel);
+  const raiz = el('div', { class: `filtro${limpavel ? ' filtro-limpavel' : ''}`, dataset: { filtro: id } }, botao, botaoLimpar, painel);
   botao.addEventListener('click', () => {
     const estavaAberto = abertoAtual?.raiz === raiz;
     fecharAberto();
@@ -154,7 +161,15 @@ export function barraDeFiltros({ tela, selecao, opcoes, aoMudar, aoLimpar }) {
   const atual = Object.fromEntries(visiveis.map((f) => [f.id, new Set(selecao[f.id] ?? [])]));
 
   const limpar = el('button', { type: 'button', class: 'botao botao-link', onclick: aoLimpar }, 'Limpar filtros');
-  const atualizarLimpar = () => { limpar.hidden = !visiveis.some((f) => atual[f.id].size); };
+  // "Filtros (2)": quantos filtros desta tela estão ativos (pedido da equipe, 17/11/2026).
+  const contagem = el('span', { class: 'filtro-contagem' });
+  const atualizarLimpar = () => {
+    const ativos = visiveis.filter((f) => atual[f.id].size).length;
+    limpar.hidden = !ativos;
+    contagem.hidden = !ativos;
+    contagem.textContent = String(ativos);
+    contagem.setAttribute('aria-label', `${ativos} ${ativos === 1 ? 'ativo' : 'ativos'}`);
+  };
 
   const itens = visiveis.map((f) => listaDeMarcar({
     id: f.id,
@@ -162,10 +177,11 @@ export function barraDeFiltros({ tela, selecao, opcoes, aoMudar, aoLimpar }) {
     valores: opcoes[f.id] ?? [],
     rotuloValor: f.rotuloValor,
     selecionados: atual[f.id],
+    limpavel: true,
     aoMudar: (novo) => { atualizarLimpar(); aoMudar(f.id, novo); },
   }));
   atualizarLimpar();
 
   return el('div', { class: 'barra-filtros', role: 'region', 'aria-label': 'Filtros' },
-    el('span', { class: 'barra-filtros-titulo' }, 'Filtros'), itens, limpar);
+    el('span', { class: 'barra-filtros-titulo' }, 'Filtros', contagem), itens, limpar);
 }

@@ -7,6 +7,7 @@ import { gerarXlsx, TIPO_XLSX } from './tabela-xlsx.js';
 import { criarLarguras, criarAjuste } from './tabela-larguras.js';
 import { criarColunasOcultas } from './tabela-colunas.js';
 import { botaoDensidade } from './tabela-densidade.js';
+import { lerConjunto, salvarConjunto } from '../preferencias.js';
 
 const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
@@ -38,11 +39,14 @@ const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '
  * "Exportar Excel" (toda tabela, só onde download funciona): planilha .xlsx com as linhas filtradas, número,
  * data, % e R$ de verdade, cabeçalho com filtro (tabela-xlsx.js). Arquivo = `nomeArquivo` com .xlsx;
  * xlsx: nome da aba da planilha (sem ele, o título da tabela).
+ * recolhida: tabela com os números de um gráfico (pedido da equipe, 17/11/2026): começa fechada atrás
+ * do botão "Ver tabela (N linhas)", para a tela não ficar longa. Aberta ou fechada fica lembrada neste
+ * navegador por `nomeArquivo` (preferência `tabelas-abertas`).
  */
 export function criarTabela(opcoes) {
   const {
     colunas, titulo, porPagina = 50, pesquisa = true, nomeArquivo = 'tabela.csv', rodape, vazio = 'Nada para mostrar.',
-    aoClicarLinha, aoDuploClique, classeLinha, grupo, caberNaLargura = false, escolherColunas = false, xlsx,
+    aoClicarLinha, aoDuploClique, classeLinha, grupo, caberNaLargura = false, escolherColunas = false, xlsx, recolhida = false,
   } = opcoes;
   const pesquisaveis = exportaveis(colunas);
   const idTabela = novoId('tab');
@@ -219,6 +223,7 @@ export function criarTabela(opcoes) {
       irPara: (p) => { estado.pagina = p; render(); },
     });
     ajuste.pedir();
+    mostrarRecolhida?.();
   }
 
   larguras.aplicar();
@@ -229,10 +234,38 @@ export function criarTabela(opcoes) {
     el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, larguras.botao, ocultas.botao, botaoDensidade(), botaoCopiar, botaoExcel),
     ajuste.rolagem,
     paginacao);
+
+  // Tabela de gráfico recolhida: botão abre/fecha; o texto diz quantas linhas tem.
+  let saida = elemento;
+  let mostrarRecolhida = null;
+  if (recolhida) {
+    const CHAVE = 'tabelas-abertas';
+    let aberta = lerConjunto(CHAVE).has(nomeArquivo);
+    elemento.id = novoId('tabbloco');
+    const botao = el('button', {
+      type: 'button', class: 'botao botao-link tabela-alternar', 'aria-controls': elemento.id,
+      onclick: () => {
+        aberta = !aberta;
+        const salvas = lerConjunto(CHAVE);
+        if (aberta) salvas.add(nomeArquivo); else salvas.delete(nomeArquivo);
+        salvarConjunto(CHAVE, salvas);
+        mostrarRecolhida();
+        if (aberta) ajuste.pedir();
+      },
+    });
+    mostrarRecolhida = () => {
+      elemento.hidden = !aberta;
+      botao.setAttribute('aria-expanded', String(aberta));
+      // Seta só visual (fora do nome do botão para leitor de tela).
+      substituir(botao, el('span', { class: 'tabela-alternar-seta', 'aria-hidden': 'true' }, aberta ? '▾' : '▸'),
+        aberta ? 'Ocultar tabela' : `Ver tabela (${plural(estado.linhas.length, NOME_LINHA)})`);
+    };
+    saida = el('div', { class: 'tabela-recolhivel' }, botao, elemento);
+  }
   render();
 
   return {
-    elemento,
+    elemento: saida,
     /** Troca as linhas. `manterPagina`: fica na mesma página (ex.: ao ocultar uma SC da lista). */
     atualizar(linhas, { manterPagina = false } = {}) {
       estado.linhas = linhas;

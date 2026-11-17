@@ -54,6 +54,7 @@ function mostrarPeriodo(dados) {
   if (antigo) partes.push(`${atraso} dias úteis atrás`);
   raiz.periodo.classList.toggle('selo-alerta', antigo);
   raiz.periodo.textContent = partes.join(' · ');
+  raiz.periodo.dataset.curto = antigo ? `Dados de ${atraso} dias úteis atrás` : ''; // topo compacto (base.css)
   raiz.periodo.title = 'Dias em aberto e SLA calculados na data em que o painel foi gerado.';
   raiz.periodo.hidden = false;
 }

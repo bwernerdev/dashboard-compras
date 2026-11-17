@@ -64,7 +64,7 @@ export function telaStatus(ctx) {
       aoClicar: (s) => { local.status = local.status.size === 1 && local.status.has(s) ? new Set() : new Set([s]); guardarStatus(); ctx.redesenhar(); },
     }),
     criarTabela({
-      titulo: 'SCs por status', linhas: porStatus, pesquisa: false, nomeArquivo: 'scs-por-status.csv',
+      titulo: 'SCs por status', linhas: porStatus, pesquisa: false, nomeArquivo: 'scs-por-status.csv', recolhida: true,
       colunas: [
         { id: 'status', rotulo: 'Status', valor: (s) => s.status, exibir: (s) => seloDoStatus(s.status) },
         { id: 'scs', rotulo: 'SCs', num: true, valor: (s) => s.scs, formato: fmt.inteiro },

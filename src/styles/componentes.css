@@ -13,6 +13,21 @@
 .botao-sec:hover:not(:disabled) { background: var(--button-hover); }
 .botao-pequeno { height: var(--h-control-sm); padding: 0 var(--s2); font-size: var(--fs-sm); }
 .botao:disabled { opacity: .5; }
+/* Menu de ações com nome (ui/menu.js): "Exportar ▾" no topo do app. */
+.menu { position: relative; }
+.menu-seta { margin-left: 2px; font-size: var(--fs-2xs); color: var(--text-muted); }
+.menu-painel {
+  position: absolute; top: calc(100% + 4px); right: 0; z-index: 30;
+  display: flex; flex-direction: column; min-width: 180px; padding: var(--s1);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-3);
+}
+.menu-item {
+  display: flex; align-items: center; height: var(--h-control-sm); padding: 0 var(--s3);
+  border: 0; border-radius: var(--r-sm); background: transparent; color: var(--text);
+  font-size: var(--fs-sm); text-align: left; white-space: nowrap;
+}
+.menu-item:hover:not(:disabled), .menu-item:focus-visible { background: var(--surface-hover); }
+.menu-item:disabled { color: var(--text-muted); opacity: .6; cursor: default; }
 .botao-link {
   height: auto; padding: 2px var(--s1); background: none; color: var(--accent-text); font-weight: 600;
 }
@@ -113,6 +128,12 @@ input[type="search"].campo { min-width: 220px; }
 }
 .botao-ajuda:hover, .botao-ajuda:focus-visible { color: var(--accent-text); border-color: var(--accent); }
 .bloco > * + .tabela-bloco { margin-top: var(--s4); }
+/* Tabela de gráfico recolhida (tabela.js, recolhida): "Ver tabela (N linhas)" abaixo do gráfico. */
+.bloco > * + .tabela-recolhivel { margin-top: var(--s3); }
+.tabela-recolhivel { display: flex; flex-direction: column; align-items: flex-start; gap: var(--s2); }
+.tabela-recolhivel > .tabela-bloco { align-self: stretch; }
+.tabela-alternar { font-size: var(--fs-sm); }
+.tabela-alternar-seta { display: inline-block; width: 1em; }
 
 .estado-vazio, .boas-vindas {
   padding: var(--s6) var(--s5); text-align: center;
@@ -164,6 +185,8 @@ input[type="search"].campo { min-width: 220px; }
 .esqueleto-bloco { height: 280px; }
 @keyframes brilho { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 
+/* Filtro numa tela pesada (casca.js): a tela atual fica apagada enquanto redesenha. */
+.atualizando { opacity: .55; transition: opacity .12s; pointer-events: none; }
 /* Troca de aba: a tela nova entra com um fade curto. */
 .entrando { animation: entrar .18s ease-out; }
 @keyframes entrar { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
@@ -176,7 +199,13 @@ input[type="search"].campo { min-width: 220px; }
 
 /* Barra de filtros */
 .barra-filtros { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
-.barra-filtros-titulo { font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); }
+.barra-filtros-titulo { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: 600; color: var(--text-muted); }
+/* Quantos filtros ativos (filtros.js): bolinha na cor de destaque ao lado de "Filtros". */
+.filtro-contagem {
+  display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: var(--r-pill); background: var(--accent); color: var(--accent-ink);
+  font-size: var(--fs-2xs); font-weight: 700; font-variant-numeric: tabular-nums;
+}
 .barra-filtros .botao-link { font-size: var(--fs-sm); }
 .filtro { position: relative; }
 .filtro-botao {
@@ -190,6 +219,16 @@ input[type="search"].campo { min-width: 220px; }
 .filtro-nome { color: var(--text-muted); }
 .filtro-valor { font-weight: 600; max-width: 18ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .filtro-botao.ativo { border-color: var(--accent); background: var(--surface-selected); }
+/* Filtro global ativo: o "▾" dá lugar ao "×" que limpa só ele (filtros.js, limpavel). */
+.filtro-limpavel .filtro-botao.ativo { padding-right: 28px; }
+.filtro-limpavel .filtro-botao.ativo::after { content: none; }
+.filtro-limpar {
+  position: absolute; top: 50%; right: 4px; transform: translateY(-50%);
+  display: grid; place-items: center; width: 20px; height: 20px; padding: 0;
+  border: 0; border-radius: 50%; background: transparent; color: var(--accent-text);
+  font-size: var(--fs-md); line-height: 1;
+}
+.filtro-limpar:hover { background: var(--accent); color: var(--accent-ink); }
 .filtro-botao.ativo .filtro-valor { color: var(--accent-text); }
 /* Dentro dos blocos (Status, Colunas na barra da tabela): mesmo formato dos botões ao lado
    (botao-sec pequeno: canto de 6 px, fundo cinza, texto 600). A pílula fica só na faixa de filtros do topo. */
@@ -241,7 +280,31 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .legenda li { display: inline-flex; align-items: center; gap: 6px; }
 .legenda-chave { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 
-/* Colunas verticais */
+/* Colunas verticais (graficos.js, colunas: meses de Spend e Saving). Área de 220 px; a coluna cresce
+   da base (ponta de cima arredondada), valor em cima em cor de texto, mês embaixo. */
+.grafico-colunas {
+  display: flex; align-items: stretch; justify-content: space-around; gap: var(--s2);
+  height: 220px; padding: 0 var(--s2);
+}
+.gc-coluna {
+  flex: 1; min-width: 0; max-width: 120px; display: flex; flex-direction: column; align-items: center; gap: var(--s1);
+  padding: var(--s1) 2px 0; border-radius: var(--r-sm);
+}
+.gc-coluna:hover, .gc-coluna:focus-visible { background: var(--surface-hover); }
+.gc-area {
+  flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px;
+  border-bottom: 1px solid var(--line-strong);
+}
+.gc-barra {
+  width: min(48px, 70%); min-height: 1px; border-radius: 4px 4px 0 0;
+  background: linear-gradient(0deg, color-mix(in srgb, var(--serie-unica) 70%, var(--surface)), var(--serie-unica));
+  transform-origin: center bottom;
+}
+.entrando .gc-barra { animation: crescer-coluna .45s ease-out; }
+@keyframes crescer-coluna { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .entrando .gc-barra { animation: none; } }
+.gc-valor { font-size: var(--fs-sm); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--text); }
+.gc-rotulo { font-size: var(--fs-sm); color: var(--text-muted); white-space: nowrap; padding-bottom: 2px; }
 
 /* Barra segmentada na célula */
 .celula-sla { display: inline-flex; align-items: center; gap: var(--s2); }
@@ -293,6 +356,8 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .tabela .num { text-align: right; font-variant-numeric: tabular-nums; }
 /* Faixa alternada: por linha nas tabelas simples, por SC/OF nas agrupadas (tabela.js marca `faixa`). */
 .tabela tbody tr.faixa { background: var(--zebra); }
+.tabela tbody tr.faixa:is(.grupo-inicio, .grupo-continua, .grupo-recolhido) { background: var(--zebra-grupo); }
+.tabela tbody tr.faixa:is(.grupo-inicio, .grupo-continua, .grupo-recolhido):hover { background: var(--surface-hover); }
 .tabela tbody tr:hover { background: var(--surface-hover); }
 .tabela tr.clicavel { cursor: pointer; }
 /* Linhas agrupadas (itens da mesma SC): separador forte entre grupos, nenhum dentro do grupo. */

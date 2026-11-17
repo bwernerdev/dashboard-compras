@@ -3,7 +3,7 @@
 import { el } from '../ui/dom.js';
 import { cartao, linhaDeCartoes, bloco, estadoVazio, variacao, variacaoRelativa, pontos } from '../ui/cartoes.js';
 import { blocoComparacao } from './comparacao.js';
-import { barras } from '../ui/graficos.js';
+import { barras, colunas } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
 import { seloDoSaving } from '../ui/cores-planilha.js';
@@ -58,15 +58,15 @@ export function telaSaving(ctx) {
     }),
     criarTabela({
       titulo: 'Saving por filial', linhas: porFilial, pesquisa: false, ordem: { coluna: 'total', desc: true },
-      nomeArquivo: 'saving-por-filial.csv', colunas: colunasSaving('Filial'), rodape: rodapeSaving('Total geral'),
+      nomeArquivo: 'saving-por-filial.csv', recolhida: true, colunas: colunasSaving('Filial'), rodape: rodapeSaving('Total geral'),
       aoClicarLinha: (g) => ctx.filtrar('filial', g.chave),
     }).elemento,
   );
 
   const meses = bloco(
     { titulo: 'Economia por mês do pedido' },
-    // Barras deitadas, como Spend por mês (poucos meses não esticam o gráfico).
-    porMes.length ? barras({
+    // Colunas, como Spend por mês: tempo da esquerda para a direita.
+    porMes.length ? colunas({
       itens: porMes.map((g) => ({
         id: g.chave, rotulo: rotuloMes(g.chave), valor: g.economia,
         detalhe: [{ valor: fmt.moeda(g.total), rotulo: 'total comprado' }, { valor: fmt.pctFino(g.pct), rotulo: 'saving' }],
@@ -77,7 +77,7 @@ export function telaSaving(ctx) {
     criarTabela({
       titulo: 'Saving por mês do pedido',
       linhas: porMes.map((g) => ({ ...g, chave: rotuloMes(g.chave), ordem: g.chave })),
-      pesquisa: false, nomeArquivo: 'saving-por-mes.csv',
+      pesquisa: false, nomeArquivo: 'saving-por-mes.csv', recolhida: true,
       colunas: [{ ...colunasSaving('Mês')[0], valor: (g) => g.chave }, ...colunasSaving('Mês').slice(1)],
       rodape: rodapeSaving('Total geral'),
     }).elemento,

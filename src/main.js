@@ -15,6 +15,7 @@ import { abrirContratos } from './telas/contratos.js';
 import { resumoStatus, resumoEmAberto, itensEmAberto } from './analise.js';
 import { lerPreferencia, salvarPreferencia } from './preferencias.js';
 import { el } from './ui/dom.js';
+import { ligarMenu } from './ui/menu.js';
 import { esqueleto } from './ui/cartoes.js';
 import { criarNavegador, ligarTema, ligarImpressao, ligarTopoCompacto, diasDesdeABase, BASE_ANTIGA_DIAS } from './ui/casca.js';
 import { aplicarMarca } from './ui/marca.js';
@@ -267,7 +268,10 @@ function desenharPeriodo() {
   if (antiga) partes.push(`${atraso} dias úteis atrás: atualize as bases`);
   raiz.periodo.textContent = partes.join(' · ');
   raiz.periodo.classList.toggle('selo-alerta', antiga);
-  raiz.periodo.title = m.hoje !== estado.hoje ? 'Dias em aberto e SLA recalculados para hoje.' : '';
+  // Topo compacto (ao rolar): só o aviso curto, para as abas caberem (base.css).
+  raiz.periodo.dataset.curto = antiga ? `Base de ${atraso} dias úteis atrás` : '';
+  raiz.periodo.title = [antiga ? raiz.periodo.textContent : '', m.hoje !== estado.hoje ? 'Dias em aberto e SLA recalculados para hoje.' : '']
+    .filter(Boolean).join('. ');
   raiz.periodo.hidden = false;
 }
 
@@ -313,8 +317,10 @@ const tamanho = (bytes) => (bytes >= 1048576
 async function gerarEBaixarPainel() {
   if (!estado.base) return;
   botaoPainel.disabled = true;
-  const textoAntes = botaoPainel.textContent;
-  botaoPainel.textContent = 'Gerando...';
+  // O menu fecha no clique: o andamento aparece no próprio botão Exportar.
+  botaoExportar.disabled = true;
+  const textoAntes = botaoExportar.firstChild.textContent;
+  botaoExportar.firstChild.textContent = 'Gerando painel...';
   try {
     const html = await gerarPainel({
       registros: estado.base.registros, followUp: estado.followUp?.registros ?? null, meta: estado.base.meta, hoje: estado.hoje,
@@ -340,13 +346,16 @@ async function gerarEBaixarPainel() {
   } catch (erro) {
     abrirDialogo({ id: 'titulo-painel', titulo: 'Não foi possível gerar o painel', corpo: [el('p', {}, erro.message)] });
   } finally {
-    botaoPainel.textContent = textoAntes;
+    botaoExportar.firstChild.textContent = textoAntes;
+    botaoExportar.disabled = false;
     botaoPainel.disabled = !estado.base;
   }
 }
 
 const botaoPainel = document.getElementById('acao-painel');
 botaoPainel.addEventListener('click', gerarEBaixarPainel);
+const botaoExportar = document.getElementById('acao-exportar');
+ligarMenu(botaoExportar, document.getElementById('menu-exportar'));
 const botaoContratos = document.getElementById('acao-contratos');
 botaoContratos.addEventListener('click', () => estado.contratos && abrirContratos({
   contratos: estado.contratos,

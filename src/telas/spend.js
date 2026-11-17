@@ -4,7 +4,7 @@
 import { el } from '../ui/dom.js';
 import { cartao, linhaDeCartoes, bloco, estadoVazio, variacao, variacaoRelativa } from '../ui/cartoes.js';
 import { blocoComparacao } from './comparacao.js';
-import { barras } from '../ui/graficos.js';
+import { barras, colunas } from '../ui/graficos.js';
 import { criarTabela } from '../ui/tabela.js';
 import * as fmt from '../ui/formatos.js';
 import { spendPorFilial, resumoSpend, savingPorMes, rotuloMes } from '../analise.js';
@@ -35,7 +35,7 @@ export function telaSpend(ctx) {
     }),
     criarTabela({
       titulo: 'Spend por filial', linhas: porFilial, pesquisa: false, ordem: { coluna: 'valor', desc: true },
-      nomeArquivo: 'spend-por-filial.csv',
+      nomeArquivo: 'spend-por-filial.csv', recolhida: true,
       colunas: [
         { id: 'chave', rotulo: 'Filial', valor: (g) => g.chave },
         { id: 'valor', rotulo: 'Spend', num: true, valor: (g) => g.valor, formato: fmt.moedaCentavos },
@@ -49,8 +49,8 @@ export function telaSpend(ctx) {
 
   const meses = bloco(
     { titulo: 'Spend por mês do pedido' },
-    // Barras deitadas (não colunas): poucos meses não esticam o gráfico e ficam alinhados com o de filiais.
-    barras({
+    // Colunas: tempo da esquerda para a direita (pedido da equipe, 17/11/2026).
+    colunas({
       itens: porMes.map((g) => ({ id: g.chave, rotulo: rotuloMes(g.chave), valor: g.total })),
       formato: fmt.moedaCompacta,
       rotuloSerie: 'em OFs',
@@ -58,7 +58,7 @@ export function telaSpend(ctx) {
     criarTabela({
       titulo: 'Spend por mês do pedido',
       linhas: porMes.map((g) => ({ mes: rotuloMes(g.chave), total: g.total })),
-      pesquisa: false, nomeArquivo: 'spend-por-mes.csv',
+      pesquisa: false, nomeArquivo: 'spend-por-mes.csv', recolhida: true,
       colunas: [
         { id: 'mes', rotulo: 'Mês', valor: (g) => g.mes },
         { id: 'total', rotulo: 'Spend', num: true, valor: (g) => g.total, formato: fmt.moedaCentavos },

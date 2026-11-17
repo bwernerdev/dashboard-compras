@@ -1,8 +1,9 @@
 // Casca comum ao app da equipe (main.js) e ao painel publicado (painel/painel.js):
 // abas, barra de filtros globais, tela ativa, tema e impressão.
 // Não importa configuração nem regras de importação: entra no painel publicado.
-import { el, substituir } from './dom.js';
+import { el, substituir, icone } from './dom.js';
 import { esconderDica } from './dica.js';
+import { esqueleto } from './cartoes.js';
 import { barraDeFiltros } from './filtros.js';
 import { aplicarFiltros, opcoesDosFiltros, FILTROS, filtroValeNaTela } from '../analise.js';
 import { salvarPreferencia, lerJson, salvarJson } from '../preferencias.js';
@@ -51,6 +52,28 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
   };
   let pedido = 0;
   let entrar = false; // troca de aba: a tela nova entra com fade curto (classe `entrando`)
+  // Tempo do último desenho de cada tela (ms). Tela que demorou (Status com a base cheia: ~400 ms)
+  // mostra o esqueleto antes de desenhar, para a aba responder no clique; nos filtros, a tela atual
+  // fica apagada enquanto redesenha. Antes do 1º desenho, base grande conta como pesada.
+  const custo = new Map();
+  const TELA_PESADA_MS = 80;
+  const pesada = (id) => (custo.get(id) ?? ((estado.registros?.length ?? 0) > 3000 ? TELA_PESADA_MS : 0)) >= TELA_PESADA_MS;
+  /**
+   * Depois que o navegador pintar (esqueleto, aba marcada). O requestAnimationFrame não dispara com a
+   * janela em segundo plano: a reserva de 50 ms garante o desenho. Só o último pedido vale.
+   */
+  let rodada = 0;
+  const depoisDePintar = (fn) => {
+    clearTimeout(pedido);
+    const vez = ++rodada;
+    const ir = () => {
+      if (vez !== rodada) return;
+      rodada++; // a outra via (quadro ou reserva) não desenha de novo
+      pedido = setTimeout(fn, 0);
+    };
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(ir);
+    setTimeout(ir, 50);
+  };
 
   // Altura da faixa de filtros (fixa no topo ao rolar): as tabelas descontam dela para caber na janela.
   // Mede ao desenhar os filtros, ao mudar a janela e quando a faixa muda de altura (quebra de linha).
@@ -109,6 +132,14 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     estado.aba = id;
     aoTrocarAba?.(id);
     entrar = true;
+    if (estado.registros && pesada(id)) {
+      desenharAbas();
+      desenharFiltros();
+      substituir(raiz.conteudo, esqueleto('Montando a tela...'));
+      depoisDePintar(desenharTela);
+      return;
+    }
+    rodada++; // desenho pendente de uma tela pesada não vale mais
     desenhar();
   }
 
@@ -156,6 +187,13 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
   // setTimeout (não requestAnimationFrame): continua funcionando com a aba em segundo plano.
   function agendarTela() {
     clearTimeout(pedido);
+    if (estado.registros && pesada(estado.aba)) {
+      raiz.conteudo.firstElementChild?.classList.add('atualizando');
+      raiz.conteudo.setAttribute('aria-busy', 'true');
+      depoisDePintar(desenharTela);
+      return;
+    }
+    rodada++;
     pedido = setTimeout(desenharTela, 0);
   }
 
@@ -164,6 +202,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     raiz.conteudo.setAttribute('aria-labelledby', `aba-${estado.aba}`);
     if (!estado.registros) { substituir(raiz.conteudo, telaVazia()); return; }
     const tela = telas.find((t) => t.id === estado.aba);
+    const inicio = performance.now();
     if (raiz.filtrosImpressao) raiz.filtrosImpressao.textContent = descreverFiltros(estado.selecao, estado.aba);
     substituir(raiz.conteudo, tela.desenhar({
       registros: aplicarFiltros(estado.registros, estado.selecao, estado.aba),
@@ -188,6 +227,8 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
         window.scrollTo({ top: 0, behavior: 'smooth' });
       },
     }));
+    custo.set(tela.id, performance.now() - inicio);
+    raiz.conteudo.removeAttribute('aria-busy');
     if (entrar) {
       entrar = false;
       raiz.conteudo.firstElementChild?.classList.add('entrando');
@@ -231,12 +272,19 @@ export function ligarTopoCompacto() {
   }, { passive: true });
 }
 
-/** Botão de tema claro/escuro (html[data-theme]); a escolha fica no navegador quando dá. */
+/**
+ * Botão de tema claro/escuro (html[data-theme]); a escolha fica no navegador quando dá.
+ * Só ícone (pedido da equipe, 17/11/2026): lua no tema claro, sol no escuro; o nome fica no
+ * aria-label e no title ("Tema escuro"/"Tema claro").
+ */
 export function ligarTema(botao) {
   const mostrar = () => {
     const escuro = document.documentElement.dataset.theme === 'dark';
+    const nome = escuro ? 'Tema claro' : 'Tema escuro';
     botao.setAttribute('aria-pressed', String(escuro));
-    botao.textContent = escuro ? 'Tema claro' : 'Tema escuro';
+    botao.setAttribute('aria-label', nome);
+    botao.title = nome;
+    substituir(botao, icone(escuro ? 'sol' : 'lua', 16));
   };
   botao.addEventListener('click', () => {
     const novo = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
@@ -247,8 +295,12 @@ export function ligarTema(botao) {
   mostrar();
 }
 
-/** Botão Imprimir: imprime sempre no tema claro (papel branco). */
+/**
+ * Botão Imprimir: imprime sempre no tema claro (papel branco). Com a classe `botao-icone` (painel
+ * publicado) vira só o ícone da impressora; no app fica com texto, dentro do menu Exportar.
+ */
 export function ligarImpressao(botao) {
+  if (botao.classList.contains('botao-icone')) substituir(botao, icone('impressora', 16));
   botao.addEventListener('click', () => window.print());
   let temaAntes = null;
   window.addEventListener('beforeprint', () => {

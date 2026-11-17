@@ -26,10 +26,16 @@
     <div class="topo-acoes">
       <button type="button" id="acao-importar" class="botao">Atualizar bases</button>
       <button type="button" id="acao-contratos" class="botao botao-sec" disabled title="Importe a planilha de contratos em Atualizar bases">Contratos</button>
-      <button type="button" id="acao-painel" class="botao botao-sec" disabled title="Baixa o painel-compras.html para publicar no SharePoint">Gerar painel</button>
+      <!-- Menu "Exportar" (ui/menu.js): Gerar painel e Imprimir. -->
+      <div class="menu">
+        <button type="button" id="acao-exportar" class="botao botao-sec" aria-controls="menu-exportar">Exportar<span class="menu-seta" aria-hidden="true">▾</span></button>
+        <div id="menu-exportar" class="menu-painel" role="menu" aria-labelledby="acao-exportar" hidden>
+          <button type="button" id="acao-painel" class="menu-item" role="menuitem" disabled title="Baixa o painel-compras.html para publicar no SharePoint">Gerar painel</button>
+          <button type="button" id="acao-imprimir" class="menu-item" role="menuitem">Imprimir</button>
+        </div>
+      </div>
       <button type="button" id="acao-config" class="botao botao-sec">Configuração</button>
-      <button type="button" id="acao-imprimir" class="botao botao-sec">Imprimir</button>
-      <button type="button" id="acao-tema" class="botao botao-sec" aria-pressed="false">Tema escuro</button>
+      <button type="button" id="acao-tema" class="botao botao-sec botao-icone" aria-pressed="false">Tema escuro</button>
     </div>
     <nav id="abas" class="abas" role="tablist" aria-label="Telas"></nav>
   </header>

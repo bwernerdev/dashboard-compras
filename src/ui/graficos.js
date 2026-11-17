@@ -39,6 +39,33 @@ export function barras({ itens, formato, aoClicar, selecionado = null, rotuloSer
 }
 
 /**
+ * Colunas verticais de uma série, para tempo (meses da esquerda para a direita, na ordem dos itens).
+ * itens: [{ id, rotulo, valor, detalhe? }]; formato(valor) -> texto (valor em cima da coluna).
+ * Colunas de no máximo 48 px: poucos meses não viram blocos largos.
+ */
+export function colunas({ itens, formato, rotuloSerie = '' }) {
+  const max = Math.max(0, ...itens.map((i) => i.valor));
+  const lista = el('div', { class: 'grafico-colunas', role: 'list' });
+  for (const item of itens) {
+    const altura = max > 0 ? (Math.max(0, item.valor) / max) * 100 : 0;
+    const coluna = el('div', {
+      class: 'gc-coluna', role: 'listitem', tabindex: '0',
+      'aria-label': `${item.rotulo}: ${formato(item.valor)}${rotuloSerie ? ` ${rotuloSerie}` : ''}`,
+    },
+    el('span', { class: 'gc-area' },
+      el('span', { class: 'gc-valor' }, formato(item.valor)),
+      el('span', { class: 'gc-barra', style: { height: `${altura}%` } })),
+    el('span', { class: 'gc-rotulo' }, item.rotulo));
+    ligarDica(coluna, item.rotulo, () => [
+      { valor: formato(item.valor), rotulo: rotuloSerie },
+      ...(item.detalhe ?? []),
+    ]);
+    lista.append(coluna);
+  }
+  return lista;
+}
+
+/**
  * Barras horizontais empilhadas.
  * series: [{ id, rotulo, cor }] em ordem fixa (a cor acompanha a série, nunca a posição);
  * categorias: [{ rotulo, partes: { idSerie: valor }, total }].

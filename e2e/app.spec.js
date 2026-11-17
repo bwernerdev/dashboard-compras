@@ -4,6 +4,10 @@ import { readFile } from 'node:fs/promises';
 import { arquivoBase, arquivoBaseAnterior, arquivoFollowUp, arquivoContratos, FILIAL_A, FILIAL_B, COMPRADOR } from './ajuda/bases.js';
 import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
 
+/** Abre a tabela recolhida embaixo de um gráfico ("Ver tabela (N linhas)"). */
+const verTabela = (page, titulo) => page.locator('.bloco', { has: page.getByRole('heading', { name: titulo, exact: true }) })
+  .getByRole('button', { name: /^Ver tabela/ }).click();
+
 const valorDoCartao = (page, rotulo) => page.locator('.tela > .cartoes > .cartao', { has: page.locator('.cartao-rotulo', { hasText: rotulo }) }).locator('.cartao-valor');
 
 async function importarBase(page) {
@@ -253,8 +257,18 @@ test('filtros globais ficam salvos no navegador', async ({ page }) => {
   await filtro.getByLabel('URGENTE').check();
   await page.keyboard.press('Escape');
   await expect(filtro.locator('.filtro-valor')).toHaveText('URGENTE');
+  await expect(page.locator('.filtro-contagem')).toHaveText('1'); // "Filtros (1)"
   await page.reload();
   await expect(filtro.locator('.filtro-valor')).toHaveText('URGENTE');
+  // O "×" do filtro ativo limpa só ele.
+  await filtro.getByRole('button', { name: 'Limpar filtro Prioridade' }).click();
+  await expect(filtro.locator('.filtro-valor')).toHaveText('Todos');
+  await expect(page.locator('.filtro-contagem')).toBeHidden();
+  await expect(filtro.getByRole('button', { name: 'Limpar filtro Prioridade' })).toBeHidden();
+  await filtro.locator('.filtro-botao').click();
+  await filtro.getByLabel('Todos').uncheck();
+  await filtro.getByLabel('URGENTE').check();
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Limpar filtros' }).click();
   await page.reload();
   await expect(filtro.locator('.filtro-valor')).toHaveText('Todos');
@@ -344,6 +358,7 @@ test('SCs por Comprador (com período De/Até) e Saving', async ({ page }) => {
   await expect(valorDoCartao(page, 'SCs no período')).toHaveText('3');
 
   await expect(valorDoCartao(page, 'Pré-pedidos')).toHaveText('2'); // PP-1 + vazio (como na planilha)
+  await verTabela(page, 'SCs por comprador e status');
   const tabela = page.getByRole('table', { name: 'SCs por comprador e status' });
   await expect(tabela.locator('tbody tr', { hasText: COMPRADOR.apelido }).locator('td').last()).toHaveText('3');
 
@@ -352,6 +367,7 @@ test('SCs por Comprador (com período De/Até) e Saving', async ({ page }) => {
   const economia = page.locator('.tela > .cartoes > .cartao', { has: page.locator('.cartao-rotulo', { hasText: /^Economia$/ }) });
   await expect(economia.locator('.cartao-detalhe')).toHaveText(/R\$\s100,00/);
   await expect(valorDoCartao(page, '% Saving')).toHaveText('10,00%');
+  await verTabela(page, 'Economia por filial');
   await expect(page.getByRole('table', { name: 'Saving por filial' }).locator('tbody tr').first()).toContainText(FILIAL_B.nome.trim());
 });
 
@@ -378,6 +394,12 @@ test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', asyn
   await page.getByRole('tab', { name: 'Spend' }).click();
   await expect(page.locator('[data-filtro="mes"]')).toBeVisible();
   await expect(valorDoCartao(page, 'OFs')).toHaveText('1');
+  // Mês do pedido em colunas; a tabela embaixo do gráfico começa recolhida e fica lembrada aberta.
+  await expect(page.locator('.bloco', { hasText: 'Spend por mês do pedido' }).locator('.gc-coluna')).toHaveCount(1);
+  await expect(page.getByRole('table', { name: 'Spend por filial' })).toHaveCount(0);
+  await expect(page.locator('.bloco', { hasText: 'Spend por filial' }).getByRole('button', { name: /^Ver tabela/ })).toHaveAccessibleName('Ver tabela (1 linha)');
+  await verTabela(page, 'Spend por filial');
+  await page.reload();
   const spend = page.getByRole('table', { name: 'Spend por filial' });
   await expect(spend.locator('tbody tr').first()).toContainText(FILIAL_B.nome.trim());
   await expect(spend.locator('tbody tr').first()).toContainText('100%');
@@ -573,13 +595,35 @@ test('configuração: exportar e importar o arquivo da equipe', async ({ page })
   await expect(conteudo.getByText('Regional Exportada').first()).toBeVisible();
 });
 
+test('topo: menu Exportar (Gerar painel, Imprimir) pelo mouse e teclado', async ({ page }) => {
+  await page.goto('./');
+  const exportar = page.getByRole('button', { name: 'Exportar', exact: true });
+  const menu = page.getByRole('menu');
+  await expect(menu).toBeHidden();
+  await exportar.click();
+  await expect(menu).toBeVisible();
+  await expect(menu.getByRole('menuitem')).toHaveText(['Gerar painel', 'Imprimir']);
+  await expect(menu.getByRole('menuitem', { name: 'Gerar painel' })).toBeDisabled(); // sem base
+  await expect(menu.getByRole('menuitem', { name: 'Imprimir' })).toBeFocused(); // 1º item ativo
+  await page.keyboard.press('Escape');
+  await expect(menu).toBeHidden();
+  await expect(exportar).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(menu).toBeVisible();
+  await page.locator('h1').click(); // clique fora fecha
+  await expect(menu).toBeHidden();
+});
+
 test('tema escuro alterna e fica salvo', async ({ page }) => {
   await page.goto('./');
   const html = page.locator('html');
   const inicial = await html.getAttribute('data-theme');
+  // Só ícone: o nome diz para qual tema vai.
+  await expect(page.locator('#acao-tema')).toHaveAccessibleName(inicial === 'dark' ? 'Tema claro' : 'Tema escuro');
   await page.locator('#acao-tema').click();
   const novo = inicial === 'dark' ? 'light' : 'dark';
   await expect(html).toHaveAttribute('data-theme', novo);
+  await expect(page.locator('#acao-tema')).toHaveAccessibleName(novo === 'dark' ? 'Tema claro' : 'Tema escuro');
   await page.reload();
   await expect(html).toHaveAttribute('data-theme', novo);
 });
