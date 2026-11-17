@@ -9,6 +9,30 @@ import { criarColunasOcultas } from './tabela-colunas.js';
 import { botaoDensidade } from './tabela-densidade.js';
 import { lerConjunto, salvarConjunto } from '../preferencias.js';
 
+// Um comparador só (criar o Intl a cada comparação, como no localeCompare, custava ~1 s na lista
+// de 12 mil itens do Status). Mesma regra do localeCompare('pt-BR', { numeric: true }).
+const comparador = new Intl.Collator('pt-BR', { numeric: true });
+const ehVazio = (v) => v === null || v === undefined || v === '';
+
+/**
+ * Ordena as linhas pela coluna: números como número, o resto como texto (pt-BR, "2" antes de "10"),
+ * vazios sempre no fim, empate mantém a ordem de antes. O valor de cada linha é lido uma vez só.
+ */
+export function ordenarLinhas(linhas, col, desc) {
+  const sinal = desc ? -1 : 1;
+  const itens = linhas.map((l, i) => ({ l, i, v: col.valor(l) }));
+  itens.sort((a, b) => {
+    const va = a.v;
+    const vb = b.v;
+    if (va === vb) return a.i - b.i;
+    if (ehVazio(va)) return ehVazio(vb) ? a.i - b.i : 1;
+    if (ehVazio(vb)) return -1;
+    const r = typeof va === 'number' && typeof vb === 'number' ? (va - vb) : comparador.compare(String(va), String(vb));
+    return r * sinal || a.i - b.i;
+  });
+  return itens.map((x) => x.l);
+}
+
 const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 /**
@@ -99,24 +123,21 @@ export function criarTabela(opcoes) {
     ativo: caberNaLargura, colunas, idTabela, indice, tabela, cabeca, visivel: (c) => !ocultas.oculta(c.id), encolhivel,
   });
 
+  // Resultado da pesquisa + ordem guardado: trocar de página, Copiar e Excel não refazem a conta.
+  // Vale enquanto as linhas (mesmo array), o termo e a ordem forem os mesmos.
+  let memoria = null;
   function linhasVisiveis() {
+    const chave = `${estado.termo}|${estado.ordem?.coluna ?? ''}|${estado.ordem?.desc ?? ''}`;
+    if (memoria?.linhas === estado.linhas && memoria.chave === chave) return memoria.resultado;
     let linhas = estado.linhas;
     if (estado.termo) {
       linhas = linhas.filter((l) => pesquisaveis.some((c) => normalizar(textoDaCelula(c, l)).includes(estado.termo)));
     }
     if (estado.ordem) {
       const col = colunas.find((c) => c.id === estado.ordem.coluna);
-      const sinal = estado.ordem.desc ? -1 : 1;
-      linhas = [...linhas].sort((a, b) => {
-        const va = col.valor(a);
-        const vb = col.valor(b);
-        if (va === vb) return 0;
-        if (va === null || va === undefined || va === '') return 1; // vazios sempre no fim
-        if (vb === null || vb === undefined || vb === '') return -1;
-        if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * sinal;
-        return String(va).localeCompare(String(vb), 'pt-BR', { numeric: true }) * sinal;
-      });
+      linhas = ordenarLinhas(linhas, col, estado.ordem.desc);
     }
+    memoria = { linhas: estado.linhas, chave, resultado: linhas };
     return linhas;
   }
 
