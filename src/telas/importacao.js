@@ -9,6 +9,27 @@ const ARQUIVOS = [
   { tipo: 'contratos', titulo: 'Contratos (anexo)', dica: 'CONTROLE DE CONTRATOS.xlsx', vazio: 'Opcional: abre na janela Contratos (botão no topo)' },
 ];
 
+const TIPOS_XLSX = [{
+  description: 'Planilha do Excel (.xlsx)',
+  accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] },
+}];
+
+/**
+ * Escolher arquivo pelo seletor do navegador com um `id` por tipo (Chrome e Edge): cada caixa abre na
+ * pasta da última importação daquele tipo (Base de um lugar, Follow-Up de outro, Contratos de outro).
+ * A página nunca vê o caminho; quem lembra a pasta é o navegador. Sem o recurso (outros navegadores):
+ * null, e vale o seletor comum do <input type="file">. Cancelar: undefined.
+ */
+async function escolherComPastaLembrada(tipo) {
+  if (typeof window.showOpenFilePicker !== 'function') return null;
+  try {
+    const [arquivo] = await window.showOpenFilePicker({ id: `importar-${tipo}`, types: TIPOS_XLSX, multiple: false });
+    return arquivo.getFile();
+  } catch (erro) {
+    return erro?.name === 'AbortError' ? undefined : null;
+  }
+}
+
 /** Texto de situação de uma base já carregada. */
 export function situacaoDaBase(dados) {
   if (!dados) return null;
@@ -58,6 +79,15 @@ export function caixasDeImportacao({ estado, aoImportar }) {
     };
 
     entrada.addEventListener('change', () => { if (entrada.files[0]) carregar(entrada.files[0]); });
+    // Clique na caixa: seletor com a pasta lembrada por tipo; se o navegador não tiver, segue o comum.
+    let seletorComum = false;
+    entrada.addEventListener('click', async (ev) => {
+      if (seletorComum || typeof window.showOpenFilePicker !== 'function') { seletorComum = false; return; }
+      ev.preventDefault();
+      const arquivo = await escolherComPastaLembrada(a.tipo);
+      if (arquivo) carregar(arquivo);
+      else if (arquivo === null) { seletorComum = true; entrada.click(); }
+    });
     caixa.addEventListener('dragover', (ev) => { ev.preventDefault(); caixa.classList.add('arrastando'); });
     caixa.addEventListener('dragleave', () => caixa.classList.remove('arrastando'));
     caixa.addEventListener('drop', (ev) => {

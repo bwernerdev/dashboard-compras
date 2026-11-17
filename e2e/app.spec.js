@@ -65,6 +65,27 @@ test('sem bases mostra a importação; arquivo errado mostra o motivo', async ({
   await expect(page.locator('.arquivo[data-tipo="base"] .arquivo-status')).toContainText('não parece ser o relatório');
 });
 
+test('cada caixa de importação abre o seletor com a pasta lembrada do seu tipo', async ({ page }) => {
+  // Seletor do navegador simulado: a janela do sistema não abre no teste. Guarda o id de cada chamada.
+  const base = await arquivoBase();
+  await page.addInitScript((bytes) => {
+    window.chamadasSeletor = [];
+    window.showOpenFilePicker = async ({ id }) => {
+      window.chamadasSeletor.push(id);
+      if (id !== 'importar-base') throw new DOMException('cancelou', 'AbortError');
+      return [{ getFile: async () => new File([new Uint8Array(bytes)], 'base.xlsx') }];
+    };
+  }, [...base.buffer]);
+  await page.goto('./');
+  await page.locator('.arquivo[data-tipo="base"]').click();
+  await expect(valorDoCartao(page, 'SCs em aberto')).toBeVisible();
+  await page.locator('#acao-importar').click();
+  await page.locator('dialog .arquivo[data-tipo="followUp"]').click();
+  await page.locator('dialog .arquivo[data-tipo="contratos"]').click();
+  await expect(page.locator('dialog .arquivo[data-tipo="contratos"] .arquivo-status')).toContainText('Opcional'); // cancelou: nada muda
+  expect(await page.evaluate(() => window.chamadasSeletor)).toEqual(['importar-base', 'importar-followUp', 'importar-contratos']);
+});
+
 test('Regional: cartões, período, faixa e filtro por clique', async ({ page }) => {
   await importarBase(page);
   await expect(page.locator('#periodo')).toContainText('12/09/2026 a 11/11/2026');
