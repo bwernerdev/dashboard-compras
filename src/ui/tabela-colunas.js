@@ -1,5 +1,5 @@
 // Colunas ocultas de uma tabela (ui/tabela.js): botão "Colunas" (lista de marcar), lembrado por `nomeArquivo`.
-// Colunas ocultas só saem da tela: CSV e "Copiar tabela" continuam com todas.
+// Colunas ocultas só saem da tela: Excel e "Copiar tabela" continuam com todas.
 import { el } from './dom.js';
 import { lerJson, salvarConjunto } from '../preferencias.js';
 import { listaDeMarcar } from './filtros.js';

@@ -188,9 +188,10 @@ test('olho e duplo clique recolhem SC atendida numa linha; desfazer e expandir',
   await expect(lista.locator('tbody tr.grupo-recolhido')).toHaveCount(0);
   await expect(contagem).toHaveText('2 SCs, 3 itens');
 
-  // CSV não leva a coluna do olho.
-  const [download] = await Promise.all([page.waitForEvent('download'), lista.getByRole('button', { name: 'Exportar CSV' }).click()]);
-  expect((await readFile(await download.path(), 'utf8')).startsWith('﻿Dias da aprovação;')).toBe(true);
+  // O Excel não leva a coluna do olho.
+  const [download] = await Promise.all([page.waitForEvent('download'), lista.getByRole('button', { name: 'Exportar Excel' }).click()]);
+  const [cabecalho] = await lerAbaInteira(await abrirPasta(new Blob([await readFile(await download.path())])), 'SCs em aberto');
+  expect(cabecalho[0]).toBe('Dias da aprovação');
 });
 
 test('lista de SCs em tela cheia: só pelo botão, Esc (depois da lista de marcar), não abre sozinha', async ({ page }) => {
@@ -460,8 +461,8 @@ test('Contratos: anexo opcional abre numa janela separada, com as abas da planil
   await expect(janela.locator('tbody tr', { hasText: 'FORNECEDOR A' })).toContainText('111'); // nº Projuris
   await expect(janela.locator('tbody tr', { hasText: 'FORNECEDOR A' })).toContainText('222'); // nº ME
 
-  // .xlsx da aba: todas as colunas, uma linha por contrato.
-  const [planilha] = await Promise.all([page.waitForEvent('download'), janela.getByRole('button', { name: 'Exportar .xlsx' }).click()]);
+  // Excel da aba: todas as colunas, uma linha por contrato.
+  const [planilha] = await Promise.all([page.waitForEvent('download'), janela.getByRole('button', { name: 'Exportar Excel' }).click()]);
   expect(planilha.suggestedFilename()).toBe('contratos-contratos.xlsx');
   const linhas = await lerAbaInteira(await abrirPasta(new Blob([await readFile(await planilha.path())])), 'Contratos');
   expect(linhas.length).toBe(5);
@@ -487,14 +488,23 @@ test('bases ficam salvas no navegador e a aba é lembrada', async ({ page }) => 
   await expect(valorDoCartao(page, '% Saving')).toHaveText('10,00%');
 });
 
-test('exporta CSV para o Excel pt-BR', async ({ page }) => {
+test('"Exportar Excel": um botão só por tabela, sem CSV, baixa .xlsx com as linhas', async ({ page }) => {
   await importarBase(page);
+  await expect(page.getByRole('button', { name: /Exportar CSV|Exportar \.xlsx/ })).toHaveCount(0);
   const bloco = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
-  const [download] = await Promise.all([page.waitForEvent('download'), bloco.getByRole('button', { name: 'Exportar CSV' }).click()]);
-  expect(download.suggestedFilename()).toBe('scs-em-aberto.csv');
-  const texto = await readFile(await download.path(), 'utf8');
-  expect(texto.startsWith('﻿Dias da aprovação;SC;Data Aprovação;Prioridade;Status;Produto;')).toBe(true);
-  expect(texto.trim().split('\r\n')).toHaveLength(4); // cabeçalho + 3 itens
+  await expect(bloco.getByRole('button', { name: 'Exportar Excel' })).toHaveCount(1);
+  const [download] = await Promise.all([page.waitForEvent('download'), bloco.getByRole('button', { name: 'Exportar Excel' }).click()]);
+  expect(download.suggestedFilename()).toBe('scs-em-aberto.xlsx');
+  const pasta = await abrirPasta(new Blob([await readFile(await download.path())]));
+  expect(pasta.abas.map((a) => a.nome)).toEqual(['SCs em aberto']); // aba com o título da tabela
+  const linhas = await lerAbaInteira(pasta, 'SCs em aberto');
+  expect(linhas[0].slice(0, 6)).toEqual(['Dias da aprovação', 'SC', 'Data Aprovação', 'Prioridade', 'Status', 'Produto']);
+  expect(linhas).toHaveLength(4); // cabeçalho + 3 itens
+
+  // Tabela de resumo também (Saving: % e R$ como número).
+  await page.getByRole('tab', { name: 'Saving' }).click();
+  const [planilha] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar Excel' }).first().click()]);
+  expect(planilha.suggestedFilename()).toMatch(/^saving-.+\.xlsx$/);
 });
 
 test('configuração: editar o de-para recalcula; restaurar padrão volta', async ({ page }) => {

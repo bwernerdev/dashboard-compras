@@ -1,4 +1,5 @@
-// Saída das tabelas (ui/tabela.js): texto das células, CSV, texto para colar no Excel, baixar e copiar.
+// Saída das tabelas (ui/tabela.js): texto das células, texto para colar no Excel, baixar e copiar.
+// A planilha do "Exportar Excel" fica em tabela-xlsx.js.
 import { el } from './dom.js';
 import { formatarSerie } from '../datas.js';
 
@@ -10,7 +11,7 @@ export function textoDaCelula(col, linha) {
   return col.formato ? col.formato(v) : String(v);
 }
 
-/** Colunas que vão para CSV, "Copiar tabela" e pesquisa (não as de controle, como o olho). */
+/** Colunas que vão para o Excel, "Copiar tabela" e pesquisa (não as de controle, como o olho). */
 export const exportaveis = (colunas) => colunas.filter((c) => !c.controle);
 
 /** Valor para o Excel em pt-BR: data dd/mm/aaaa, número com vírgula decimal e sem separador de milhar. */
@@ -22,18 +23,6 @@ function valorDeSaida(col, linha) {
   return v;
 }
 
-/** CSV para o Excel em pt-BR: ";" como separador, vírgula decimal, BOM UTF-8. */
-export function gerarCsv(todas, linhas) {
-  const colunas = exportaveis(todas);
-  const campo = (v) => {
-    const s = String(v ?? '');
-    return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  const corpo = [colunas.map((c) => campo(c.rotulo)).join(';'),
-    ...linhas.map((l) => colunas.map((c) => campo(valorDeSaida(c, l))).join(';'))];
-  return `\uFEFF${corpo.join('\r\n')}\r\n`;
-}
-
 /** Texto para colar no Excel: tabulação entre colunas, vírgula decimal, sem separador de milhar. */
 export function gerarTsv(todas, linhas) {
   const colunas = exportaveis(todas);
@@ -43,7 +32,7 @@ export function gerarTsv(todas, linhas) {
 }
 
 /** Baixa um arquivo gerado na hora. */
-export function baixar(nome, conteudo, tipo = 'text/csv;charset=utf-8') {
+export function baixar(nome, conteudo, tipo) {
   const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
   const a = el('a', { href: url, download: nome });
   document.body.append(a);
@@ -73,7 +62,7 @@ export async function copiarTexto(texto) {
   }
 }
 
-/** Exportar CSV só onde download funciona (no quadro do SharePoint não: painel/painel.js desliga). */
-const exportacao = { csv: true };
-export function definirExportacao({ csv }) { exportacao.csv = csv; }
-export const podeExportarCsv = () => exportacao.csv;
+/** "Exportar Excel" só onde download funciona (no quadro do SharePoint não: painel/painel.js desliga). */
+const exportacao = { arquivo: true };
+export function definirExportacao({ arquivo }) { exportacao.arquivo = arquivo; }
+export const podeExportar = () => exportacao.arquivo;

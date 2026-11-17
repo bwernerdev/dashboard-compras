@@ -1,6 +1,6 @@
 // Painel publicado (o arquivo painel-compras.html): só consulta. Lê os dados embutidos na página,
 // mostra as telas públicas (as abas visíveis da planilha antiga, telas/publicas.js) com os filtros globais e se adapta ao quadro isolado
-// do SharePoint (PROJETO.md, seção 7): sem CSV e sem imprimir lá dentro; "Copiar tabela" funciona.
+// do SharePoint (PROJETO.md, seção 7): sem "Exportar Excel" e sem imprimir lá dentro; "Copiar tabela" funciona.
 // Os números ficam congelados na data em que o painel foi gerado.
 //
 // Não importar daqui nada de config/, importar.js, memoria.js nem telas internas: tudo o que este
@@ -35,7 +35,7 @@ const raiz = {
   filtrosImpressao: document.getElementById('filtros-impressao'),
 };
 
-definirExportacao({ csv: !noQuadro });
+definirExportacao({ arquivo: !noQuadro });
 document.getElementById('aviso-quadro').hidden = !noQuadro;
 const botaoImprimir = document.getElementById('acao-imprimir');
 if (noQuadro) botaoImprimir.hidden = true;

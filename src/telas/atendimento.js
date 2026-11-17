@@ -98,7 +98,7 @@ export function telaAtendimento(ctx) {
 
   return el('div', { class: 'tela' }, cartoes, bloco(
     { titulo: 'Itens em aberto', subtitulo: 'Itens agrupados por SC, da mais antiga para a mais nova.',
-      ajuda: 'Pesquise por SC, produto, solicitante ou filial. CSV, .xlsx e "Copiar tabela" trazem um item por linha.' },
+      ajuda: 'Pesquise por SC, produto, solicitante ou filial. Excel e "Copiar tabela" trazem um item por linha.' },
     alternar,
     tabela.elemento,
   ));

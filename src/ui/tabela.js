@@ -1,8 +1,8 @@
-// Tabela com ordenação por coluna, pesquisa, paginação, linha de total, "Copiar tabela" e exportação CSV.
-// Partes em módulos próprios: tabela-exportar.js (CSV, copiar, baixar), tabela-xlsx.js (Excel), tabela-larguras.js (larguras e
+// Tabela com ordenação por coluna, pesquisa, paginação, linha de total, "Copiar tabela" e "Exportar Excel".
+// Partes em módulos próprios: tabela-exportar.js (copiar, baixar), tabela-xlsx.js (Excel), tabela-larguras.js (larguras e
 // caber na largura), tabela-colunas.js (colunas ocultas), tabela-densidade.js (botão "Compacta").
 import { el, substituir, novoId } from './dom.js';
-import { textoDaCelula, exportaveis, gerarCsv, gerarTsv, baixar, copiarTexto, podeExportarCsv } from './tabela-exportar.js';
+import { textoDaCelula, exportaveis, gerarTsv, baixar, copiarTexto, podeExportar } from './tabela-exportar.js';
 import { gerarXlsx, TIPO_XLSX } from './tabela-xlsx.js';
 import { criarLarguras, criarAjuste } from './tabela-larguras.js';
 import { criarColunasOcultas } from './tabela-colunas.js';
@@ -15,14 +15,14 @@ const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '
  *            exibir?(linha) -> Node|texto, classe?(linha) -> string, titulo?,
  *            semDuploClique?: bool (clique e dois cliques nessa coluna não disparam aoClicarLinha nem
  *            aoDuploClique: servem para selecionar o texto e copiar),
- *            controle?: bool (coluna de botão: sem ordenar, fora do CSV, do "Copiar" e da pesquisa;
+ *            controle?: bool (coluna de botão: sem ordenar, fora do Excel, do "Copiar" e da pesquisa;
  *            o rótulo só para leitor de tela) }]
  * opções: titulo (legenda acessível), ordem { coluna, desc }, porPagina, pesquisa, nomeArquivo,
  *         rodape(linhas) -> [texto por coluna], vazio (texto sem linhas, ou função que o devolve), aoClicarLinha(linha),
  *         aoDuploClique(linha), classeLinha(linha) -> string,
  *         grupo { chave(linha), colunas: [ids], nome: ['SC', 'SCs'] }: linhas da mesma chave ficam
  *         juntas (na ordem da 1ª que aparece), as colunas do grupo só na 1ª linha (como a tabela
- *         dinâmica da planilha) e a paginação conta grupos. CSV e "Copiar tabela" repetem tudo.
+ *         dinâmica da planilha) e a paginação conta grupos. Excel e "Copiar tabela" repetem tudo.
  *         recolhido(chave) -> bool: grupo recolhido vira uma linha só, com as `colunasRecolhido`
  *         preenchidas e o resto vazio (como recolher a SC na tabela dinâmica); `nomeRecolhido`:
  *         ['atendida', 'atendidas'] entra na contagem.
@@ -34,9 +34,10 @@ const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '
  * largura salva) encolhem na proporção (com reticências) para a tabela caber sem rolar para o lado; refaz ao mudar a janela ou as linhas.
  * escolherColunas: botão "Colunas" (lista de marcar) para ocultar colunas; lembrado por `nomeArquivo`.
  * Coluna com `ocultaPadrao: true` começa oculta até a pessoa escolher.
- * Colunas ocultas só saem da tela: CSV e "Copiar tabela" continuam com todas.
- * xlsx: nome da aba; mostra "Exportar .xlsx" (planilha do Excel com número, data e filtro; tabela-xlsx.js),
- * com as mesmas linhas do CSV. Só onde download funciona, como o CSV.
+ * Colunas ocultas só saem da tela: Excel e "Copiar tabela" continuam com todas.
+ * "Exportar Excel" (toda tabela, só onde download funciona): planilha .xlsx com as linhas filtradas, número,
+ * data, % e R$ de verdade, cabeçalho com filtro (tabela-xlsx.js). Arquivo = `nomeArquivo` com .xlsx;
+ * xlsx: nome da aba da planilha (sem ele, o título da tabela).
  */
 export function criarTabela(opcoes) {
   const {
@@ -55,21 +56,19 @@ export function criarTabela(opcoes) {
     oninput: (ev) => { estado.termo = normalizar(ev.target.value); estado.pagina = 0; render(); },
   }) : null;
   const contagem = el('span', { class: 'tabela-contagem', 'aria-live': 'polite' });
-  const botaoCsv = podeExportarCsv() ? el('button', {
-    type: 'button', class: 'botao botao-sec botao-pequeno',
-    onclick: () => baixar(nomeArquivo, gerarCsv(colunas, linhasVisiveis())),
-  }, 'Exportar CSV') : null;
-  const botaoXlsx = xlsx && podeExportarCsv() ? el('button', {
+  // nomeArquivo segue terminando em .csv: é a chave das larguras e colunas salvas no navegador.
+  const botaoExcel = podeExportar() ? el('button', {
     type: 'button', class: 'botao botao-sec botao-pequeno', title: 'Baixa as linhas filtradas numa planilha do Excel',
     onclick: async () => {
-      botaoXlsx.disabled = true;
+      botaoExcel.disabled = true;
       try {
-        baixar(nomeArquivo.replace(/\.csv$/i, '') + '.xlsx', await gerarXlsx(colunas, linhasVisiveis(), { aba: xlsx }), TIPO_XLSX);
+        const planilha = await gerarXlsx(colunas, linhasVisiveis(), { aba: xlsx ?? titulo });
+        baixar(nomeArquivo.replace(/\.csv$/i, '') + '.xlsx', planilha, TIPO_XLSX);
       } finally {
-        botaoXlsx.disabled = false;
+        botaoExcel.disabled = false;
       }
     },
-  }, 'Exportar .xlsx') : null;
+  }, 'Exportar Excel') : null;
   const botaoCopiar = el('button', {
     type: 'button', class: 'botao botao-sec botao-pequeno', title: 'Copia as linhas filtradas para colar no Excel',
     onclick: async () => {
@@ -227,7 +226,7 @@ export function criarTabela(opcoes) {
 
   const elemento = el('div', { class: 'tabela-bloco' },
     larguras.estilo, ocultas.estilo, ajuste.estilo,
-    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, larguras.botao, ocultas.botao, botaoDensidade(), botaoCopiar, botaoCsv, botaoXlsx),
+    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, larguras.botao, ocultas.botao, botaoDensidade(), botaoCopiar, botaoExcel),
     ajuste.rolagem,
     paginacao);
   render();

@@ -1,5 +1,5 @@
 // Agregações e filtros das telas (src/analise.js), memória (src/memoria.js), validação da
-// configuração e CSV. Dados fictícios.
+// configuração. Dados fictícios.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -9,7 +9,6 @@ import {
 } from '../src/analise.js';
 import { brutosDe, recalcular, juntarAoHistorico } from '../src/memoria.js';
 import { validarConfig, lerConfigExportada } from '../src/telas/configuracao.js';
-import { gerarCsv } from '../src/ui/tabela-exportar.js';
 import { criarConfig, CONFIG_PADRAO } from '../src/config/index.js';
 import { calcularLinhaBase } from '../src/regras.js';
 import { serie } from '../src/datas.js';
@@ -212,15 +211,6 @@ test('validarConfig: aceita o padrão e aponta problemas', () => {
   const erros = validarConfig(c);
   assert.equal(erros.length, 4, erros.join('\n'));
   assert.ok(erros.some((e) => e.includes('código repetido')));
-});
-
-test('gerarCsv: ";" como separador, vírgula decimal, aspas quando preciso, BOM', () => {
-  const csv = gerarCsv([
-    { rotulo: 'Nome', valor: (l) => l.n },
-    { rotulo: 'Valor', valor: (l) => l.v },
-    { rotulo: 'Data', valor: (l) => l.d, tipo: 'data' },
-  ], [{ n: 'A;B', v: 1.5, d: serie(2026, 11, 11) }, { n: 'Diz "oi"', v: null, d: null }]);
-  assert.equal(csv, '﻿Nome;Valor;Data\r\n"A;B";1,5;11/11/2026\r\n"Diz ""oi""";;\r\n');
 });
 
 test('ehRegularizacao: categoria REGULARIZAÇÃO, sem maiúsculas nem acento', () => {

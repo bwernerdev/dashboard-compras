@@ -1,10 +1,11 @@
-// "Exportar .xlsx": a planilha gerada abre no leitor do próprio app (mesmo formato do ME) com os tipos certos.
+// "Exportar Excel": a planilha gerada abre no leitor do próprio app (mesmo formato do ME) com os tipos certos.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { gerarXlsx, letraDaColuna } from '../src/ui/tabela-xlsx.js';
 import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
 import { abrirZip, textoDaParte } from '../src/leitor/zip.js';
 import { serie } from '../src/datas.js';
+import * as fmt from '../src/ui/formatos.js';
 
 const COLUNAS = [
   { id: 'olho', rotulo: 'Olho', controle: true, valor: () => 'x' },
@@ -48,6 +49,25 @@ test('gerarXlsx: cabeçalho em negrito, congelado e com filtro; data com formato
 test('gerarXlsx: tabela sem linhas tem só o cabeçalho', async () => {
   const linhas = await lerAbaInteira(await abrirPasta(await gerarXlsx(COLUNAS, [], { aba: 'X' })), 'X');
   assert.deepEqual(linhas, [['Dias', 'Nome', 'Valor', 'Data']]);
+});
+
+test('gerarXlsx: % e R$ pelo formato da tela (ou formatoExcel) ficam número com formato do Excel', async () => {
+  const colunas = [
+    { id: 'pct', rotulo: '% Saving', valor: (l) => l.pct, formato: fmt.pctFino },
+    { id: 'total', rotulo: 'Total', valor: (l) => l.total, formato: fmt.moedaCentavos },
+    { id: 'contrato', rotulo: 'Valor', valor: (l) => l.contrato, formatoExcel: 'moeda', formato: String },
+  ];
+  const linhas = [{ pct: 0.1234, total: 1500.5, contrato: 'Conforme proposta' }, { pct: 0, total: 10, contrato: 99 }];
+  const blob = await gerarXlsx(colunas, linhas, { aba: 'Saving' });
+  const aba = await textoDaParte(await abrirZip(blob), 'xl/worksheets/sheet1.xml');
+  assert.match(aba, /<c r="A2" s="5"><v>0.1234<\/v><\/c>/); // % (0,00%)
+  assert.match(aba, /<c r="B2" s="6"><v>1500.5<\/v><\/c>/); // R$
+  assert.match(aba, /<c r="C2" t="s">/); // texto continua texto
+  assert.match(aba, /<c r="C3" s="6"><v>99<\/v><\/c>/);
+  const estilos = await textoDaParte(await abrirZip(blob), 'xl/styles.xml');
+  assert.match(estilos, /<numFmt numFmtId="164" formatCode="&quot;R\$&quot; #,##0.00"\/>/);
+  assert.match(estilos, /<cellXfs count="7">/);
+  assert.deepEqual((await lerAbaInteira(await abrirPasta(blob), 'Saving'))[1], [0.1234, 1500.5, 'Conforme proposta']);
 });
 
 test('letraDaColuna', () => {

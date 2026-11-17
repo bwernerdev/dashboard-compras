@@ -37,7 +37,7 @@ function seloPrazo(p) {
 
 const textoOuNumero = (formatar) => (v) => (typeof v === 'number' ? formatar(v) : String(v));
 /**
- * Colunas de controle: começam ocultas na tela (botão "Colunas" mostra; CSV e .xlsx levam todas).
+ * Colunas de controle: começam ocultas na tela (botão "Colunas" mostra; o Excel leva todas).
  * Os números do contrato (Projuris e ME) aparecem (pedido da equipe, 17/11/2026).
  */
 const OCULTAS_PADRAO = new Set(['ifrs16', 'minuta', 'item', 'servicoLocacao']);
@@ -52,7 +52,9 @@ function colunaDoCampo(c) {
   if (c.id === 'status') return { ...base, valor: statusDoContrato, exibir: seloStatus };
   if (c.tipo === 'data') return { ...base, tipo: 'data', centro: true };
   // Valor às vezes é texto ("Conforme proposta"): encolhe com reticências como as colunas de texto.
-  if (c.tipo === 'moeda') return { ...base, num: true, formato: textoOuNumero(fmt.moedaCentavos), classe: () => 'texto-medio' };
+  if (c.tipo === 'moeda') {
+    return { ...base, num: true, formato: textoOuNumero(fmt.moedaCentavos), formatoExcel: 'moeda', classe: () => 'texto-medio' };
+  }
   if (c.tipo === 'codigo') return { ...base, formato: String };
   if (CLASSES_TEXTO[c.id]) return { ...base, classe: () => CLASSES_TEXTO[c.id] };
   return base;
@@ -132,7 +134,7 @@ function desenharAba(aba, quadro, opcoes) {
     bloco({
       titulo: aba.rotulo,
       subtitulo: temFim ? 'Ordenada pelo prazo: o que vence primeiro fica no topo.' : null,
-      ajuda: 'Pesquise por fornecedor, CNPJ, objeto ou filial. Clique no cabeçalho para ordenar. "Colunas" esconde colunas da tela; CSV, .xlsx e "Copiar tabela" trazem todas.',
+      ajuda: 'Pesquise por fornecedor, CNPJ, objeto ou filial. Clique no cabeçalho para ordenar. "Colunas" esconde colunas da tela; Excel e "Copiar tabela" trazem todas.',
     }, filtros, tabela.elemento));
 }
 

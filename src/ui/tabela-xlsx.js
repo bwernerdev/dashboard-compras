@@ -1,8 +1,10 @@
-// "Exportar .xlsx" das tabelas (opção `xlsx` de criarTabela): planilha do Excel de verdade, sem dependência.
-// Número fica número, data fica data (dd/mm/aaaa no Excel em pt-BR), texto nas strings compartilhadas.
+// "Exportar Excel" das tabelas (ui/tabela.js): planilha do Excel de verdade, sem dependência.
+// Número fica número, data fica data (dd/mm/aaaa no Excel em pt-BR), % e R$ com o formato do Excel
+// (pelo `formato` da coluna ou `formatoExcel: 'pct' | 'moeda'`), texto nas strings compartilhadas.
 // Cabeçalho em negrito, congelado e com filtro; largura de cada coluna pelo maior texto.
 // `criarZip` também monta os .xlsx fictícios dos testes (tests/ajuda/xlsx-ficticio.js).
 import { exportaveis } from './tabela-exportar.js';
+import * as fmt from './formatos.js';
 
 export const TIPO_XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
@@ -105,21 +107,31 @@ export function letraDaColuna(i) {
 /** Nome de aba aceito pelo Excel: até 31 caracteres, sem : \ / ? * [ ]. */
 const nomeDeAba = (s) => String(s || 'Planilha').replace(/[:\\/?*[\]]/g, ' ').trim().slice(0, 31) || 'Planilha';
 
-// Estilos (cellXfs): 0 normal, 1 cabeçalho em negrito, 2 data, 3 inteiro, 4 decimal (formatos nativos do Excel).
-const ESTILO = { cabecalho: 1, data: 2, inteiro: 3, decimal: 4 };
+// Estilos (cellXfs): 0 normal, 1 cabeçalho em negrito, 2 data, 3 inteiro, 4 decimal, 5 % com 2 casas,
+// 6 R$ com centavos (formato 164, próprio; o Excel mostra com os separadores do computador).
+const ESTILO = { cabecalho: 1, data: 2, inteiro: 3, decimal: 4, pct: 5, moeda: 6 };
+
+/** Formato do Excel pelo formato da tela: % e R$ ficam número com o formato certo. */
+const FORMATO_EXCEL = new Map([
+  [fmt.pct, 'pct'], [fmt.pctFino, 'pct'], [fmt.moeda, 'moeda'], [fmt.moedaCentavos, 'moeda'], [fmt.moedaCompacta, 'moeda'],
+]);
+const formatoExcel = (coluna) => coluna.formatoExcel ?? FORMATO_EXCEL.get(coluna.formato);
 const ESTILOS = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
   + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+  + '<numFmts count="1"><numFmt numFmtId="164" formatCode="&quot;R$&quot; #,##0.00"/></numFmts>'
   + '<fonts count="2"><font><sz val="11"/><name val="Calibri"/><family val="2"/></font>'
   + '<font><b/><sz val="11"/><name val="Calibri"/><family val="2"/></font></fonts>'
   + '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'
   + '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
   + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-  + '<cellXfs count="5">'
+  + '<cellXfs count="7">'
   + '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
   + '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>'
   + '<xf numFmtId="14" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
   + '<xf numFmtId="1" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
   + '<xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+  + '<xf numFmtId="10" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
+  + '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
   + '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 
 const NS = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
@@ -128,8 +140,9 @@ const CABECALHO_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 const TIPO_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 /**
- * Planilha .xlsx (Blob) com as colunas exportáveis e as linhas dadas, um item por linha (como o CSV).
- * Data (coluna `tipo: 'data'`, série do Excel) vira data; número vira número; vazio fica sem célula.
+ * Planilha .xlsx (Blob) com as colunas exportáveis e as linhas dadas, um item por linha.
+ * Data (coluna `tipo: 'data'`, série do Excel) vira data; % e R$ viram número com formato; número vira
+ * número; vazio fica sem célula.
  */
 export async function gerarXlsx(todas, linhas, { aba = 'Planilha' } = {}) {
   const colunas = exportaveis(todas);
@@ -145,8 +158,11 @@ export async function gerarXlsx(todas, linhas, { aba = 'Planilha' } = {}) {
     if (v === null || v === undefined || v === '') return '';
     if (typeof v === 'number') {
       if (!Number.isFinite(v)) return '';
-      const estilo = coluna.tipo === 'data' ? ESTILO.data : Number.isInteger(v) ? ESTILO.inteiro : ESTILO.decimal;
-      larguras[i] = Math.max(larguras[i], coluna.tipo === 'data' ? 12 : String(Math.round(v * 100) / 100).length + 3);
+      const especial = coluna.tipo === 'data' ? 'data' : formatoExcel(coluna);
+      const estilo = especial ? ESTILO[especial] : Number.isInteger(v) ? ESTILO.inteiro : ESTILO.decimal;
+      const largura = especial === 'data' ? 12 : especial === 'pct' ? 10
+        : String(Math.round(v * 100) / 100).length + (especial === 'moeda' ? 8 : 3);
+      larguras[i] = Math.max(larguras[i], largura);
       return `<c r="${ref}" s="${estilo}"><v>${v}</v></c>`;
     }
     const texto = String(v);

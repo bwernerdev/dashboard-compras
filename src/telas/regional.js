@@ -242,8 +242,8 @@ export function telaRegional(ctx) {
       acoes: botaoTelaCheia,
       subtitulo: 'Itens agrupados por SC, da mais antiga para a mais nova.',
       ajuda: atendidasLigadas
-        ? 'Já atendeu? Clique no olho ou dê dois cliques na linha (fora do número da SC) para recolher a SC numa linha só (fica salvo neste navegador). CSV e "Copiar tabela" trazem um item por linha.'
-        : 'CSV e "Copiar tabela" trazem um item por linha.',
+        ? 'Já atendeu? Clique no olho ou dê dois cliques na linha (fora do número da SC) para recolher a SC numa linha só (fica salvo neste navegador). Excel e "Copiar tabela" trazem um item por linha.'
+        : 'Excel e "Copiar tabela" trazem um item por linha.',
     },
     recortes,
     tabela.elemento,

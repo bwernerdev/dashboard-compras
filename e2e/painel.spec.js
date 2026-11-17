@@ -47,7 +47,8 @@ test('painel aberto como arquivo: telas públicas (sem Compradores), sem dados i
   await expect(painel.locator('link[rel="icon"]')).toHaveCount(1);
   await expect(painel.locator('#aviso-quadro')).toBeHidden();
   await expect(painel.locator('#acao-imprimir')).toBeVisible();
-  await expect(painel.getByRole('button', { name: 'Exportar CSV' }).first()).toBeVisible();
+  await expect(painel.getByRole('button', { name: 'Exportar Excel' }).first()).toBeVisible();
+  await expect(painel.getByRole('button', { name: /Exportar CSV|Exportar \.xlsx/ })).toHaveCount(0);
   await expect(painel.locator('.olho')).toHaveCount(0); // "atendida" é só do app da equipe
 
   // Contratos (anexo): mesmo botão e mesma janela do app.
@@ -58,9 +59,9 @@ test('painel aberto como arquivo: telas públicas (sem Compradores), sem dados i
   await janela.getByRole('button', { name: 'Fechar' }).click();
   await expect(janela).toBeHidden();
 
-  // Atendimento: "Exportar .xlsx" baixa uma planilha do Excel com os itens em aberto, um por linha.
+  // Atendimento: "Exportar Excel" baixa uma planilha do Excel com os itens em aberto, um por linha.
   await painel.getByRole('tab', { name: 'Atendimento' }).click();
-  const [planilha] = await Promise.all([painel.waitForEvent('download'), painel.getByRole('button', { name: 'Exportar .xlsx' }).click()]);
+  const [planilha] = await Promise.all([painel.waitForEvent('download'), painel.getByRole('button', { name: 'Exportar Excel' }).click()]);
   expect(planilha.suggestedFilename()).toBe('atendimento.xlsx');
   const pasta = await abrirPasta(new Blob([await readFile(await planilha.path())]));
   expect(pasta.abas.map((a) => a.nome)).toEqual(['Atendimento']);
@@ -88,7 +89,7 @@ test('painel aberto como arquivo: telas públicas (sem Compradores), sem dados i
   expect(erros).toEqual([]);
 });
 
-test('painel no quadro isolado do SharePoint: aviso, sem CSV/.xlsx e sem imprimir, telas funcionam', async ({ page, context }, info) => {
+test('painel no quadro isolado do SharePoint: aviso, sem Exportar Excel e sem imprimir, telas funcionam', async ({ page, context }, info) => {
   const { html } = await gerarPainel(page, info);
   const host = await context.newPage();
   const erros = [];
@@ -100,16 +101,16 @@ test('painel no quadro isolado do SharePoint: aviso, sem CSV/.xlsx e sem imprimi
   await expect(cartao(quadro, 'SCs em aberto')).toHaveText('2');
   await expect(quadro.locator('#aviso-quadro')).toBeVisible();
   await expect(quadro.locator('#acao-imprimir')).toBeHidden();
-  await expect(quadro.getByRole('button', { name: 'Exportar CSV' })).toHaveCount(0);
+  await expect(quadro.getByRole('button', { name: 'Exportar Excel' })).toHaveCount(0);
   await quadro.getByRole('tab', { name: 'Atendimento' }).click();
   await expect(quadro.getByRole('button', { name: 'Copiar tabela', exact: true })).toBeVisible();
-  await expect(quadro.getByRole('button', { name: 'Exportar .xlsx' })).toHaveCount(0);
+  await expect(quadro.getByRole('button', { name: 'Exportar Excel' })).toHaveCount(0);
   await expect(quadro.getByRole('button', { name: 'Copiar tabela' }).first()).toBeVisible();
 
-  // Contratos abrem na janela também dentro do quadro (sem .xlsx/CSV lá dentro).
+  // Contratos abrem na janela também dentro do quadro (sem Exportar Excel lá dentro).
   await quadro.locator('#acao-contratos').click();
   await expect(quadro.getByRole('dialog', { name: 'Contratos' }).getByRole('tab')).toHaveCount(4);
-  await expect(quadro.getByRole('dialog', { name: 'Contratos' }).getByRole('button', { name: 'Exportar .xlsx' })).toHaveCount(0);
+  await expect(quadro.getByRole('dialog', { name: 'Contratos' }).getByRole('button', { name: 'Exportar Excel' })).toHaveCount(0);
   await quadro.getByRole('dialog', { name: 'Contratos' }).getByRole('button', { name: 'Fechar' }).click();
 
   // Tema e filtros funcionam sem armazenamento.

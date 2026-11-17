@@ -8,11 +8,11 @@
 | `regras.test.js` | Cada regra de `src/regras.js`: filial, comprador, dias em aberto, SLA (fora só com mais de 30 dias úteis, qualquer prioridade), Saving Real em texto pt-BR, tempos por etapa, Follow-Up |
 | `leitor.test.js` | Leitor de xlsx: tipos de célula, XML picado em pedaços, filtro de colunas, xlsx completo, mensagens de erro |
 | `importar.test.js` | Importação ponta a ponta com xlsx fictício: filtro de filial, conversão de tipos, Dados Gerais, coluna faltando, cancelamento |
-| `analise.test.js` | Agregações e filtros das telas (`src/analise.js`, inclusive `ehPendencia`, `ehRegularizacao`, spend, status e entregas), memória (`brutosDe`, `recalcular`), `validarConfig` e CSV |
+| `analise.test.js` | Agregações e filtros das telas (`src/analise.js`, inclusive `ehPendencia`, `ehRegularizacao`, spend, status e entregas), memória (`brutosDe`, `recalcular`), `validarConfig` |
 | `painel.test.js` | Dados do painel publicado (`src/painel/dados.js`): só campos públicos, detalhe só de SC em aberto, versão, compactar/descompactar; texto do "Copiar tabela" (`gerarTsv`) |
 | `atendidas.test.js` | SCs atendidas (`src/atendidas.js`): marcar, desmarcar, guardar, vencer em 120 dias, armazenamento estragado (localStorage de mentira) |
 | `preferencias.test.js` | Estado lembrado das telas (`src/preferencias.js`): `lerJson`, `lerEscolha` (só opções válidas), `lerConjunto`, armazenamento bloqueado |
-| `tabela-xlsx.test.js` | "Exportar .xlsx" (`src/ui/tabela-xlsx.js`): a planilha abre no leitor do app, número e data como número, sem coluna de controle, cabeçalho congelado com filtro, nome de aba aceito pelo Excel |
+| `tabela-xlsx.test.js` | "Exportar Excel" (`src/ui/tabela-xlsx.js`): a planilha abre no leitor do app, número e data como número, % e R$ com formato do Excel, sem coluna de controle, cabeçalho congelado com filtro, nome de aba aceito pelo Excel |
 | `contratos.test.js` | Planilha de contratos (`src/contratos/`): cabeçalho abaixo do título, quadros com título, Renovações ignorada, vencimento da aba ME, prazo, cartões (sem INATIVO), filial ajustada, abas que faltam e arquivo errado |
 | `cores-planilha.test.js` | Cores da planilha antiga por status, prioridade e % saving; status separados no gráfico |
 | `ajuda/` | Gerador de `.xlsx` em memória para os testes (também usado pelo `e2e/`) |
