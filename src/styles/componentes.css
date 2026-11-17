@@ -62,7 +62,7 @@ input[type="search"].campo { min-width: 220px; }
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-1);
 }
 .cartao-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s2); }
-.cartao-rotulo { color: var(--text-muted); font-size: var(--fs-xs); font-weight: 600; }
+.cartao-rotulo { color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; } /* 13 px desde 17/11/2026: o texto mais lido do cartão */
 /* Ícone decorativo no canto: fundo claro da cor do tom (azul sem tom). */
 .cartao-icone {
   display: grid; place-items: center; flex: none; width: 32px; height: 32px; margin: -4px -4px 0 0;
@@ -523,6 +523,7 @@ body:has(.th-alca.arrastando) { cursor: col-resize; user-select: none; }
 .org-no-lider { flex-direction: row; width: 280px; text-align: left; gap: var(--s3); padding: var(--s2) var(--s3); }
 .org-no-lider .org-avatar { width: 48px; height: 48px; margin: 0; flex: none; font-size: var(--fs-lg); }
 .org-nome { color: var(--text-strong); }
+.org-filial-codigo { font-variant-numeric: tabular-nums; color: var(--text-muted); }
 .org-cargo { color: var(--text-muted); font-size: var(--fs-sm); }
 .org-filiais {
   list-style: none; margin: var(--s2) 0 0; padding: var(--s2) 0 0; border-top: 1px solid var(--line);

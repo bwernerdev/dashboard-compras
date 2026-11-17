@@ -10,6 +10,12 @@ import * as fmt from '../ui/formatos.js';
 import { seloDoStatus, classeDaLinhaSc } from '../ui/cores-planilha.js';
 import { itensEmAberto, resumoEmAberto, ehRegularizacao, aguardandoAprovacao } from '../analise.js';
 
+const PREFIXO_APROVACAO = 'Ag. aprovação ';
+/** "Ag. aprovação FABIANO LECHINSKI" -> "Ag. aprovação Fabiano Lechinski"; sigla ("GA") e o resto como vieram. */
+const exibirAprovacao = (t) => (typeof t === 'string' && t.startsWith(PREFIXO_APROVACAO) && t.slice(PREFIXO_APROVACAO.length).includes(' ')
+  ? PREFIXO_APROVACAO + fmt.nomeProprio(t.slice(PREFIXO_APROVACAO.length))
+  : fmt.texto(t));
+
 const RECORTES = [
   ['todos', 'Todos'],
   ['Fora do Prazo', 'Fora do prazo'],
@@ -47,7 +53,8 @@ const COLUNAS = [
   { id: 'sla', rotulo: 'SLA', valor: (r) => r.sla, exibir: (r) => seloSla(r.sla), titulo: `Fora do prazo: mais de ${PRAZO_SLA_DIAS} dias úteis em aberto` },
   { id: 'descricao', rotulo: 'Produto', valor: (r) => r.descricao, classe: () => 'texto-longo' },
   { id: 'status', rotulo: 'Status', valor: (r) => r.status, exibir: (r) => seloDoStatus(r.status) },
-  { id: 'aprovacao', rotulo: 'Status Pré-Pedido', valor: (r) => r.aprovacao },
+  // Nome do aprovador sem caixa alta só na tela ("Ag. aprovação Fabiano Lechinski"); Excel e pesquisa usam o texto do ME.
+  { id: 'aprovacao', rotulo: 'Status Pré-Pedido', valor: (r) => r.aprovacao, exibir: (r) => exibirAprovacao(r.aprovacao) },
   { id: 'comprador', rotulo: 'Comprador', valor: (r) => r.comprador ?? '-' },
 ];
 

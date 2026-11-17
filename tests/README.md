@@ -8,7 +8,7 @@
 | `regras.test.js` | Cada regra de `src/regras.js`: filial, comprador, dias em aberto, SLA (fora só com mais de 30 dias úteis, qualquer prioridade), Saving Real em texto pt-BR, tempos por etapa, Follow-Up |
 | `leitor.test.js` | Leitor de xlsx: tipos de célula, XML picado em pedaços, filtro de colunas, xlsx completo, mensagens de erro |
 | `importar.test.js` | Importação ponta a ponta com xlsx fictício: filtro de filial, conversão de tipos, Dados Gerais, coluna faltando, cancelamento |
-| `analise.test.js` | Agregações e filtros das telas (`src/analise.js`, inclusive `ehPendencia`, `ehRegularizacao`, spend, status e entregas), memória (`brutosDe`, `recalcular`), `validarConfig` |
+| `analise.test.js` | Agregações e filtros das telas (`src/analise.js`, inclusive `ehPendencia`, `ehRegularizacao`, spend, status e entregas), memória (`brutosDe`, `recalcular`), `validarConfig`, `nomeProprio` (nome em caixa alta para exibir) |
 | `painel.test.js` | Dados do painel publicado (`src/painel/dados.js`): só campos públicos, detalhe só de SC em aberto, versão, compactar/descompactar; texto do "Copiar tabela" (`gerarTsv`) |
 | `atendidas.test.js` | SCs atendidas (`src/atendidas.js`): marcar, desmarcar, guardar, vencer em 120 dias, armazenamento estragado (localStorage de mentira) |
 | `preferencias.test.js` | Estado lembrado das telas (`src/preferencias.js`): `lerJson`, `lerEscolha` (só opções válidas), `lerConjunto`, armazenamento bloqueado |

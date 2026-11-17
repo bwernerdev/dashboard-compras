@@ -355,3 +355,13 @@ test('importar configuração: só campos conhecidos, como texto; arquivo invál
   assert.ok(lerConfigExportada('{"filiais": []}').erros.length);
   assert.ok(lerConfigExportada('{"filiais": [{"codigo": ""}], "compradores": []}').erros.length);
 });
+
+test('nomeProprio: nome em caixa alta vira nome próprio; texto com minúscula fica igual', async () => {
+  const { nomeProprio } = await import('../src/ui/formatos.js');
+  assert.equal(nomeProprio('EZEQUIAS DA SILVA'), 'Ezequias da Silva');
+  assert.equal(nomeProprio('FABIANO LECHINSKI'), 'Fabiano Lechinski');
+  assert.equal(nomeProprio('DE SOUZA E SILVA'), 'De Souza e Silva'); // partícula no começo fica maiúscula
+  assert.equal(nomeProprio('CLÉA ÇAMPOS'), 'Cléa Çampos');
+  assert.equal(nomeProprio('Fulano de Tal'), 'Fulano de Tal');
+  assert.equal(nomeProprio(null), '');
+});

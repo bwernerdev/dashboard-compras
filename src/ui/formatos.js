@@ -23,4 +23,15 @@ const fPctFino = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFract
 /** % saving costuma ser < 1%: sempre 2 casas (0,03%). */
 export const pctFino = (v) => (vazio(v) ? '-' : fPctFino.format(v));
 export const data = (serie) => (vazio(serie) || serie === '' ? '-' : formatarSerie(serie));
+// Partículas que ficam minúsculas no meio do nome (Ezequias da Silva).
+const PARTICULAS = new Set(['da', 'de', 'do', 'das', 'dos', 'e']);
+/**
+ * Nome em CAIXA ALTA (como vem do ME/de-para) para exibição: "EZEQUIAS DA SILVA" -> "Ezequias da Silva".
+ * Texto que já tem minúscula fica como está. Só para mostrar: filtro, pesquisa e Excel usam o original.
+ */
+export function nomeProprio(v) {
+  const s = String(v ?? '');
+  if (s !== s.toUpperCase()) return s;
+  return s.toLowerCase().split(/(\s+)/).map((p, i) => (i > 0 && PARTICULAS.has(p) ? p : p.charAt(0).toUpperCase() + p.slice(1))).join('');
+}
 export const texto = (v) => (v === null || v === undefined || v === '' ? '-' : String(v));

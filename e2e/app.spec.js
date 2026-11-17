@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { arquivoBase, arquivoBaseAnterior, arquivoFollowUp, arquivoContratos, FILIAL_A, FILIAL_B, COMPRADOR } from './ajuda/bases.js';
 import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
+import { nomeProprio } from '../src/ui/formatos.js';
 
 /** Abre a tabela recolhida embaixo de um gráfico ("Ver tabela (N linhas)"). */
 const verTabela = (page, titulo) => page.locator('.bloco', { has: page.getByRole('heading', { name: titulo, exact: true }) })
@@ -378,7 +379,7 @@ test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', asyn
 
   await page.getByRole('tab', { name: 'Status' }).click();
   await expect(valorDoCartao(page, 'SCs no período')).toHaveText('3'); // filial fora do de-para descartada
-  await expect(page.locator('.cartao-rotulo', { hasText: 'SCs no período' })).toHaveText('SCs no período 12/09/2026 até 11/11/2026');
+  await expect(page.locator('.cartao', { has: page.locator('.cartao-rotulo', { hasText: 'SCs no período' }) }).locator('.cartao-detalhe')).toHaveText('4 itens · 12/09/2026 a 11/11/2026');
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
   await expect(valorDoCartao(page, 'SCs em pedido')).toHaveText('1');
   const lista = page.locator('.bloco', { hasText: 'Lista de SCs' });
@@ -417,7 +418,9 @@ test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', asyn
   await expect(page.getByRole('table', { name: 'Itens em aberto' }).locator('tbody tr')).toHaveCount(1);
   // Status Pré-Pedido: nível 1 com o aprovador GA da filial (padrão); recorte "Ag. aprovação".
   await page.getByRole('group', { name: 'SLA' }).getByRole('button', { name: 'Todos' }).click();
-  await expect(atendimento.getByText(`Ag. aprovação ${FILIAL_A.aprovadorGA}`)).toBeVisible();
+  // Nome sem caixa alta na tela (o de-para guarda em maiúsculas).
+  await expect(atendimento.getByText(`Ag. aprovação ${nomeProprio(FILIAL_A.aprovadorGA)}`, { exact: true })).toBeVisible();
+  expect(nomeProprio(FILIAL_A.aprovadorGA)).not.toBe(FILIAL_A.aprovadorGA);
   await page.getByRole('button', { name: 'Ag. aprovação (1)' }).click();
   await expect(atendimento.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
   await page.getByRole('button', { name: 'Outros', exact: true }).click();
@@ -432,7 +435,13 @@ test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', asyn
   await expect(page.locator('.org-no')).toHaveCount(8); // árvore: 4 líderes + 3 compradores + assessoria
   await expect(page.locator('.org-filiais')).toHaveCount(3);
   await expect(page.locator('img.org-foto')).toHaveCount(7); // fotos da planilha; Erico sem foto lá: iniciais
+  // Sem faixa de filtros (não mudam a árvore); filial com código e nome do de-para, como nas tabelas.
+  await expect(page.locator('#filtros')).toBeHidden();
+  await expect(page.locator('.org-filiais li', { hasText: /^570 · / })).toHaveText('570 · Itajaí - HUB');
+  await expect(page.locator('.org-filiais li', { hasText: /^570 · / })).toHaveAttribute('title', '30.570 - Itajaí - Armazém');
   await expect(page.locator('#conteudo')).not.toContainText('SCs em aberto'); // só o organograma
+  await page.getByRole('tab', { name: 'Status' }).click(); // a faixa de filtros volta
+  await expect(page.locator('#filtros')).toBeVisible();
 });
 
 test('Entrega: sem Follow-Up avisa; com Follow-Up mostra OFs por status', async ({ page }) => {

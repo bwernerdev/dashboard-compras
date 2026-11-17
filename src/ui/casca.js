@@ -28,7 +28,8 @@ export function descreverFiltros(selecao, tela) {
 
 /**
  * Controla abas, filtros e tela.
- * telas: [{ id, rotulo, desenhar(ctx) }]; raiz: { abas, filtros, conteudo, filtrosImpressao };
+ * telas: [{ id, rotulo, desenhar(ctx), semFiltros? }] (semFiltros: a faixa de filtros some nessa aba e a
+ * tela recebe todos os registros); raiz: { abas, filtros, conteudo, filtrosImpressao };
  * telaVazia(): conteúdo quando não há registros; aoTrocarAba(id) opcional.
  * chaveFiltros: preferência onde a seleção dos filtros globais fica salva neste navegador (volta na
  * próxima vez que abrir; pedido da equipe, 12/11/2026). Sem ela, os filtros começam vazios.
@@ -164,8 +165,10 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     document.getElementById(`aba-${telas[j].id}`)?.focus();
   });
 
+  const semFiltros = () => !!telas.find((t) => t.id === estado.aba)?.semFiltros;
+
   function desenharFiltros() {
-    if (!estado.registros) { substituir(raiz.filtros); raiz.filtros.hidden = true; medirTopo(); return; }
+    if (!estado.registros || semFiltros()) { substituir(raiz.filtros); raiz.filtros.hidden = true; medirTopo(); return; }
     raiz.filtros.hidden = false;
     queueMicrotask(medirTopo);
     substituir(raiz.filtros, barraDeFiltros({
@@ -203,20 +206,22 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
     if (!estado.registros) { substituir(raiz.conteudo, telaVazia()); return; }
     const tela = telas.find((t) => t.id === estado.aba);
     const inicio = performance.now();
-    if (raiz.filtrosImpressao) raiz.filtrosImpressao.textContent = descreverFiltros(estado.selecao, estado.aba);
+    // Tela sem filtros: nada filtrado e nenhuma linha de filtros na impressão.
+    const selecao = tela.semFiltros ? {} : estado.selecao;
+    if (raiz.filtrosImpressao) raiz.filtrosImpressao.textContent = tela.semFiltros ? '' : descreverFiltros(selecao, estado.aba);
     substituir(raiz.conteudo, tela.desenhar({
-      registros: aplicarFiltros(estado.registros, estado.selecao, estado.aba),
-      followUp: estado.followUp ? aplicarFiltros(estado.followUp, estado.selecao, estado.aba) : null,
+      registros: aplicarFiltros(estado.registros, selecao, estado.aba),
+      followUp: estado.followUp ? aplicarFiltros(estado.followUp, selecao, estado.aba) : null,
       anteriores: estado.anteriores
-        ? { registros: aplicarFiltros(estado.anteriores.registros, estado.selecao, estado.aba), rotulo: estado.anteriores.rotulo }
+        ? { registros: aplicarFiltros(estado.anteriores.registros, selecao, estado.aba), rotulo: estado.anteriores.rotulo }
         : null,
       periodo: estado.periodo,
       redesenhar: desenharTela,
       /** Registros com todos os filtros menos um (ex.: comparação de períodos ignora "Mês do pedido"). */
-      registrosSem: (idFiltro) => aplicarFiltros(estado.registros, { ...estado.selecao, [idFiltro]: new Set() }, estado.aba),
-      limparFiltros: Object.values(estado.selecao).some((v) => v?.size) ? limparFiltros : null,
+      registrosSem: (idFiltro) => aplicarFiltros(estado.registros, { ...selecao, [idFiltro]: new Set() }, estado.aba),
+      limparFiltros: Object.values(selecao).some((v) => v?.size) ? limparFiltros : null,
       // Mini gráficos: o histórico guarda só os totais; com filtro que vale nesta tela, não aparece.
-      historico: FILTROS.some((f) => filtroValeNaTela(f, estado.aba) && estado.selecao[f.id]?.size) ? null : estado.historico,
+      historico: FILTROS.some((f) => filtroValeNaTela(f, estado.aba) && selecao[f.id]?.size) ? null : estado.historico,
       filtrar(idFiltro, valor) {
         const atual = estado.selecao[idFiltro];
         const jaEra = atual?.size === 1 && atual.has(valor);

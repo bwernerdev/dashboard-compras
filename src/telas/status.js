@@ -41,8 +41,9 @@ export function telaStatus(ctx) {
   const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoStatus(ctx.anteriores.registros) : null);
 
   const cartoes = linhaDeCartoes(
-    // Período do relatório do ME no rótulo (pedido da equipe, 13/11/2026).
-    cartao({ icone: 'documento', rotulo: ctx.periodo ? `SCs no período ${formatarSerie(ctx.periodo.inicio)} até ${formatarSerie(ctx.periodo.fim)}` : 'SCs no período', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens`, variacao: vs('scs', fmt.inteiro), serie: serieDe(ctx.historico, (p) => p.status.scs, resumo.scs) }),
+    // Período do relatório do ME no cartão (pedido da equipe, 13/11/2026).
+    // Datas na linha de baixo (17/11/2026): no rótulo elas quebravam a linha do cartão.
+    cartao({ icone: 'documento', rotulo: 'SCs no período', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens${ctx.periodo ? ` · ${formatarSerie(ctx.periodo.inicio)} a ${formatarSerie(ctx.periodo.fim)}` : ''}`, variacao: vs('scs', fmt.inteiro), serie: serieDe(ctx.historico, (p) => p.status.scs, resumo.scs) }),
     cartao({ icone: 'relogio', rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.abertas), detalhe: 'Com item sem pedido e não cancelado', variacao: vs('abertas', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.status.abertas, resumo.abertas) }),
     cartao({ icone: 'carrinho', rotulo: 'SCs em pedido', valor: fmt.inteiro(resumo.emPedido), detalhe: 'Com item no status Em Pedido', variacao: vs('emPedido', fmt.inteiro), serie: serieDe(ctx.historico, (p) => p.status.emPedido, resumo.emPedido) }),
     cartao({ icone: 'cancelado', rotulo: 'SCs canceladas', valor: fmt.inteiro(resumo.canceladas), detalhe: 'Com item no status Cancelado', variacao: vs('canceladas', fmt.inteiro), serie: serieDe(ctx.historico, (p) => p.status.canceladas, resumo.canceladas) }),
