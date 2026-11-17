@@ -13,10 +13,16 @@
     "test": "node --test tests/*.test.js",
     "medir": "node scripts/medir.mjs",
     "conferir": "node scripts/conferir-xlsm.mjs",
-    "test:e2e": "npm run build && playwright test"
+    "test:e2e": "npm run build && playwright test",
+    "lint": "eslint .",
+    "tipos": "tsc -p ."
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@playwright/test": "1.63.0",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
+    "typescript": "7.0.2",
     "vite": "8.3.0"
   }
 }

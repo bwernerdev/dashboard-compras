@@ -12,7 +12,8 @@
 | `importacao.js` | Ponte tela ↔ worker (`importarNoWorker`) |
 | `importacao.worker.js` | Worker: roda `importar` fora da thread da tela e manda o progresso |
 | `importar.js` | Importação de um relatório: lê por fluxo, descarta filiais fora do de-para, converte tipos, aplica `regras.js`. Roda no worker e no Node (scripts e testes) |
-| `esquema.js` | Colunas lidas de cada relatório (`BASE`, `FOLLOW_UP`), pelo nome do cabeçalho, com o tipo |
+| `esquema.js` | Colunas lidas de cada relatório (`BASE`, `FOLLOW_UP`), pelo nome do cabeçalho, com o tipo (`@type {const}`: viram os tipos dos registros) |
+| `tipos.d.ts` | Só para `npm run tipos` (não entra no build): `LinhaBase`/`LinhaFollowUp` (de `esquema.js`), `Registro`/`RegistroFollowUp` (retorno de `calcularLinhaBase`/`calcularLinhaFollowUp`), `Linha` (qualquer das duas), `Config`. Usados em JSDoc em `regras.js`, `analise.js` e `painel/dados.js` (`// @ts-check`) |
 | `regras.js` | **Única** implementação das regras de negócio (colunas calculadas da planilha antiga). Ver `PROJETO.md`, seção 3 |
 | `datas.js` | Datas como série do Excel; `dias` (DIAS) e `diasUteis` (DIATRABALHOTOTAL, sem feriados) |
 | `telas/` | As telas e os diálogos (importação, configuração) |
@@ -23,6 +24,7 @@
 
 ## Convenções
 - Regra nova ou alterada: só em `regras.js`, com teste em `tests/regras.test.js` e nota no `PROJETO.md`.
+- Campo calculado novo: entra sozinho no tipo `Registro` (retorno de `calcularLinhaBase`); `npm run tipos` acusa nome errado em `regras.js`, `analise.js` e `painel/dados.js`.
 - Conta das telas (agrupar, contar, somar): só em `analise.js`, com teste em `tests/analise.test.js`. As telas só montam DOM.
 - Registro importado = colunas do `esquema.js` (nomes em camelCase) + colunas calculadas. "-" e "" da planilha viram `null`; `#N/D` vira `ERRO_ND`.
 - Contagem de SC = distinta por "Solicitação de Compra"; contagem de itens = linhas.

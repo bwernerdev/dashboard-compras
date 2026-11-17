@@ -8,6 +8,8 @@ Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configura�
 - `npm run build:painel`: gera `src/painel/modelo.gerado.html` (`vite.painel.config.js`). Roda sozinho antes de `dev` e `build`; mudou algo que entra no painel com o dev aberto, rode de novo.
 - `npm run dev`: servidor Vite. No preview do app: configuração `dashboard` em `../.claude/launch.json` (porta 5180).
 - `npm test`: testes unitários (`node --test tests/*.test.js`), só dados fictícios.
+- `npm run lint`: ESLint (`eslint.config.js`: recomendadas, variável sem uso, `===`).
+- `npm run tipos`: TypeScript só checando JSDoc (`tsconfig.json`, sem build) em `regras.js`, `analise.js` e `painel/dados.js` (`// @ts-check`); tipos dos registros em `src/tipos.d.ts`, tirados de `esquema.js` e das regras. Nome de campo errado vira erro.
 - `npm run test:e2e`: build + Playwright (Chrome instalado) em `127.0.0.1:4187` (`vite preview`), bases fictícias.
 - `npm run medir`: tempo de importação das bases reais da raiz (meta 20 s; hoje ~3 s).
 - `npm run conferir`: recalcula a planilha antiga com `src/regras.js` e `src/analise.js` e compara tudo (linhas e tabelas dinâmicas). Rodar sempre que mexer em regra, agregação ou config.
@@ -26,7 +28,7 @@ Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configura�
 | `src/styles/` | CSS em camadas: tokens (tema escuro, paleta dos gráficos), base, componentes, impressão |
 | `tests/`, `tests/ajuda/` | Testes unitários e gerador de xlsx fictício |
 | `e2e/`, `e2e/ajuda/` | Testes Playwright e bases fictícias |
-| `.github/workflows/` | `pages.yml`: build e publicação no GitHub Pages |
+| `.github/workflows/` | `pages.yml`: lint, tipos, testes, build, e2e e publicação no GitHub Pages (nada publica se falhar) |
 | `scripts/` | `medir.mjs`, `conferir-xlsm.mjs`, `gerar-teste-intranet.mjs` |
 | `node_modules/`, `dist/`, `.npm-cache/`, `test-results/` | Gerados/ignorados: não ler nem editar |
 
@@ -36,6 +38,7 @@ Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configura�
 | `PROJETO.md` | Diagnóstico da planilha, erro encontrado, regras, decisões, telas, fases, perguntas |
 | `README.md` | Visão para quem usa e mapa das pastas |
 | `index.html`, `vite.config.js` (`base: './'`), `package.json`, `playwright.config.js` | Entrada, build e e2e |
+| `eslint.config.js`, `tsconfig.json` | Lint e checagem de tipos (`npm run lint`, `npm run tipos`; os dois rodam no CI) |
 | `vite.painel.config.js` | Build do modelo do painel (JS + CSS num script só, encaixados em `src/painel/modelo.html`) |
 | `.painel-build/`, `painel-compras*.html` | Gerados/ignorados |
 | `teste-intranet.html` | Página de teste do local de publicação (SharePoint): recursos que funcionam e peso. Gerada por `scripts/gerar-teste-intranet.mjs`; não editar à mão |

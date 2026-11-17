@@ -1,0 +1,16 @@
+{
+  // Checagem de tipos sem build (`npm run tipos`): só os arquivos com `// @ts-check` são checados
+  // (regras.js, analise.js, painel/dados.js). Tipos em src/tipos.d.ts.
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "strict": false,
+    "target": "es2023",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "skipLibCheck": true
+  },
+  "files": ["src/regras.js", "src/analise.js", "src/painel/dados.js", "src/tipos.d.ts"]
+}

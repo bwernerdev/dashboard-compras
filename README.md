@@ -17,7 +17,7 @@ A equipe abre o app em https://bwernerdev.github.io/dashboard-compras/ (ou `npm 
 ## Pastas
 | Pasta | Conteúdo |
 |---|---|
-| (raiz) | Documentação (`PROJETO.md`, `CLAUDE.md`), entrada do app (`index.html`), build do painel (`vite.painel.config.js`), `teste-intranet.html` e as planilhas locais (não versionadas) |
+| (raiz) | Documentação (`PROJETO.md`, `CLAUDE.md`), entrada do app (`index.html`), build do painel (`vite.painel.config.js`), lint e tipos (`eslint.config.js`, `tsconfig.json`), `teste-intranet.html` e as planilhas locais (não versionadas) |
 | `src/` | Código do app (leitor, regras, configuração, telas, componentes, CSS) e do painel publicado (`src/painel/`) |
 | `tests/` | Testes unitários com dados fictícios |
 | `e2e/` | Testes no navegador (Playwright) com dados fictícios |

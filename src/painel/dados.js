@@ -3,6 +3,10 @@
 // pré-pedido (tela Compradores, interna). Alguns campos só para SCs em aberto (Regional, Atendimento).
 // Formato: { versao, geradoEm, hoje, periodo, arquivo, campos, linhas, followUp: { campos, linhas } | null }
 // em JSON, gzip, base64. Roda no navegador e no Node (testes).
+// @ts-check
+
+/** @typedef {import('../tipos').Registro} Registro */
+/** @typedef {import('../tipos').RegistroFollowUp} RegistroFollowUp */
 
 // 2: sem item e slaMax; 3: + categoria (linha vermelha de regularização);
 // 4: telas Status, Entrega, Spend, Atendimento (detalhe em toda linha, numeroPedido, slaMax, Follow-Up);
@@ -10,19 +14,28 @@
 // 7: + dataPedido (comparação de períodos em Spend e Saving); 8: + aprovacao (Status Pré-Pedido, Atendimento)
 export const VERSAO = 8;
 
-/** Campos de toda linha: filtros, contagens, saving, spend e a lista da tela Status. */
+/**
+ * Campos de toda linha: filtros, contagens, saving, spend e a lista da tela Status.
+ * @type {(keyof Registro)[]}
+ */
 const CAMPOS_BASE = [
   'solicitacao', 'regional', 'nomeFilial', 'comprador', 'prioridade', 'temContrato', 'status',
   'diasEmAberto', 'sla', 'totalPedidoComImpostos', 'savingReal', 'anoPedido', 'mesPedido',
   'numeroPedido', 'sc', 'data', 'descricao', 'solicitante', 'filial', 'categoria', 'dataPedido',
 ];
 
-/** Campos só das SCs em aberto (listas das telas Regional e Atendimento). */
+/**
+ * Campos só das SCs em aberto (listas das telas Regional e Atendimento).
+ * @type {(keyof Registro)[]}
+ */
 const CAMPOS_DETALHE = ['diasDaAprovacao', 'codigoProduto', 'qtdSolicitacao', 'criacao', 'aprovacao'];
 
 export const CAMPOS_PUBLICOS = [...CAMPOS_BASE, ...CAMPOS_DETALHE];
 
-/** Campos do Follow-Up (tela Entrega e filtros globais). */
+/**
+ * Campos do Follow-Up (tela Entrega e filtros globais).
+ * @type {(keyof RegistroFollowUp)[]}
+ */
 export const CAMPOS_FOLLOW_UP = [
   'solicitacao', 'sc', 'numeroPedido', 'of', 'dataPedido', 'filial', 'nomeFilial', 'regional',
   'solicitante', 'comprador', 'prioridade', 'temContrato', 'codigoProduto', 'descricao',
@@ -31,7 +44,10 @@ export const CAMPOS_FOLLOW_UP = [
 
 const valorOuNulo = (v) => (v === undefined || (typeof v === 'number' && Number.isNaN(v)) ? null : v);
 
-/** Monta o objeto de dados do painel a partir dos registros calculados do app. */
+/**
+ * Monta o objeto de dados do painel a partir dos registros calculados do app.
+ * @param {{ registros: Registro[], followUp?: RegistroFollowUp[] | null, meta: any, hoje: number, geradoEm: string }} entrada
+ */
 export function montarDadosDoPainel({ registros, followUp = null, meta, hoje, geradoEm }) {
   const g = meta?.dadosGerais ?? {};
   return {

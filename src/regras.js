@@ -1,3 +1,4 @@
+// @ts-check
 // Regras de negócio do painel: cópia fiel das colunas calculadas das abas
 // `Base` e `Follow-UP` do DASHBOARD COMPRAS 2026.xlsm (PROJETO.md, seção 3).
 // Única exceção aprovada: a planilha lia as datas de outra linha (PROJETO.md, seção 2);
@@ -11,6 +12,10 @@
 // "-" e "" da planilha viram null; #N/D vira a constante ERRO_ND.
 
 import { dias, diasUteis, partesDaSerie } from './datas.js';
+
+/** @typedef {import('./tipos').LinhaBase} LinhaBase */
+/** @typedef {import('./tipos').LinhaFollowUp} LinhaFollowUp */
+/** @typedef {import('./tipos').Config} Config */
 
 export const ERRO_ND = '#N/D';
 export const PENDENTE = 'Pendente';
@@ -31,7 +36,11 @@ export function nomeComprador(selecionadoPor, tamanho) {
   return texto(selecionadoPor).slice(6, 6 + tamanho);
 }
 
-/** Filial ajustada, nome e regional pelo de-para. Fora do de-para: null (a planilha mostra "-"). */
+/**
+ * Filial ajustada, nome e regional pelo de-para. Fora do de-para: null (a planilha mostra "-").
+ * @param {Config} cfg
+ * @param {string | null} codigoFilial
+ */
 export function dadosDaFilial(cfg, codigoFilial) {
   const ajustada = cfg.filialAjustada(codigoFilial);
   if (ajustada === null) return { filial: null, nomeFilial: null, regional: null };
@@ -102,7 +111,11 @@ export function savingReal(saving, qtdSolicitacao) {
   return Number.isNaN(valor) ? 0 : valor;
 }
 
-/** Tempo (dias corridos) em cada etapa, como as colunas Cancelado ... Em pendências de contrato. */
+/**
+ * Tempo (dias corridos) em cada etapa, como as colunas Cancelado ... Em pendências de contrato.
+ * @param {LinhaBase} r
+ * @param {number} hoje
+ */
 export function temposPorEtapa(r, hoje) {
   const st = r.status;
   return {
@@ -130,6 +143,9 @@ function anoMesPedido(numeroPedido, dataPedido) {
 /**
  * Linha da base (Relatório de Requisição) -> registro com as colunas calculadas.
  * hoje: série do dia (HOJE()).
+ * @param {LinhaBase} r
+ * @param {Config} cfg
+ * @param {number} hoje
  */
 export function calcularLinhaBase(r, cfg, hoje) {
   const filial = dadosDaFilial(cfg, r.codigoFilial);
@@ -168,6 +184,9 @@ export function calcularLinhaBase(r, cfg, hoje) {
  * Linha do Follow-Up -> registro com as colunas calculadas da aba Follow-UP.
  * Fora da planilha (para os filtros globais e a tela Entrega): `comprador` (apelido do de-para,
  * pelo nome com 40 caracteres como na Base; sem apelido, o nome da planilha) e `temContrato`.
+ * @param {LinhaFollowUp} r
+ * @param {Config} cfg
+ * @param {number} hoje
  */
 export function calcularLinhaFollowUp(r, cfg, hoje) {
   const filial = dadosDaFilial(cfg, r.codigoFilial);

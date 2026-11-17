@@ -1,8 +1,9 @@
 // Colunas lidas de cada relatório do ME, pelo nome do cabeçalho (a ordem no arquivo não importa).
 // tipo: 'texto' | 'numero' | 'data' (série do Excel) | 'bruto' (mantém como veio).
+// `@type {const}`: os nomes e tipos viram os tipos dos registros (src/tipos.d.ts).
 // Colunas não listadas (observação, complemento, endereços) são ignoradas: economizam memória.
 
-export const BASE = {
+export const BASE = /** @type {const} */ ({
   rotulo: 'Base (Relatório de Requisição)',
   aba: 'Relatório',
   colunas: {
@@ -44,9 +45,9 @@ export const BASE = {
     saving: ['Saving', 'bruto'],
     dataCancelamento: ['Data Cancelamento Solicitação', 'data'],
   },
-};
+});
 
-export const FOLLOW_UP = {
+export const FOLLOW_UP = /** @type {const} */ ({
   rotulo: 'Follow-Up',
   aba: 'Relatório',
   colunas: {
@@ -75,6 +76,6 @@ export const FOLLOW_UP = {
     qtdPendente: ['Qtde. Pendente', 'numero'],
     qtdCancelada: ['Quantidade cancelada', 'numero'],
   },
-};
+});
 
 export const ESQUEMAS = { base: BASE, followUp: FOLLOW_UP };

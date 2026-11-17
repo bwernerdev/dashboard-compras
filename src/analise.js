@@ -1,6 +1,11 @@
 // Filtros e agregações das telas. Funções puras (sem DOM): testadas em tests/analise.test.js.
 // Contagens de SC são DISTINTAS por "Solicitação de Compra", como a contagem distinta
 // do modelo de dados da planilha antiga; contagem de itens = linhas.
+// @ts-check
+
+/** @typedef {import('./tipos').Registro} Registro */
+/** @typedef {import('./tipos').RegistroFollowUp} RegistroFollowUp */
+/** @typedef {import('./tipos').Linha} Linha */
 
 import { serie, partesDaSerie } from './datas.js';
 import { PENDENTE } from './regras.js';
@@ -8,7 +13,10 @@ import { PENDENTE } from './regras.js';
 const SEM_VALOR = '-';
 const nomeOuTraco = (v) => (v === null || v === undefined || v === '' ? SEM_VALOR : String(v));
 
-/** Mês do pedido como "aaaa-mm" (ou null sem pedido). */
+/**
+ * Mês do pedido como "aaaa-mm" (ou null sem pedido).
+ * @param {Linha} r
+ */
 export function chaveMes(r) {
   return r.anoPedido ? `${r.anoPedido}-${String(r.mesPedido).padStart(2, '0')}` : null;
 }
@@ -24,6 +32,7 @@ export function rotuloMes(chave) {
  * Filtros globais. telas: em quais telas o filtro vale (ausente = todas).
  * "Mês do pedido" só faz sentido onde há pedido (Saving e Spend).
  */
+/** @type {{ id: string, rotulo: string, valor: (r: Linha) => string, rotuloValor?: (v: string) => string, telas?: string[] }[]} */
 export const FILTROS = [
   { id: 'regional', rotulo: 'Regional', valor: (r) => nomeOuTraco(r.regional) },
   { id: 'filial', rotulo: 'Filial', valor: (r) => nomeOuTraco(r.nomeFilial) },
@@ -38,18 +47,28 @@ export const filtroValeNaTela = (f, tela) => !f.telas || f.telas.includes(tela);
 /**
  * Aplica os filtros ativos. selecao: { idFiltro: Set de valores } (vazio/ausente = todos).
  */
+/**
+ * @template {Linha} T
+ * @param {T[]} registros
+ * @param {Record<string, Set<string>>} selecao
+ * @param {string} [tela]
+ * @returns {T[]}
+ */
 export function aplicarFiltros(registros, selecao, tela) {
   const ativos = FILTROS.filter((f) => filtroValeNaTela(f, tela) && selecao[f.id]?.size);
   if (!ativos.length) return registros;
   return registros.filter((r) => ativos.every((f) => selecao[f.id].has(f.valor(r))));
 }
 
-/** Valores possíveis de cada filtro (para montar as listas), em ordem. */
+/**
+ * Valores possíveis de cada filtro (para montar as listas), em ordem.
+ * @param {Linha[]} registros
+ */
 export function opcoesDosFiltros(registros) {
   const opcoes = {};
   for (const f of FILTROS) {
     const valores = new Set(registros.map(f.valor));
-    opcoes[f.id] = [...valores].sort((a, b) => (a === SEM_VALOR) - (b === SEM_VALOR) || a.localeCompare(b, 'pt-BR'));
+    opcoes[f.id] = [...valores].sort((a, b) => Number(a === SEM_VALOR) - Number(b === SEM_VALOR) || a.localeCompare(b, 'pt-BR'));
   }
   return opcoes;
 }
@@ -57,7 +76,7 @@ export function opcoesDosFiltros(registros) {
 // ---------- Regional (SCs em aberto) ----------
 
 /** Itens em aberto: sem pedido e não cancelados (têm dias em aberto). */
-export const itensEmAberto = (registros) => registros.filter((r) => r.diasEmAberto !== null);
+export const itensEmAberto = (/** @type {Registro[]} */ registros) => registros.filter((r) => r.diasEmAberto !== null);
 
 export const FAIXAS_DIAS = [
   { id: 'ate5', rotulo: 'Até 5 dias', ate: 5 },
@@ -68,15 +87,15 @@ export const FAIXAS_DIAS = [
 ];
 export const faixaDe = (dias) => FAIXAS_DIAS.find((f) => dias <= f.ate).id;
 
-const distintas = (linhas) => new Set(linhas.map((r) => r.solicitacao)).size;
+const distintas = (/** @type {Linha[]} */ linhas) => new Set(linhas.map((r) => r.solicitacao)).size;
 
 /** Item aguardando aprovação do pré-pedido (Status Pré-Pedido traduzido: "Ag. aprovação ..."). */
-export function aguardandoAprovacao(r) {
+export function aguardandoAprovacao(/** @type {Registro} */ r) {
   return typeof r.aprovacao === 'string' && r.aprovacao.startsWith('Ag. aprovação');
 }
 
 /** Cartões da tela Status: SCs distintas no período, em aberto, em pedido e canceladas. */
-export function resumoStatus(registros) {
+export function resumoStatus(/** @type {Registro[]} */ registros) {
   const doStatus = new Map(scsPorStatus(registros).map((s) => [s.status, s.scs]));
   return {
     scs: distintas(registros),
@@ -88,7 +107,7 @@ export function resumoStatus(registros) {
 }
 
 /** Cartões das telas Regional, Atendimento e SCs por Comprador (contagens por item e por SC). */
-export function resumoEmAberto(abertos) {
+export function resumoEmAberto(/** @type {Registro[]} */ abertos) {
   const noPrazo = abertos.filter((r) => r.sla === 'No Prazo').length;
   const fora = abertos.filter((r) => r.sla === 'Fora do Prazo').length;
   const dias = abertos.map((r) => r.diasEmAberto);
@@ -120,14 +139,18 @@ export function resumoEmAberto(abertos) {
 }
 
 /** SCs e itens por faixa de dias úteis em aberto. */
-export function porFaixaDeDias(abertos) {
+export function porFaixaDeDias(/** @type {Registro[]} */ abertos) {
   return FAIXAS_DIAS.map((f) => {
     const linhas = abertos.filter((r) => faixaDe(r.diasEmAberto) === f.id);
     return { ...f, scs: distintas(linhas), itens: linhas.length };
   });
 }
 
-/** Agrupa e resume (SCs, SLA, média de dias) por um campo; ordena por SCs. */
+/**
+ * Agrupa e resume (SCs, SLA, média de dias) por um campo; ordena por SCs.
+ * @param {Registro[]} abertos
+ * @param {keyof Registro} campo
+ */
 export function emAbertoPor(abertos, campo) {
   const grupos = new Map();
   for (const r of abertos) {
@@ -145,23 +168,29 @@ export function emAbertoPor(abertos, campo) {
  */
 export const STATUS_PENDENCIAS = ['Em pendências de compra', 'Em pendências de contrato'];
 const mesmoTexto = (a, b) => String(a ?? '').toLowerCase() === String(b ?? '').toLowerCase();
-export const ehPendencia = (r) => STATUS_PENDENCIAS.some((s) => mesmoTexto(r.status, s));
+export const ehPendencia = (/** @type {Linha} */ r) => STATUS_PENDENCIAS.some((s) => mesmoTexto(r.status, s));
 
 /**
  * SC de regularização ("Categoria solicitação" = REGULARIZAÇÃO no ME): compra já feita, SC aberta
  * depois. A categoria vale para a SC inteira. Sem diferenciar maiúsculas nem acento.
  */
-export const ehRegularizacao = (r) => String(r.categoria ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+export const ehRegularizacao = (/** @type {Linha} */ r) => String(r.categoria ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '')
   .trim().toLowerCase().startsWith('regularizacao');
 
 /** Recorta por status. selecionados: Set de status (vazio/ausente = todos). */
+/**
+ * @template {Linha} T
+ * @param {T[]} registros
+ * @param {Set<string>} [selecionados]
+ * @returns {T[]}
+ */
 export function recortarPorStatus(registros, selecionados) {
   if (!selecionados?.size) return registros;
   return registros.filter((r) => selecionados.has(nomeOuTraco(r.status)));
 }
 
 /** Itens por status, na ordem do processo (STATUS_SC), outros status no fim em ordem alfabética. */
-export function itensPorStatus(registros) {
+export function itensPorStatus(/** @type {Linha[]} */ registros) {
   const contagem = new Map();
   for (const r of registros) {
     const s = nomeOuTraco(r.status);
@@ -186,7 +215,7 @@ const statusDoGrafico = (s) => (STATUS_SC.includes(s) ? s : OUTROS);
  * SCs distintas por comprador x status (tabela dinâmica 3 da aba sc p Compr).
  * total = SCs distintas do comprador (uma SC com itens em dois status conta uma vez).
  */
-export function scsPorCompradorStatus(registros) {
+export function scsPorCompradorStatus(/** @type {Registro[]} */ registros) {
   const porComprador = new Map();
   const statusVistos = new Set();
   for (const r of registros) {
@@ -213,6 +242,11 @@ export function scsPorCompradorStatus(registros) {
 }
 
 /** Linhas com a data (`campo`: criacao ou dataPrePedido) dentro do período (com período, linha sem a data sai). */
+/**
+ * @param {Registro[]} regs
+ * @param {{ de: number | null, ate: number | null }} periodo
+ * @param {'criacao' | 'dataPrePedido'} [campo]
+ */
 export function recortarPeriodo(regs, { de, ate }, campo = 'criacao') {
   if (de === null && ate === null) return regs;
   return regs.filter((r) => {
@@ -222,7 +256,7 @@ export function recortarPeriodo(regs, { de, ate }, campo = 'criacao') {
   });
 }
 
-const temPrePedido = (r) => r.numeroPrePedido !== null && r.numeroPrePedido !== undefined && r.numeroPrePedido !== '';
+const temPrePedido = (/** @type {Registro} */ r) => r.numeroPrePedido !== null && r.numeroPrePedido !== undefined && r.numeroPrePedido !== '';
 const VAZIO = Symbol('vazio');
 
 /**
@@ -233,7 +267,7 @@ const VAZIO = Symbol('vazio');
  * Thayane, Vitor e Bruno W.; "-" (comprador fora do de-para) e Pendente ficam de fora, mesmo com
  * pré-pedido). Só aparecem compradores e regionais com pelo menos um pré-pedido de verdade.
  */
-export function prePedidosPorCompradorRegional(registros) {
+export function prePedidosPorCompradorRegional(/** @type {Registro[]} */ registros) {
   const doDePara = (r) => { const c = nomeOuTraco(r.comprador); return c !== SEM_VALOR && c !== PENDENTE; };
   const comPre = registros.filter((r) => temPrePedido(r) && doDePara(r));
   const compradores = new Set(comPre.map((r) => nomeOuTraco(r.comprador)));
@@ -267,6 +301,10 @@ export function prePedidosPorCompradorRegional(registros) {
 export const pctSaving = (total, economia) => (total + economia ? economia / (total + economia) : null);
 
 /** Total comprado (pedido c/ impostos) e economia (Saving Real) agrupados por uma função de chave. */
+/**
+ * @param {Registro[]} registros
+ * @param {(r: Registro) => string} chaveDe
+ */
 export function savingPor(registros, chaveDe) {
   const grupos = new Map();
   for (const r of registros) {
@@ -280,23 +318,23 @@ export function savingPor(registros, chaveDe) {
   return [...grupos.values()].map((g) => ({ ...g, pct: pctSaving(g.total, g.economia) }));
 }
 
-export function resumoSaving(registros) {
+export function resumoSaving(/** @type {Registro[]} */ registros) {
   const [g] = savingPor(registros, () => 'total');
   return g ?? { chave: 'total', total: 0, economia: 0, itensComSaving: 0, pct: null };
 }
 
-export const savingPorFilial = (registros) => savingPor(registros, (r) => nomeOuTraco(r.nomeFilial))
+export const savingPorFilial = (/** @type {Registro[]} */ registros) => savingPor(registros, (r) => nomeOuTraco(r.nomeFilial))
   .sort((a, b) => b.total - a.total);
 
-export const savingPorComprador = (registros) => savingPor(registros, (r) => nomeOuTraco(r.comprador))
+export const savingPorComprador = (/** @type {Registro[]} */ registros) => savingPor(registros, (r) => nomeOuTraco(r.comprador))
   .sort((a, b) => b.economia - a.economia || b.total - a.total);
 
 /** Por mês do pedido, em ordem cronológica (só linhas com pedido). */
-export const savingPorMes = (registros) => savingPor(registros.filter((r) => chaveMes(r)), chaveMes)
+export const savingPorMes = (/** @type {Registro[]} */ registros) => savingPor(registros.filter((r) => chaveMes(r)), chaveMes)
   .sort((a, b) => a.chave.localeCompare(b.chave));
 
 /** SCs distintas e itens por status (tela Status), na mesma ordem de `itensPorStatus`. */
-export function scsPorStatus(registros) {
+export function scsPorStatus(/** @type {Linha[]} */ registros) {
   const scs = new Map();
   for (const r of registros) {
     const s = nomeOuTraco(r.status);
@@ -313,7 +351,7 @@ export function scsPorStatus(registros) {
  * tabelas dinâmicas da aba Spend (filial "-" fica de fora). Soma toda linha com valor, mesmo sem
  * número de pedido (há linhas assim na base, e a planilha soma). ofs = pedidos distintos.
  */
-export function spendPorFilial(registros) {
+export function spendPorFilial(/** @type {Registro[]} */ registros) {
   const grupos = new Map();
   for (const r of registros) {
     if (!r.nomeFilial || (!r.numeroPedido && !r.totalPedidoComImpostos)) continue;
@@ -335,6 +373,10 @@ export function spendPorFilial(registros) {
  * início, sem passar do fim dele. Assim um mês pela metade não é comparado com um mês inteiro.
  * Sem pedido com data: null.
  */
+/**
+ * @param {Registro[]} registros
+ * @param {'mes' | 'tri'} [tipo]
+ */
 export function periodosDePedido(registros, tipo = 'mes') {
   const comPedido = registros.filter((r) => r.numeroPedido && Number.isFinite(r.dataPedido) && r.dataPedido > 0);
   if (!comPedido.length) return null;
@@ -352,7 +394,7 @@ export function periodosDePedido(registros, tipo = 'mes') {
   };
 }
 
-export function resumoSpend(registros) {
+export function resumoSpend(/** @type {Registro[]} */ registros) {
   const filiais = spendPorFilial(registros);
   const ofs = new Set(registros.filter((r) => r.nomeFilial && r.numeroPedido).map((r) => r.numeroPedido)).size;
   // ofs: distintas no total (a mesma OF em duas filiais conta uma vez)
@@ -365,7 +407,7 @@ export function resumoSpend(registros) {
 export const STATUS_ENTREGA = ['NÃO ENTREGUE', 'ENTREGUE PARCIAL', 'ENTREGUE'];
 
 /** OFs distintas e itens por status de entrega (outros status no fim, em ordem alfabética). */
-export function entregasPorStatus(registros) {
+export function entregasPorStatus(/** @type {RegistroFollowUp[]} */ registros) {
   const grupos = new Map();
   for (const r of registros) {
     const s = nomeOuTraco(r.statusEntrega);
@@ -380,6 +422,13 @@ export function entregasPorStatus(registros) {
 }
 
 /** Recorta pelo valor de um campo. selecionados: Set (vazio/ausente = todos). */
+/**
+ * @template {Linha} T
+ * @param {T[]} registros
+ * @param {keyof Linha} campo
+ * @param {Set<string>} [selecionados]
+ * @returns {T[]}
+ */
 export function recortarPor(registros, campo, selecionados) {
   if (!selecionados?.size) return registros;
   return registros.filter((r) => selecionados.has(nomeOuTraco(r[campo])));

@@ -31,7 +31,7 @@ export function gerarCsv(todas, linhas) {
   };
   const corpo = [colunas.map((c) => campo(c.rotulo)).join(';'),
     ...linhas.map((l) => colunas.map((c) => campo(valorDeSaida(c, l))).join(';'))];
-  return `﻿${corpo.join('\r\n')}\r\n`;
+  return `\uFEFF${corpo.join('\r\n')}\r\n`;
 }
 
 /** Texto para colar no Excel: tabulação entre colunas, vírgula decimal, sem separador de milhar. */
@@ -61,7 +61,7 @@ export async function copiarTexto(texto) {
   area.value = texto;
   document.body.append(area);
   area.select();
-  let ok = false;
+  let ok;
   try { ok = document.execCommand('copy'); } catch { ok = false; }
   area.remove();
   if (ok) return true;
