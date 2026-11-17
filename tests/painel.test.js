@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   montarDadosDoPainel, registrosDoPainel, followUpDoPainel, compactar, descompactar, CAMPOS_PUBLICOS, CAMPOS_FOLLOW_UP, VERSAO,
 } from '../src/painel/dados.js';
-import { gerarTsv } from '../src/ui/tabela.js';
+import { gerarTsv } from '../src/ui/tabela-exportar.js';
 
 const aberto = {
   solicitacao: 'SC-1', regional: 'Sul', nomeFilial: 'Filial A', comprador: 'Ana', prioridade: 'Normal',

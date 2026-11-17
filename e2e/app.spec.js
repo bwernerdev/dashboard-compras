@@ -374,6 +374,10 @@ test('abas na ordem da planilha; Status, Spend, Atendimento e Organograma', asyn
   await expect(atendimento.locator('.tabela-contagem')).toHaveText('1 SC, 1 item');
   await page.getByRole('button', { name: 'Outros', exact: true }).click();
   await expect(atendimento.locator('.tabela-contagem')).toHaveText('1 SC, 2 itens');
+  // Recortes lembrados neste navegador: voltam ao recarregar.
+  await page.reload();
+  await expect(page.getByRole('group', { name: 'Status Pré-Pedido' }).getByRole('button', { name: 'Outros' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(atendimento.locator('.tabela-contagem')).toHaveText('1 SC, 2 itens');
 
   await page.getByRole('tab', { name: 'Organograma' }).click();
   await expect(page.getByRole('heading', { name: "Organograma Suprimentos CD's" })).toBeVisible();

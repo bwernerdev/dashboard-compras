@@ -4,11 +4,11 @@
 import { el } from '../ui/dom.js';
 import { linhaDeCartoes, bloco } from '../ui/cartoes.js';
 import { formatarSerie } from '../datas.js';
-import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
+import { lerEscolha, salvarPreferencia } from '../preferencias.js';
 import { periodosDePedido } from '../analise.js';
 
-const local = { tipo: lerPreferencia('comparacao-periodo') === 'tri' ? 'tri' : 'mes' };
 const OPCOES = [['mes', 'Mês x anterior'], ['tri', 'Trimestre x anterior']];
+const local = { tipo: lerEscolha('comparacao-periodo', OPCOES.map(([id]) => id), 'mes') };
 const diaMes = (s) => formatarSerie(s).slice(0, 5);
 const trecho = (p) => `${diaMes(p.inicio)} a ${diaMes(p.fim)}`;
 

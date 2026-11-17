@@ -15,18 +15,16 @@ import {
 import { PENDENTE } from '../regras.js';
 import { corDoStatusNoGrafico } from '../ui/cores-planilha.js';
 import { serie, partesDaSerie, formatarSerie } from '../datas.js';
-import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
+import { lerJson, salvarJson } from '../preferencias.js';
 
 // Período em série do Excel (dias inteiros); null = sem limite.
 const CHAVE_PERIODO = 'periodo-compradores';
 const periodo = lerPeriodo();
 function lerPeriodo() {
-  try {
-    const p = JSON.parse(lerPreferencia(CHAVE_PERIODO, '{}')) ?? {};
-    return { de: Number.isFinite(p.de) ? p.de : null, ate: Number.isFinite(p.ate) ? p.ate : null };
-  } catch { return { de: null, ate: null }; }
+  const p = lerJson(CHAVE_PERIODO, {});
+  return { de: Number.isFinite(p.de) ? p.de : null, ate: Number.isFinite(p.ate) ? p.ate : null };
 }
-const guardarPeriodo = () => salvarPreferencia(CHAVE_PERIODO, JSON.stringify(periodo));
+const guardarPeriodo = () => salvarJson(CHAVE_PERIODO, periodo);
 
 /** Série -> "aaaa-mm-dd" (valor do campo de data) e volta. */
 const paraCampo = (s) => {

@@ -4,7 +4,7 @@
 // que bate, como o PROCV da planilha antiga.
 import { el, substituir } from '../ui/dom.js';
 import { CONFIG_PADRAO, normalizarCodigoFilial } from '../config/index.js';
-import { baixar } from '../ui/tabela.js';
+import { baixar } from '../ui/tabela-exportar.js';
 
 export const NOME_ARQUIVO_CONFIG = 'configuracao-compras.json';
 

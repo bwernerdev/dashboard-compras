@@ -5,7 +5,7 @@ import { el, substituir } from './dom.js';
 import { esconderDica } from './dica.js';
 import { barraDeFiltros } from './filtros.js';
 import { aplicarFiltros, opcoesDosFiltros, FILTROS, filtroValeNaTela } from '../analise.js';
-import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
+import { salvarPreferencia, lerJson, salvarJson } from '../preferencias.js';
 import { diasUteis } from '../datas.js';
 
 /**
@@ -82,7 +82,7 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
   function guardarSelecao() {
     if (!chaveFiltros) return;
     const ativos = Object.entries(estado.selecao).filter(([, v]) => v?.size).map(([id, v]) => [id, [...v]]);
-    salvarPreferencia(chaveFiltros, JSON.stringify(Object.fromEntries(ativos)));
+    salvarJson(chaveFiltros, Object.fromEntries(ativos));
   }
 
   function definirFollowUp(registros) {
@@ -263,9 +263,7 @@ export function ligarImpressao(botao) {
 
 /** Seleção salva ({ idFiltro: [valores] }) -> { idFiltro: Set }; só filtros conhecidos. Estragada = nenhuma. */
 function lerSelecao(chave) {
-  try {
-    const salvo = JSON.parse(lerPreferencia(chave, '{}')) ?? {};
-    return Object.fromEntries(FILTROS.filter((f) => Array.isArray(salvo[f.id]) && salvo[f.id].length)
-      .map((f) => [f.id, new Set(salvo[f.id])]));
-  } catch { return {}; }
+  const salvo = lerJson(chave, {});
+  return Object.fromEntries(FILTROS.filter((f) => Array.isArray(salvo[f.id]) && salvo[f.id].length)
+    .map((f) => [f.id, new Set(salvo[f.id])]));
 }

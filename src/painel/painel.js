@@ -13,7 +13,7 @@ import '../styles/impressao.css';
 import { descompactar, registrosDoPainel, followUpDoPainel } from './dados.js';
 import { criarNavegador, ligarTema, ligarImpressao, ligarTopoCompacto, diasDesdeABase, BASE_ANTIGA_DIAS } from '../ui/casca.js';
 import { aplicarMarca } from '../ui/marca.js';
-import { definirExportacao } from '../ui/tabela.js';
+import { definirExportacao } from '../ui/tabela-exportar.js';
 import { el, substituir } from '../ui/dom.js';
 import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
 import { formatarSerie, hojeSerie } from '../datas.js';

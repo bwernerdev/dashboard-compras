@@ -2,14 +2,13 @@
 // Substitui a aba "Atendimento" da planilha antiga (Dias em aberto > SC > Filial > ... > Status).
 import { PRAZO_SLA_DIAS } from '../regras.js';
 import { el } from '../ui/dom.js';
+import { lerEscolha, salvarPreferencia } from '../preferencias.js';
 import { cartao, linhaDeCartoes, bloco, comparar, serieDe, estadoVazio } from '../ui/cartoes.js';
 import { criarTabela } from '../ui/tabela.js';
 import { cliqueDeDetalhe } from '../ui/detalhe.js';
 import * as fmt from '../ui/formatos.js';
 import { seloDoStatus, classeDaLinhaSc } from '../ui/cores-planilha.js';
 import { itensEmAberto, resumoEmAberto, ehRegularizacao, aguardandoAprovacao } from '../analise.js';
-
-const local = { sla: 'todos', pre: 'todos' };
 
 const RECORTES = [
   ['todos', 'Todos'],
@@ -23,6 +22,13 @@ const RECORTES_PRE = [
   ['aprovacao', 'Ag. aprovação', aguardandoAprovacao],
   ['outros', 'Outros', (r) => !aguardandoAprovacao(r)],
 ];
+
+// Recortes lembrados neste navegador (como o recorte de Status das outras telas): não zeram ao importar.
+const CHAVES = { sla: 'atendimento-sla', pre: 'atendimento-pre' };
+const local = {
+  sla: lerEscolha(CHAVES.sla, RECORTES.map(([id]) => id), 'todos'),
+  pre: lerEscolha(CHAVES.pre, RECORTES_PRE.map(([id]) => id), 'todos'),
+};
 
 /** SLA com marca de cor e texto (nunca só a cor). */
 function seloSla(sla) {
@@ -69,7 +75,7 @@ export function telaAtendimento(ctx) {
   const alternador = (rotuloGrupo, opcoes, chave) => el('div', { class: 'alternador', role: 'group', 'aria-label': rotuloGrupo },
     opcoes.map(([id, rotulo]) => el('button', {
       type: 'button', class: 'alternador-opcao', 'aria-pressed': String(local[chave] === id),
-      onclick: () => { local[chave] = id; ctx.redesenhar(); },
+      onclick: () => { local[chave] = id; salvarPreferencia(CHAVES[chave], id); ctx.redesenhar(); },
     }, rotulo)));
   const qtdAprovacao = abertos.filter(aguardandoAprovacao).length;
   const alternar = el('div', { class: 'linha-alternadores' },
@@ -97,5 +103,5 @@ export function telaAtendimento(ctx) {
   ));
 }
 
-/** Zera o recorte local (ao trocar de bases). */
-export function reiniciarAtendimento() { local.sla = 'todos'; local.pre = 'todos'; }
+/** Nada a zerar ao trocar de bases: os recortes ficam lembrados. */
+export function reiniciarAtendimento() { /* nada a zerar */ }

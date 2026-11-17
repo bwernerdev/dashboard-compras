@@ -9,7 +9,7 @@ import {
 } from '../src/analise.js';
 import { brutosDe, recalcular, juntarAoHistorico } from '../src/memoria.js';
 import { validarConfig, lerConfigExportada } from '../src/telas/configuracao.js';
-import { gerarCsv } from '../src/ui/tabela.js';
+import { gerarCsv } from '../src/ui/tabela-exportar.js';
 import { criarConfig, CONFIG_PADRAO } from '../src/config/index.js';
 import { calcularLinhaBase } from '../src/regras.js';
 import { serie } from '../src/datas.js';
