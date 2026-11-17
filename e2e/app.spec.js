@@ -238,6 +238,9 @@ test('filtros globais ficam salvos no navegador', async ({ page }) => {
 });
 
 test('largura da coluna: arrastar, setas, autoajuste com dois cliques, lembrada e "Larguras originais"', async ({ page }) => {
+  // Janela larga: a lista cabe sem o "caber na largura" encolher a coluna salva (no Linux do CI as
+  // fontes são mais largas e, em 1280 px, a lista passaria da janela).
+  await page.setViewportSize({ width: 1920, height: 1000 });
   await importarBase(page);
   const lista = page.locator('.bloco', { hasText: 'Itens agrupados por SC' });
   const th = lista.locator('thead th', { hasText: 'Produto' });
