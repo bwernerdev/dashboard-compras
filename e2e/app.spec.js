@@ -78,7 +78,7 @@ test('cada caixa de importação abre o seletor com a pasta lembrada do seu tipo
     window.showOpenFilePicker = async ({ id }) => {
       window.chamadasSeletor.push(id);
       if (id !== 'importar-base') throw new DOMException('cancelou', 'AbortError');
-      return [{ getFile: async () => new File([new Uint8Array(bytes)], 'base.xlsx') }];
+      return [{ name: 'base.xlsx', getFile: async () => new File([new Uint8Array(bytes)], 'base.xlsx') }];
     };
   }, [...base.buffer]);
   await page.goto('./');
@@ -89,6 +89,65 @@ test('cada caixa de importação abre o seletor com a pasta lembrada do seu tipo
   await page.locator('dialog .arquivo[data-tipo="contratos"]').click();
   await expect(page.locator('dialog .arquivo[data-tipo="contratos"] .arquivo-status')).toContainText('Opcional'); // cancelou: nada muda
   expect(await page.evaluate(() => window.chamadasSeletor)).toEqual(['importar-base', 'importar-followUp', 'importar-contratos']);
+});
+
+test('arquivo que o seletor do navegador não entrega (pasta de rede no Citrix): avisa e passa ao seletor comum', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.chamadasSeletor = 0;
+    window.showOpenFilePicker = async () => {
+      window.chamadasSeletor++;
+      return [{ name: 'Follow-Up.xlsx', getFile: async () => { throw new DOMException('não leu', 'NotReadableError'); } }];
+    };
+  });
+  await page.goto('./');
+  const caixa = page.locator('.arquivo[data-tipo="followUp"]');
+  await caixa.click();
+  await expect(caixa.locator('.arquivo-status')).toContainText('O navegador não entregou o arquivo Follow-Up.xlsx (NotReadableError)');
+  await expect(caixa).toHaveAttribute('data-estado', 'erro');
+  // Clique seguinte: seletor comum, que lê o arquivo direto.
+  const escolha = page.waitForEvent('filechooser');
+  await caixa.click();
+  await (await escolha).setFiles(await arquivoFollowUp());
+  await expect(caixa.locator('.arquivo-status')).toContainText('linhas');
+  expect(await page.evaluate(() => window.chamadasSeletor)).toBe(1);
+});
+
+test('seletor do navegador com erro (bloqueado): avisa e o próximo clique usa o seletor comum', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.chamadasSeletor = 0;
+    window.showOpenFilePicker = async () => { window.chamadasSeletor++; throw new DOMException('bloqueado', 'SecurityError'); };
+  });
+  await page.goto('./');
+  const caixa = page.locator('.arquivo[data-tipo="followUp"]');
+  await caixa.click();
+  await expect(caixa.locator('.arquivo-status')).toHaveText('O seletor de arquivos do navegador não abriu. Clique de novo para escolher o arquivo.');
+  const escolha = page.waitForEvent('filechooser');
+  await caixa.click();
+  await (await escolha).setFiles(await arquivoFollowUp());
+  await expect(caixa.locator('.arquivo-status')).toContainText('linhas');
+  // A Base também vai direto ao seletor comum, sem tentar de novo o do navegador.
+  const escolhaBase = page.waitForEvent('filechooser');
+  await page.locator('.arquivo[data-tipo="base"]').click();
+  await escolhaBase;
+  expect(await page.evaluate(() => window.chamadasSeletor)).toBe(1);
+});
+
+test('seletor do navegador parado: avisa em 10 s e o próximo clique usa o seletor comum', async ({ page }) => {
+  await page.clock.install();
+  await page.addInitScript(() => {
+    window.showOpenFilePicker = async () => [{ name: 'Follow-Up.xlsx', getFile: () => new Promise(() => {}) }];
+  });
+  await page.goto('./');
+  const caixa = page.locator('.arquivo[data-tipo="followUp"]');
+  await caixa.click();
+  await expect(caixa.locator('.arquivo-status')).toHaveText('Abrindo Follow-Up.xlsx...');
+  await page.clock.runFor(10_000);
+  await expect(caixa.locator('.arquivo-status')).toContainText('clique de novo para escolher pelo seletor comum');
+  const escolha = page.waitForEvent('filechooser');
+  await caixa.click();
+  await (await escolha).setFiles(await arquivoFollowUp());
+  await expect(caixa.locator('.arquivo-status')).toContainText('linhas');
+  await expect(caixa).toHaveAttribute('data-estado', 'ok');
 });
 
 test('Regional: cartões, período, faixa e filtro por clique', async ({ page }) => {

@@ -22,14 +22,34 @@ const TIPOS_XLSX = [{
  * Escolheu: { arquivo, alca } (alca: referência ao arquivo no disco, para "Reimportar bases" ler de novo).
  */
 export async function escolherComPastaLembrada(tipo) {
-  if (typeof window.showOpenFilePicker !== 'function') return null;
+  const alca = await escolherAlca(tipo);
+  if (!alca) return alca;
   try {
-    const [alca] = await window.showOpenFilePicker({ id: `importar-${tipo}`, types: TIPOS_XLSX, multiple: false });
     return { arquivo: await alca.getFile(), alca };
-  } catch (erro) {
-    return erro?.name === 'AbortError' ? undefined : null;
+  } catch {
+    return null;
   }
 }
+
+// O seletor do navegador falhou nesta página (recurso bloqueado ou arquivo que ele não entrega, como
+// pasta de rede no Citrix): daqui em diante as caixas usam o seletor comum, que lê o arquivo direto.
+let seletorDoNavegadorFalhou = false;
+
+/** Só a escolha: referência ao arquivo, undefined se cancelou, null sem o recurso ou se ele falhou. */
+async function escolherAlca(tipo) {
+  if (seletorDoNavegadorFalhou || typeof window.showOpenFilePicker !== 'function') return null;
+  try {
+    const [alca] = await window.showOpenFilePicker({ id: `importar-${tipo}`, types: TIPOS_XLSX, multiple: false });
+    return alca;
+  } catch (erro) {
+    if (erro?.name === 'AbortError') return undefined;
+    seletorDoNavegadorFalhou = true;
+    return null;
+  }
+}
+
+/** Se o navegador demorar para entregar o arquivo escolhido: avisa e passa ao seletor comum no próximo clique. */
+const AVISO_DEMORA_MS = 10_000;
 
 /** Texto de situação de uma base já carregada. */
 export function situacaoDaBase(dados) {
@@ -59,6 +79,36 @@ export function caixasDeImportacao({ estado, aoImportar }) {
       el('span', { class: 'arquivo-dica' }, a.dica),
       entrada, status, barra);
 
+    // Referência escolhida no seletor do navegador: mostra que está abrindo já (a barra corre sem
+    // porcentagem) e só então pede o arquivo. Pasta de rede pode demorar ou falhar aqui; antes a
+    // caixa ficava sem nenhum sinal.
+    let rodada = 0; // escolha mais recente: um getFile() atrasado não importa por cima de outra escolha
+    const carregarDaAlca = async (alca) => {
+      const minha = ++rodada;
+      caixa.dataset.estado = 'lendo';
+      status.textContent = `Abrindo ${alca.name}...`;
+      barra.hidden = false;
+      barra.removeAttribute('value');
+      const aviso = setTimeout(() => {
+        seletorDoNavegadorFalhou = true; // parado (pasta de rede no Citrix): o próximo clique usa o seletor comum
+        status.textContent = `Abrindo ${alca.name}... O navegador está demorando para entregar o arquivo. Se não andar, clique de novo para escolher pelo seletor comum ou copie o arquivo para uma pasta do computador.`;
+      }, AVISO_DEMORA_MS);
+      let arquivo;
+      try {
+        arquivo = await alca.getFile();
+      } catch (erro) {
+        seletorDoNavegadorFalhou = true;
+        if (minha !== rodada) return;
+        caixa.dataset.estado = 'erro';
+        barra.hidden = true;
+        status.textContent = `O navegador não entregou o arquivo ${alca.name}${erro?.name ? ` (${erro.name})` : ''}. Clique de novo para escolher pelo seletor comum, arraste o arquivo para cá ou copie para uma pasta do computador.`;
+        return;
+      } finally {
+        clearTimeout(aviso);
+      }
+      if (minha === rodada) await carregar(arquivo, alca);
+    };
+
     const carregar = async (arquivo, alca = null) => {
       caixa.dataset.estado = 'lendo';
       status.textContent = `Lendo ${arquivo.name}...`;
@@ -80,15 +130,23 @@ export function caixasDeImportacao({ estado, aoImportar }) {
       }
     };
 
-    entrada.addEventListener('change', () => { if (entrada.files[0]) carregar(entrada.files[0]); });
+    entrada.addEventListener('change', () => { if (entrada.files[0]) { rodada++; carregar(entrada.files[0]); } });
     // Clique na caixa: seletor com a pasta lembrada por tipo; se o navegador não tiver, segue o comum.
     let seletorComum = false;
     entrada.addEventListener('click', async (ev) => {
-      if (seletorComum || typeof window.showOpenFilePicker !== 'function') { seletorComum = false; return; }
+      if (caixa.dataset.estado === 'lendo' && !seletorDoNavegadorFalhou) { ev.preventDefault(); return; } // já importando
+      if (seletorComum || seletorDoNavegadorFalhou || typeof window.showOpenFilePicker !== 'function') { seletorComum = false; return; }
       ev.preventDefault();
-      const escolhido = await escolherComPastaLembrada(a.tipo);
-      if (escolhido) carregar(escolhido.arquivo, escolhido.alca);
-      else if (escolhido === null) { seletorComum = true; entrada.click(); }
+      const alca = await escolherAlca(a.tipo);
+      if (alca) carregarDaAlca(alca);
+      else if (alca === null) {
+        // O seletor do navegador deu erro. O seletor comum aberto daqui pode ser barrado (o clique já
+        // foi usado): se não abrir, o aviso pede outro clique, que já vai direto ao seletor comum.
+        caixa.dataset.estado = 'erro';
+        status.textContent = 'O seletor de arquivos do navegador não abriu. Clique de novo para escolher o arquivo.';
+        seletorComum = true;
+        entrada.click();
+      }
     });
     caixa.addEventListener('dragover', (ev) => { ev.preventDefault(); caixa.classList.add('arrastando'); });
     caixa.addEventListener('dragleave', () => caixa.classList.remove('arrastando'));
@@ -97,6 +155,7 @@ export function caixasDeImportacao({ estado, aoImportar }) {
       caixa.classList.remove('arrastando');
       const arquivo = ev.dataTransfer.files[0];
       if (!arquivo) return;
+      rodada++;
       // Arrastar também dá a referência ao arquivo (Chrome/Edge); pedida ainda dentro do evento.
       const item = ev.dataTransfer.items?.[0];
       const pedido = typeof item?.getAsFileSystemHandle === 'function' ? item.getAsFileSystemHandle().catch(() => null) : Promise.resolve(null);
