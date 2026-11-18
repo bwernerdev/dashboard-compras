@@ -46,6 +46,32 @@ async function lerDadosGerais(pasta) {
 }
 
 /**
+ * Copia o arquivo inteiro para a memória, numa leitura em sequência, antes de abrir.
+ * O leitor de zip pula entre partes do arquivo (fim, diretório, cabeçalho de cada parte): direto
+ * de uma pasta de rede, cada pulo é uma ida e volta ao servidor e a importação parecia parada em
+ * "Abrindo arquivo". Lido de uma vez, com progresso, o resto roda na memória.
+ */
+export async function copiarParaMemoria(arquivo, { aoAvancar, sinal } = {}) {
+  const total = arquivo.size;
+  const pedacos = [];
+  let lidos = 0;
+  const leitor = arquivo.stream().getReader();
+  try {
+    for (;;) {
+      if (sinal?.aborted) throw new DOMException('Importação cancelada.', 'AbortError');
+      const { done, value } = await leitor.read();
+      if (done) break;
+      pedacos.push(value);
+      lidos += value.byteLength;
+      aoAvancar?.(total ? lidos / total : 1);
+    }
+  } finally {
+    leitor.releaseLock();
+  }
+  return new Blob(pedacos);
+}
+
+/**
  * Importa um arquivo.
  * tipo: 'base' | 'followUp'. cfg: resultado de criarConfig(). hoje: série do dia.
  * aoAvancar(fração 0..1, fase) informa o progresso.
@@ -61,8 +87,10 @@ export async function importar(tipo, arquivo, cfg, {
   const calcular = CALCULAR[tipo];
   const inicio = Date.now();
 
+  aoAvancar?.(0, 'Copiando o arquivo');
+  const copia = await copiarParaMemoria(arquivo, { sinal, aoAvancar: (f) => aoAvancar?.(f, 'Copiando o arquivo') });
   aoAvancar?.(0, 'Abrindo arquivo');
-  const pasta = await abrirPasta(arquivo);
+  const pasta = await abrirPasta(copia);
   const dadosGerais = await lerDadosGerais(pasta);
   aoAvancar?.(0, 'Carregando textos');
   await pasta.strings();

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { importar } from '../src/importar.js';
+import { importar, copiarParaMemoria } from '../src/importar.js';
 import { criarConfig } from '../src/config/index.js';
 import { BASE, FOLLOW_UP } from '../src/esquema.js';
 import { serie } from '../src/datas.js';
@@ -55,6 +55,9 @@ test('base: descarta outras filiais, converte tipos e aplica as regras', async (
   assert.equal(r.meta.dadosGerais.inicio, serie(2026, 9, 12));
   assert.equal(r.meta.dadosGerais.fim, HOJE);
   assert.deepEqual(progresso.at(-1), [1, 'Concluído']);
+  // Primeiro copia o arquivo inteiro (pasta de rede), com progresso até 100%.
+  assert.deepEqual(progresso[0], [0, 'Copiando o arquivo']);
+  assert.ok(progresso.some(([f, fase]) => fase === 'Copiando o arquivo' && f === 1));
 
   const [a, b] = r.registros;
   assert.equal(a.sc, '1234567');
@@ -93,4 +96,13 @@ test('cancelamento pelo sinal', async () => {
   const ctrl = new AbortController();
   ctrl.abort();
   await assert.rejects(importar('base', blob, cfg, { hoje: HOJE, sinal: ctrl.signal }), /cancelada/);
+});
+
+test('copiarParaMemoria: lê em sequência, mesmo conteúdo, progresso até 100%', async () => {
+  const bytes = new Uint8Array(300_000).map((_, i) => i % 251);
+  const progresso = [];
+  const copia = await copiarParaMemoria(new Blob([bytes]), { aoAvancar: (f) => progresso.push(f) });
+  assert.deepEqual(new Uint8Array(await copia.arrayBuffer()), bytes);
+  assert.equal(progresso.at(-1), 1);
+  assert.ok(progresso.every((f, i) => i === 0 || f >= progresso[i - 1]));
 });

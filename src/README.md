@@ -11,7 +11,7 @@
 | `painel/` | Painel publicado (`painel-compras.html`): dados públicos, entrada, modelo e geração. Ver `painel/README.md` |
 | `importacao.js` | Ponte tela ↔ worker (`importarNoWorker`) |
 | `importacao.worker.js` | Worker: roda `importar` fora da thread da tela e manda o progresso |
-| `importar.js` | Importação de um relatório: lê por fluxo, descarta filiais fora do de-para, converte tipos, aplica `regras.js`. Roda no worker e no Node (scripts e testes) |
+| `importar.js` | Importação de um relatório: primeiro copia o arquivo para a memória numa leitura só, com progresso ("Copiando o arquivo"; direto de pasta de rede o leitor de zip, que pula entre partes, ficava muito lento), depois lê por fluxo, descarta filiais fora do de-para, converte tipos, aplica `regras.js`. Roda no worker e no Node (scripts e testes) |
 | `esquema.js` | Colunas lidas de cada relatório (`BASE`, `FOLLOW_UP`), pelo nome do cabeçalho, com o tipo (`@type {const}`: viram os tipos dos registros) |
 | `tipos.d.ts` | Só para `npm run tipos` (não entra no build): `LinhaBase`/`LinhaFollowUp` (de `esquema.js`), `Registro`/`RegistroFollowUp` (retorno de `calcularLinhaBase`/`calcularLinhaFollowUp`), `Linha` (qualquer das duas), `Config`. Usados em JSDoc em `regras.js`, `analise.js` e `painel/dados.js` (`// @ts-check`) |
 | `regras.js` | **Única** implementação das regras de negócio (colunas calculadas da planilha antiga). Ver `PROJETO.md`, seção 3 |
