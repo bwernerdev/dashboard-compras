@@ -7,8 +7,9 @@ import { criarConfig, CONFIG_PADRAO, atualizarConfigSalva } from './config/index
 import { hojeSerie, formatarSerie } from './datas.js';
 import {
   brutosDe, recalcular, salvarImportacao, salvarAnterior, salvarHistorico, juntarAoHistorico, lerImportacoes, lerConfig, salvarConfig, apagarConfig,
-  salvarContratos, salvarAlca,
+  salvarContratos, salvarCopia,
 } from './memoria.js';
+import { copiarParaMemoria } from './leitor/arquivo.js';
 import { lerContratos } from './contratos/ler.js';
 import { filialAjustadaDoContrato } from './contratos/dados.js';
 import { abrirContratos } from './telas/contratos.js';
@@ -46,7 +47,7 @@ const estado = {
   anterior: null, // base de outro dia do ME { brutos, meta, salvoEm }: variação nos cartões
   historico: [], // [{ dia, status, aberto }]: mini gráficos dos cartões (ver memoria.js)
   contratos: null, // anexo opcional (CONTROLE DE CONTRATOS): { abas, meta, salvoEm }, janela Contratos
-  alcas: {}, // referência ao último arquivo de cada tipo (Chrome/Edge): "Reimportar bases" lê de novo
+  copias: {}, // cópia do último arquivo de Base e Follow-Up (memoria.js): "Reimportar bases" lê de novo
   carregando: true, // lendo as bases salvas ao abrir: esqueleto no lugar da tela de importação
 };
 
@@ -124,61 +125,58 @@ async function importarContratos(arquivo) {
   return estado.contratos;
 }
 
-/** Guarda (ou esquece) a referência ao arquivo importado deste tipo. */
-function lembrarArquivo(tipo, alca) {
-  estado.alcas[tipo] = alca ?? null;
-  salvarAlca(tipo, alca ?? null);
+/** Guarda a cópia do arquivo importado (Base e Follow-Up), na página e no navegador. */
+function lembrarArquivo(tipo, copia) {
+  if (tipo === 'contratos' || copia === estado.copias[tipo]) return;
+  estado.copias[tipo] = copia;
+  salvarCopia(tipo, copia);
 }
 
-/** alca: referência ao arquivo (ou promessa dela, ao arrastar); null no seletor comum. */
-async function importar(tipo, arquivo, aoAvancar, alca = null) {
-  const dados = await importarSemLembrar(tipo, arquivo, aoAvancar);
-  lembrarArquivo(tipo, await alca);
+/**
+ * Importa um arquivo escolhido (clique ou arrastar) ou a cópia guardada (Reimportar). Primeiro copia o
+ * arquivo para a memória numa leitura só ("Copiando o arquivo": pasta de rede no Citrix ficava lenta
+ * com o leitor pulando entre partes); a cópia vai ao worker e fica guardada para "Reimportar bases".
+ */
+async function importar(tipo, arquivo, aoAvancar) {
+  const copia = arquivo === estado.copias[tipo] ? arquivo
+    : await copiarParaMemoria(arquivo, { aoAvancar: (f) => aoAvancar?.(f, 'Copiando o arquivo') });
+  const dados = await importarSemLembrar(tipo, copia, aoAvancar);
+  lembrarArquivo(tipo, copia);
   return dados;
 }
 
 const ROTULOS = { base: 'Base', followUp: 'Follow-Up' };
 
-/** Arquivo de novo pela referência guardada (pede permissão de leitura se preciso); sem ela, pede a caixa. */
+/** Cópia guardada do último arquivo deste tipo, se ainda der para ler; sem ela, pede a caixa. */
 async function arquivoDeNovo(tipo) {
-  const alca = estado.alcas[tipo];
-  if (alca) {
-    const permissao = await alca.queryPermission?.({ mode: 'read' }) ?? 'granted';
-    if (permissao !== 'granted' && (await alca.requestPermission({ mode: 'read' })) !== 'granted') {
-      throw new Error('o navegador não liberou a leitura do arquivo: clique de novo e escolha "Permitir"');
-    }
-    // Pasta de rede pode não responder (Citrix): depois de 10 s desiste e pede a caixa.
-    const prazo = new Promise((_, falha) => { setTimeout(() => falha(new Error('prazo')), 10_000); });
-    try {
-      return { arquivo: await Promise.race([alca.getFile(), prazo]), alca };
-    } catch {
-      throw new Error('não deu para ler o arquivo no mesmo lugar: escolha de novo pela caixa em "Atualizar bases"');
-    }
+  const copia = estado.copias[tipo];
+  if (!copia) throw new Error('escolha o arquivo de novo pela caixa em "Atualizar bases"');
+  try {
+    await copia.slice(0, 4).arrayBuffer(); // o navegador pode ter descartado a cópia (limpeza de dados)
+  } catch {
+    throw new Error('a cópia guardada do arquivo não pôde ser lida: escolha de novo pela caixa em "Atualizar bases"');
   }
-  throw new Error('escolha o arquivo de novo pela caixa em "Atualizar bases"');
+  return copia;
 }
 
 /**
- * "Reimportar bases" (Configuração): lê de novo a Base e o Follow-Up (se houver) dos mesmos arquivos,
- * para trazer as linhas de filial nova do de-para. Primeiro pega os arquivos (permissões e seletor, com
- * o clique ainda valendo), depois importa. Devolve um texto por base.
+ * "Reimportar bases" (Configuração): lê de novo a Base e o Follow-Up (se houver) das cópias guardadas
+ * na importação, para trazer as linhas de filial nova do de-para. Devolve um texto por base.
  */
 async function reimportarBases(aoAvancar) {
-  const tipos = ['base', 'followUp'].filter((t) => t === 'base' || estado[t] || estado.alcas[t]);
+  const tipos = ['base', 'followUp'].filter((t) => t === 'base' || estado[t] || estado.copias[t]);
   const arquivos = [];
   const resultado = [];
   for (const tipo of tipos) {
     try {
-      const a = await arquivoDeNovo(tipo);
-      if (a) arquivos.push({ tipo, ...a });
-      else resultado.push(`${ROTULOS[tipo]}: cancelado.`);
+      arquivos.push({ tipo, arquivo: await arquivoDeNovo(tipo) });
     } catch (erro) {
       resultado.push(`${ROTULOS[tipo]}: ${erro.message}.`);
     }
   }
-  for (const { tipo, arquivo, alca } of arquivos) {
+  for (const { tipo, arquivo } of arquivos) {
     try {
-      const dados = await importar(tipo, arquivo, (fracao, fase) => aoAvancar(`${ROTULOS[tipo]}: ${fase} ${Math.round(fracao * 100)}%`), alca);
+      const dados = await importar(tipo, arquivo, (fracao, fase) => aoAvancar(`${ROTULOS[tipo]}: ${fase} ${Math.round(fracao * 100)}%`));
       resultado.push(`${ROTULOS[tipo]}: ${arquivo.name}, ${dados.registros.length.toLocaleString('pt-BR')} linhas das filiais do de-para.`);
     } catch (erro) {
       resultado.push(`${ROTULOS[tipo]}: ${erro.message}`);
@@ -222,7 +220,7 @@ async function restaurar() {
     const s = salvas[tipo];
     if (s?.brutos) definirBase(tipo, { brutos: s.brutos, meta: s.meta, salvoEm: s.salvoEm, registros: recalcular(tipo, s.brutos, estado.cfg, estado.hoje) });
   }
-  for (const tipo of ['base', 'followUp', 'contratos']) if (salvas[`alca-${tipo}`]?.alca) estado.alcas[tipo] = salvas[`alca-${tipo}`].alca;
+  for (const tipo of ['base', 'followUp']) if (salvas[`arquivo-${tipo}`]?.arquivo) estado.copias[tipo] = salvas[`arquivo-${tipo}`].arquivo;
   if (salvas.contratos?.abas) estado.contratos = { abas: salvas.contratos.abas, meta: salvas.contratos.meta, salvoEm: salvas.contratos.salvoEm };
   const a = salvas['base-anterior'];
   if (a?.brutos && estado.base && diaDaBase(a.meta) < diaDaBase(estado.base.meta)) {

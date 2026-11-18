@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { importar, copiarParaMemoria } from '../src/importar.js';
+import { importar } from '../src/importar.js';
+import { copiarParaMemoria } from '../src/leitor/arquivo.js';
 import { criarConfig } from '../src/config/index.js';
 import { BASE, FOLLOW_UP } from '../src/esquema.js';
 import { serie } from '../src/datas.js';
@@ -105,4 +106,18 @@ test('copiarParaMemoria: lê em sequência, mesmo conteúdo, progresso até 100%
   assert.deepEqual(new Uint8Array(await copia.arrayBuffer()), bytes);
   assert.equal(progresso.at(-1), 1);
   assert.ok(progresso.every((f, i) => i === 0 || f >= progresso[i - 1]));
+});
+
+test('copiarParaMemoria: arquivo com nome continua com o nome (meta.arquivo)', async () => {
+  const copia = await copiarParaMemoria(new File(['abc'], 'base.xlsx'));
+  assert.equal(copia.name, 'base.xlsx');
+  assert.equal(await copia.text(), 'abc');
+});
+
+test('importar com copiar: false (worker recebe a cópia da tela) não copia de novo', async () => {
+  const blob = await criarXlsx([DADOS_GERAIS, relatorio(BASE, [{ solicitacao: 'FDS-1234567', codigoFilial: '30999', criacao: serie(2026, 11, 3) }])]);
+  const fases = new Set();
+  const r = await importar('base', blob, cfg, { hoje: HOJE, copiar: false, aoAvancar: (f, fase) => fases.add(fase) });
+  assert.equal(r.meta.mantidas, 1);
+  assert.ok(!fases.has('Copiando o arquivo'));
 });

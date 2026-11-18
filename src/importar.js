@@ -2,6 +2,7 @@
 // fora do de-para, converte os tipos e aplica as regras. Roda no worker e no Node.
 
 import { abrirPasta, lerAba, lerAbaInteira, CelulaErro } from './leitor/xlsx.js';
+import { copiarParaMemoria } from './leitor/arquivo.js';
 import { ESQUEMAS } from './esquema.js';
 import { CALCULAR } from './regras.js';
 import { normalizarCodigoFilial } from './config/index.js';
@@ -46,49 +47,27 @@ async function lerDadosGerais(pasta) {
 }
 
 /**
- * Copia o arquivo inteiro para a memória, numa leitura em sequência, antes de abrir.
- * O leitor de zip pula entre partes do arquivo (fim, diretório, cabeçalho de cada parte): direto
- * de uma pasta de rede, cada pulo é uma ida e volta ao servidor e a importação parecia parada em
- * "Abrindo arquivo". Lido de uma vez, com progresso, o resto roda na memória.
- */
-export async function copiarParaMemoria(arquivo, { aoAvancar, sinal } = {}) {
-  const total = arquivo.size;
-  const pedacos = [];
-  let lidos = 0;
-  const leitor = arquivo.stream().getReader();
-  try {
-    for (;;) {
-      if (sinal?.aborted) throw new DOMException('Importação cancelada.', 'AbortError');
-      const { done, value } = await leitor.read();
-      if (done) break;
-      pedacos.push(value);
-      lidos += value.byteLength;
-      aoAvancar?.(total ? lidos / total : 1);
-    }
-  } finally {
-    leitor.releaseLock();
-  }
-  return new Blob(pedacos);
-}
-
-/**
  * Importa um arquivo.
  * tipo: 'base' | 'followUp'. cfg: resultado de criarConfig(). hoje: série do dia.
- * aoAvancar(fração 0..1, fase) informa o progresso.
+ * aoAvancar(fração 0..1, fase) informa o progresso. copiar: false quando o arquivo já é a cópia na
+ * memória (a tela copia antes de mandar ao worker).
  * Para conferência com a planilha antiga (scripts/conferir-xlsm.mjs):
  *   aba: outra aba com as mesmas colunas; filtrar: false mantém todas as filiais;
  *   extras: nomes de colunas a mais, gravados em registro.planilha.
  */
 export async function importar(tipo, arquivo, cfg, {
-  hoje, aoAvancar, sinal, aba, filtrar = true, extras = [],
+  hoje, aoAvancar, sinal, aba, filtrar = true, extras = [], copiar = true,
 } = {}) {
   const esquema = ESQUEMAS[tipo];
   if (!esquema) throw new Error(`Tipo de importação desconhecido: ${tipo}`);
   const calcular = CALCULAR[tipo];
   const inicio = Date.now();
 
-  aoAvancar?.(0, 'Copiando o arquivo');
-  const copia = await copiarParaMemoria(arquivo, { sinal, aoAvancar: (f) => aoAvancar?.(f, 'Copiando o arquivo') });
+  let copia = arquivo;
+  if (copiar) {
+    aoAvancar?.(0, 'Copiando o arquivo');
+    copia = await copiarParaMemoria(arquivo, { sinal, aoAvancar: (f) => aoAvancar?.(f, 'Copiando o arquivo') });
+  }
   aoAvancar?.(0, 'Abrindo arquivo');
   const pasta = await abrirPasta(copia);
   const dadosGerais = await lerDadosGerais(pasta);

@@ -11,10 +11,8 @@ const ARQUIVOS = [
 
 // Clique na caixa: só o seletor comum do <input type="file">. O seletor do navegador com pasta lembrada
 // por tipo (showOpenFilePicker, 17/11/2026) saiu em 18/11/2026: no Citrix, com arquivo de pasta de rede,
-// ele não devolvia o arquivo e a importação não começava.
-
-/** Referência ao arquivo arrastado (Chrome/Edge), para "Reimportar bases"; se demorar, segue sem ela. */
-const PRAZO_REFERENCIA_MS = 3000;
+// ele não devolvia o arquivo e a importação não começava. Para "Reimportar bases", src/main.js guarda
+// uma cópia do arquivo escolhido (clique ou arrastar).
 
 /** Texto de situação de uma base já carregada. */
 export function situacaoDaBase(dados) {
@@ -29,8 +27,7 @@ export function situacaoDaBase(dados) {
 
 /**
  * estado: { base?, followUp?, contratos? } (dados atuais, para mostrar a situação).
- * aoImportar(tipo, arquivo, aoAvancar, alca) -> Promise (rejeita com a mensagem de erro). alca: promessa da
- * referência ao arquivo no disco (só ao arrastar, Chrome/Edge; pode dar null), ou null (seletor comum).
+ * aoImportar(tipo, arquivo, aoAvancar) -> Promise (rejeita com a mensagem de erro).
  */
 export function caixasDeImportacao({ estado, aoImportar }) {
   return el('section', { class: 'importacao', 'aria-label': 'Arquivos do ME' }, ARQUIVOS.map((a) => {
@@ -44,7 +41,7 @@ export function caixasDeImportacao({ estado, aoImportar }) {
       el('span', { class: 'arquivo-dica' }, a.dica),
       entrada, status, barra);
 
-    const carregar = async (arquivo, alca = null) => {
+    const carregar = async (arquivo) => {
       caixa.dataset.estado = 'lendo';
       status.textContent = `Lendo ${arquivo.name}...`;
       barra.hidden = false;
@@ -53,7 +50,7 @@ export function caixasDeImportacao({ estado, aoImportar }) {
         const dados = await aoImportar(a.tipo, arquivo, (fracao, fase) => {
           barra.value = fracao;
           status.textContent = `${fase}: ${Math.round(fracao * 100)}%`;
-        }, alca);
+        });
         caixa.dataset.estado = 'ok';
         status.textContent = `${situacaoDaBase(dados)} · ${(dados.meta.duracaoMs / 1000).toFixed(1)} s`;
       } catch (erro) {
@@ -72,17 +69,7 @@ export function caixasDeImportacao({ estado, aoImportar }) {
       ev.preventDefault();
       caixa.classList.remove('arrastando');
       const arquivo = ev.dataTransfer.files[0];
-      if (!arquivo) return;
-      // A importação começa já. A referência ao arquivo (Chrome/Edge) é pedida ainda dentro do evento e
-      // só é guardada no fim; se não vier em 3 s (pasta de rede), a importação segue sem ela.
-      const item = ev.dataTransfer.items?.[0];
-      const pedido = typeof item?.getAsFileSystemHandle === 'function'
-        ? Promise.race([
-          item.getAsFileSystemHandle().then((alca) => (alca?.kind === 'file' ? alca : null), () => null),
-          new Promise((ok) => { setTimeout(() => ok(null), PRAZO_REFERENCIA_MS); }),
-        ])
-        : null;
-      carregar(arquivo, pedido);
+      if (arquivo) carregar(arquivo);
     });
     return caixa;
   }));

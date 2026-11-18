@@ -92,23 +92,18 @@ test('clique na caixa abre o seletor comum, mesmo com o seletor do navegador dis
   expect(await page.evaluate(() => window.chamadasSeletor)).toBe(0);
 });
 
-/** Solta um arquivo na caixa; `alca` simula a referência que o Chrome/Edge dá ao arrastar ('nunca': não responde). */
-async function soltarNaCaixa(page, tipo, { name: nome, buffer }, alca) {
-  await page.evaluate(([tipo, nome, bytes, alca]) => {
-    const arquivo = new File([new Uint8Array(bytes)], nome);
-    const referencia = alca === 'nunca' ? new Promise(() => {}) : Promise.resolve(alca && {
-      kind: 'file', queryPermission: async () => 'granted',
-      getFile: async () => { window.leituras = (window.leituras ?? 0) + 1; return new File([new Uint8Array(bytes)], nome); },
-    });
+/** Solta um arquivo na caixa (arrastar simulado: a janela do sistema não existe no teste). */
+async function soltarNaCaixa(page, tipo, { name: nome, buffer }) {
+  await page.evaluate(([tipo, nome, bytes]) => {
     const ev = new Event('drop', { bubbles: true, cancelable: true });
-    Object.defineProperty(ev, 'dataTransfer', { value: { files: [arquivo], items: [{ getAsFileSystemHandle: () => referencia }] } });
+    Object.defineProperty(ev, 'dataTransfer', { value: { files: [new File([new Uint8Array(bytes)], nome)] } });
     document.querySelector(`.arquivo[data-tipo="${tipo}"]`).dispatchEvent(ev);
-  }, [tipo, nome, [...buffer], alca]);
+  }, [tipo, nome, [...buffer]]);
 }
 
-test('arrastar importa na hora, mesmo se a referência ao arquivo não vier (pasta de rede)', async ({ page }) => {
+test('arrastar o arquivo para a caixa importa', async ({ page }) => {
   await page.goto('./');
-  await soltarNaCaixa(page, 'base', await arquivoBase(), 'nunca');
+  await soltarNaCaixa(page, 'base', await arquivoBase());
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
 });
 
@@ -577,10 +572,10 @@ test('configuração: editar o de-para recalcula; restaurar padrão volta', asyn
   await expect(conteudo.getByText('Regional Editada')).toHaveCount(0);
 });
 
-test('configuração: "Reimportar bases" lê o mesmo arquivo de novo e traz a filial incluída', async ({ page }) => {
-  // Arquivo arrastado com a referência simulada (Chrome/Edge); conta as leituras pela referência.
-  await page.goto('./');
-  await soltarNaCaixa(page, 'base', await arquivoBase(), true);
+test('configuração: "Reimportar bases" lê a cópia do arquivo escolhido por clique, mesmo depois de recarregar, e traz a filial incluída', async ({ page }) => {
+  await importarBase(page); // seletor comum (clique)
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
+  await page.reload(); // a cópia fica guardada no navegador
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
 
   // Filial 99999 (está na base fictícia, fora do de-para): incluída e reimportada sem escolher arquivo.
@@ -591,15 +586,28 @@ test('configuração: "Reimportar bases" lê o mesmo arquivo de novo e traz a fi
   await page.getByLabel(`Filiais, linha ${n}, Filial`).fill('999');
   await page.getByLabel(`Filiais, linha ${n}, Nome`).fill('Filial Nova');
   await page.getByLabel(`Filiais, linha ${n}, Regional`).fill('Regional Nova');
+  const escolha = page.waitForEvent('filechooser', { timeout: 1000 }).then(() => true, () => false);
   await page.getByRole('button', { name: 'Reimportar bases' }).click();
   await expect(page.locator('.config-avisos')).toContainText('Base: base.xlsx, 5 linhas das filiais do de-para');
-  expect(await page.evaluate(() => window.leituras)).toBe(1); // a importação usou o arquivo solto; a reimportação, a referência
+  expect(await escolha).toBe(false); // não pediu arquivo
   await page.getByRole('button', { name: 'Fechar configuração' }).click();
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('3');
 });
 
-test('configuração: "Reimportar bases" sem referência ao arquivo pede a caixa', async ({ page }) => {
-  await importarBase(page); // seletor comum: não dá referência ao arquivo
+test('configuração: "Reimportar bases" sem cópia guardada pede a caixa', async ({ page }) => {
+  await importarBase(page);
+  // Simula o navegador sem a cópia (dados do site limpos ou sem espaço): apaga e recarrega.
+  await page.evaluate(() => new Promise((ok, falha) => {
+    const req = indexedDB.open('dashboard-compras');
+    req.onsuccess = () => {
+      const tx = req.result.transaction('importacoes', 'readwrite');
+      tx.objectStore('importacoes').delete('arquivo-base');
+      tx.oncomplete = () => { req.result.close(); ok(); };
+      tx.onerror = () => falha(tx.error);
+    };
+  }));
+  await page.reload();
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
   await page.getByRole('button', { name: 'Configuração' }).click();
   await page.getByRole('button', { name: 'Reimportar bases' }).click();
   await expect(page.locator('.config-avisos')).toContainText('Base: escolha o arquivo de novo pela caixa em "Atualizar bases".');

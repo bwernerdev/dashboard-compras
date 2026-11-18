@@ -5,6 +5,7 @@ O ExcelJS carrega o arquivo todo na memória e trava com a `base.xlsx` (54 MB co
 | Arquivo | Conteúdo |
 |---|---|
 | `zip.js` | `abrirZip` (lê só o diretório central), `fluxoDaParte` (descompacta uma parte por fluxo, com progresso), `textoDaParte` |
+| `arquivo.js` | `copiarParaMemoria`: lê o arquivo inteiro numa leitura só, em sequência, com progresso ("Copiando o arquivo"). Direto de pasta de rede (Citrix), o acesso direto do zip fazia uma ida ao servidor por pulo e ficava muito lento. Feita na tela (`src/main.js`), que guarda a cópia para "Reimportar bases" e manda ao worker |
 | `xlsx.js` | `abrirPasta` (abas + strings compartilhadas sob demanda), `lerAba` (cabeçalho escolhe as colunas; demais linhas por callback), `lerAbaInteira` (abas pequenas), `LeitorDeLinhas` (XML em pedaços → linhas), `CelulaErro` |
 
 ## Detalhes

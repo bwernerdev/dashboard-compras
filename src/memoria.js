@@ -71,15 +71,20 @@ export async function salvarImportacao(tipo, registros, meta) {
 }
 
 /**
- * Referência ao arquivo importado de cada tipo (FileSystemFileHandle do Chrome/Edge), para "Reimportar
- * bases" ler de novo o mesmo arquivo. Tipo 'alca-<tipo>'. null apaga (importado sem referência).
+ * Cópia do último arquivo importado de cada tipo (Base e Follow-Up, o .xlsx como veio), para "Reimportar
+ * bases" ler de novo sem escolher o arquivo (filial nova no de-para). Tipo 'arquivo-<tipo>'. Ocupa o
+ * tamanho do arquivo (~83 MB a Base, ~11 MB o Follow-Up) e é trocada a cada importação. Também apaga a
+ * referência ao arquivo da versão de 17/11/2026 ('alca-<tipo>'), que não é mais usada.
  */
-export async function salvarAlca(tipo, alca) {
+export async function salvarCopia(tipo, arquivo) {
   try {
-    await transacao('readwrite', (loja) => (alca ? loja.put({ tipo: `alca-${tipo}`, alca }) : loja.delete(`alca-${tipo}`)));
+    await transacao('readwrite', (loja) => {
+      loja.delete(`alca-${tipo}`);
+      return loja.put({ tipo: `arquivo-${tipo}`, arquivo, salvoEm: Date.now() });
+    });
     return true;
   } catch {
-    return false; // referência de mentira (testes) ou navegador sem o recurso: fica só na memória da página
+    return false; // sem espaço ou navegador bloqueando: a cópia fica só enquanto a página estiver aberta
   }
 }
 
@@ -124,7 +129,7 @@ export function juntarAoHistorico(pontos, ponto, max = 30) {
   return [...(pontos ?? []).filter((p) => p.dia !== ponto.dia), ponto].sort((a, b) => a.dia - b.dia).slice(-max);
 }
 
-/** { base?, followUp?, 'base-anterior'?, historico?, contratos?, 'alca-<tipo>'? } com { brutos, meta, salvoEm }; vazio se não houver nada ou o navegador bloquear. */
+/** { base?, followUp?, 'base-anterior'?, historico?, contratos?, 'arquivo-<tipo>'? } com { brutos, meta, salvoEm }; vazio se não houver nada ou o navegador bloquear. */
 export async function lerImportacoes() {
   try {
     const todas = await transacao('readonly', (loja) => loja.getAll());

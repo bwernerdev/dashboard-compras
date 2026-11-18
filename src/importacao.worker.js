@@ -12,6 +12,7 @@ self.onmessage = async (ev) => {
   try {
     const resultado = await importar(tipo, arquivo, criarConfig(config ?? undefined), {
       hoje,
+      copiar: false, // a tela já mandou a cópia na memória (src/main.js)
       aoAvancar(fracao, fase) {
         const agora = Date.now();
         if (fracao < 1 && agora - ultimoEnvio < 80) return; // no máximo ~12 avisos por segundo
