@@ -27,7 +27,7 @@ export function situacaoDaBase(dados) {
 
 /**
  * estado: { base?, followUp?, contratos? } (dados atuais, para mostrar a situação).
- * aoImportar(tipo, arquivo, aoAvancar) -> Promise (rejeita com a mensagem de erro).
+ * aoImportar(tipo, arquivo, aoAvancar, sinal) -> Promise (rejeita com a mensagem de erro; "Cancelar" aborta o sinal).
  */
 export function caixasDeImportacao({ estado, aoImportar }) {
   return el('section', { class: 'importacao', 'aria-label': 'Arquivos do ME' }, ARQUIVOS.map((a) => {
@@ -35,14 +35,25 @@ export function caixasDeImportacao({ estado, aoImportar }) {
     const status = el('span', { class: 'arquivo-status', 'aria-live': 'polite' },
       situacao ?? a.vazio);
     const barra = el('progress', { max: '1', value: '0', hidden: true });
-    const entrada = el('input', { type: 'file', accept: '.xlsx', dataset: { tipo: a.tipo } });
+    // Nome próprio: o rótulo em volta também tem o botão Cancelar, que não deve entrar no nome do campo.
+    const entrada = el('input', { type: 'file', accept: '.xlsx', 'aria-label': `${a.titulo}: ${a.dica}`, dataset: { tipo: a.tipo } });
+    // Contratos é lido de uma vez, sem worker: não há o que cancelar.
+    const cancelar = a.tipo === 'contratos' ? null
+      : el('button', { type: 'button', class: 'botao botao-link arquivo-cancelar', hidden: true }, 'Cancelar');
     const caixa = el('label', { class: 'arquivo', dataset: { tipo: a.tipo, estado: situacao ? 'ok' : '' } },
       el('span', { class: 'arquivo-titulo' }, a.titulo),
       el('span', { class: 'arquivo-dica' }, a.dica),
-      entrada, status, barra);
+      entrada, status, barra, cancelar);
+
+    let controle = null; // AbortController da leitura em andamento; null = caixa livre
+    cancelar?.addEventListener('click', (ev) => { ev.preventDefault(); controle?.abort(); });
 
     const carregar = async (arquivo) => {
+      if (controle) return; // já lendo: o segundo arquivo não corre junto com o primeiro
+      controle = new AbortController();
       caixa.dataset.estado = 'lendo';
+      entrada.disabled = true;
+      if (cancelar) cancelar.hidden = false;
       status.textContent = `Lendo ${arquivo.name}...`;
       barra.hidden = false;
       barra.value = 0;
@@ -50,20 +61,23 @@ export function caixasDeImportacao({ estado, aoImportar }) {
         const dados = await aoImportar(a.tipo, arquivo, (fracao, fase) => {
           barra.value = fracao;
           status.textContent = `${fase}: ${Math.round(fracao * 100)}%`;
-        });
+        }, controle.signal);
         caixa.dataset.estado = 'ok';
         status.textContent = `${situacaoDaBase(dados)} · ${(dados.meta.duracaoMs / 1000).toFixed(1)} s`;
       } catch (erro) {
         caixa.dataset.estado = 'erro';
         status.textContent = erro.message;
       } finally {
+        controle = null;
+        entrada.disabled = false;
+        if (cancelar) cancelar.hidden = true;
         barra.hidden = true;
         entrada.value = '';
       }
     };
 
     entrada.addEventListener('change', () => { if (entrada.files[0]) carregar(entrada.files[0]); });
-    caixa.addEventListener('dragover', (ev) => { ev.preventDefault(); caixa.classList.add('arrastando'); });
+    caixa.addEventListener('dragover', (ev) => { ev.preventDefault(); if (!controle) caixa.classList.add('arrastando'); });
     caixa.addEventListener('dragleave', () => caixa.classList.remove('arrastando'));
     caixa.addEventListener('drop', (ev) => {
       ev.preventDefault();

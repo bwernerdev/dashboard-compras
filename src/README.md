@@ -9,8 +9,8 @@
 | `atendidas.js` | SCs marcadas como atendidas (olho/duplo clique na lista da Regional): `estaAtendida`, `marcarAtendida`. No localStorage deste navegador, por Solicitação; vence em 120 dias. Só o app da equipe liga (`ligarAtendidas`) |
 | `preferencias.js` | Estado lembrado no localStorage (aba, tema, filtros, larguras e colunas das tabelas, recortes das telas): `lerPreferencia`/`salvarPreferencia` (texto), `lerEscolha` (alternadores: só vale opção válida), `lerConjunto`/`salvarConjunto` (recortes de Status), `lerJson`/`salvarJson` (objetos). Com try/catch: inválido, estragado ou sem armazenamento (quadro do SharePoint) = padrão. Usado pelo app e pelo painel |
 | `painel/` | Painel publicado (`painel-compras.html`): dados públicos, entrada, modelo e geração. Ver `painel/README.md` |
-| `importacao.js` | Ponte tela ↔ worker (`importarNoWorker`) |
-| `importacao.worker.js` | Worker: roda `importar` fora da thread da tela e manda o progresso |
+| `importacao.js` | Ponte tela ↔ worker (`importarNoWorker`): cancelar pelo `sinal` (rejeita na hora; sem outra importação, encerra o worker); worker que cai (`onerror`, `onmessageerror`) rejeita as importações pendentes e é recriado na próxima |
+| `importacao.worker.js` | Worker: roda `importar` fora da thread da tela e manda o progresso (limite de avisos por importação); `{ cancelar: id }` aborta aquela importação |
 | `importar.js` | Importação de um relatório: copia o arquivo para a memória (`leitor/arquivo.js`; `copiar: false` no worker, que já recebe a cópia da tela), lê por fluxo, descarta filiais fora do de-para, converte tipos, aplica `regras.js`. Roda no worker e no Node (scripts e testes) |
 | `esquema.js` | Colunas lidas de cada relatório (`BASE`, `FOLLOW_UP`), pelo nome do cabeçalho, com o tipo (`@type {const}`: viram os tipos dos registros) |
 | `tipos.d.ts` | Só para `npm run tipos` (não entra no build): `LinhaBase`/`LinhaFollowUp` (de `esquema.js`), `Registro`/`RegistroFollowUp` (retorno de `calcularLinhaBase`/`calcularLinhaFollowUp`), `Linha` (qualquer das duas), `Config`. Usados em JSDoc em `regras.js`, `analise.js` e `painel/dados.js` (`// @ts-check`) |

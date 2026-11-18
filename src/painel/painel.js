@@ -72,28 +72,27 @@ function ligarContratos(contratos, registros) {
 
 async function iniciar() {
   substituir(raiz.conteudo, esqueleto('Abrindo os dados do painel...'));
-  let dados;
+  // Qualquer erro até a primeira tela (dados, versão, desenho) vira aviso: senão o esqueleto ficava para sempre.
   try {
-    dados = await descompactar(document.getElementById('dados').textContent);
+    const dados = await descompactar(document.getElementById('dados').textContent);
+    const registros = registrosDoPainel(dados);
+    const nav = criarNavegador({
+      telas: TELAS_PUBLICAS,
+      raiz,
+      abaInicial: lerPreferencia('aba-painel') ?? 'regional',
+      aoTrocarAba: (id) => salvarPreferencia('aba-painel', id),
+      chaveFiltros: 'filtros-painel',
+      telaVazia: () => el('div', { class: 'estado-vazio' }, 'O painel não tem linhas.'),
+    });
+    nav.definirRegistros(registros);
+    ligarContratos(contratosDoPainel(dados), registros);
+    nav.definirFollowUp(followUpDoPainel(dados));
+    nav.definirPeriodo(dados.periodo);
+    mostrarPeriodo(dados);
+    nav.desenhar();
   } catch (erro) {
-    substituir(raiz.conteudo, el('div', { class: 'estado-vazio' }, `Não foi possível abrir os dados do painel (${erro.message}). Gere o painel de novo no app.`));
-    return;
+    substituir(raiz.conteudo, el('div', { class: 'estado-vazio' }, `Não foi possível abrir os dados do painel (${erro?.message ?? erro}). Gere o painel de novo no app.`));
   }
-  const nav = criarNavegador({
-    telas: TELAS_PUBLICAS,
-    raiz,
-    abaInicial: lerPreferencia('aba-painel') ?? 'regional',
-    aoTrocarAba: (id) => salvarPreferencia('aba-painel', id),
-    chaveFiltros: 'filtros-painel',
-    telaVazia: () => el('div', { class: 'estado-vazio' }, 'O painel não tem linhas.'),
-  });
-  const registros = registrosDoPainel(dados);
-  nav.definirRegistros(registros);
-  ligarContratos(contratosDoPainel(dados), registros);
-  nav.definirFollowUp(followUpDoPainel(dados));
-  nav.definirPeriodo(dados.periodo);
-  mostrarPeriodo(dados);
-  nav.desenhar();
 }
 
 iniciar();

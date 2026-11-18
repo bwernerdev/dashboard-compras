@@ -1,8 +1,9 @@
 // "Gerar painel": baixa o painel-compras.html e abre como arquivo e dentro de um quadro isolado
 // (igual à pré-visualização do SharePoint: iframe sandbox, srcdoc, sem armazenamento nem download).
 import { test, expect } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
+import { gzipSync } from 'node:zlib';
 import { arquivoBase, arquivoFollowUp, arquivoContratos, COMPRADOR } from './ajuda/bases.js';
 import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
 
@@ -87,6 +88,14 @@ test('painel aberto como arquivo: telas públicas (sem Compradores), sem dados i
   expect(dados).not.toContain('PP-1');
   expect(dados).not.toContain('numeroPrePedido');
   if (COMPRADOR.nome && COMPRADOR.nome !== COMPRADOR.apelido) expect(dados).not.toContain(COMPRADOR.nome);
+  expect(erros).toEqual([]);
+
+  // Dados de outra versão: aviso no lugar do esqueleto (o erro vem depois de descompactar).
+  const outraVersao = gzipSync(JSON.stringify({ versao: 0 })).toString('base64');
+  const caminhoRuim = info.outputPath('painel-outra-versao.html');
+  await writeFile(caminhoRuim, html.replace(/(<script id="dados" type="text\/plain">)[^<]*(<\/script>)/, (_, a, b) => `${a}${outraVersao}${b}`));
+  await painel.goto(pathToFileURL(caminhoRuim).href);
+  await expect(painel.locator('#conteudo .estado-vazio')).toContainText('Não foi possível abrir os dados do painel (Versão de dados desconhecida: 0)');
   expect(erros).toEqual([]);
 });
 

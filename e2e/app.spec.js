@@ -101,6 +101,45 @@ async function soltarNaCaixa(page, tipo, { name: nome, buffer }) {
   }, [tipo, nome, [...buffer]]);
 }
 
+// Worker de importação trocado por um de teste (rota do arquivo gerado pelo build em assets/).
+const WORKER = '**/importacao.worker-*.js';
+
+test('worker que cai: a caixa mostra o erro e a próxima importação funciona', async ({ page }) => {
+  await page.route(WORKER, (rota) => rota.fulfill({ contentType: 'text/javascript', body: 'throw new Error("worker de teste caiu");' }));
+  await page.goto('./');
+  const caixa = page.locator('.arquivo[data-tipo="base"]');
+  await page.locator('input[data-tipo="base"]').setInputFiles(await arquivoBase());
+  await expect(caixa).toHaveAttribute('data-estado', 'erro');
+  await expect(caixa.locator('.arquivo-status')).toContainText('A leitura parou');
+  await expect(page.locator('input[data-tipo="base"]')).toBeEnabled();
+  await page.unroute(WORKER);
+  await page.locator('input[data-tipo="base"]').setInputFiles(await arquivoBase());
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
+});
+
+test('importação travada: caixa bloqueada enquanto lê, "Cancelar" libera e a próxima funciona', async ({ page }) => {
+  await page.route(WORKER, (rota) => rota.fulfill({ contentType: 'text/javascript', body: 'self.onmessage = () => {};' }));
+  await page.goto('./');
+  const caixa = page.locator('.arquivo[data-tipo="base"]');
+  const entrada = page.locator('input[data-tipo="base"]');
+  await entrada.setInputFiles(await arquivoBase());
+  await expect(caixa).toHaveAttribute('data-estado', 'lendo');
+  await expect(entrada).toBeDisabled();
+  // Outra caixa de Base (diálogo "Atualizar bases") não corre junto com a primeira.
+  await page.locator('#acao-importar').click();
+  await page.locator('dialog input[data-tipo="base"]').setInputFiles(await arquivoBase());
+  await expect(page.locator('dialog .arquivo[data-tipo="base"] .arquivo-status')).toContainText('Já há uma importação de Base em andamento');
+  await page.locator('dialog').getByRole('button', { name: 'Fechar' }).last().click();
+  await caixa.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(caixa).toHaveAttribute('data-estado', 'erro');
+  await expect(caixa.locator('.arquivo-status')).toHaveText('Importação cancelada.');
+  await expect(caixa.getByRole('button', { name: 'Cancelar' })).toBeHidden();
+  await expect(entrada).toBeEnabled();
+  await page.unroute(WORKER);
+  await entrada.setInputFiles(await arquivoBase());
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
+});
+
 test('arrastar o arquivo para a caixa importa', async ({ page }) => {
   await page.goto('./');
   await soltarNaCaixa(page, 'base', await arquivoBase());

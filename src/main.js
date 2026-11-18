@@ -137,13 +137,23 @@ function lembrarArquivo(tipo, arquivo) {
  * arquivo para a memória numa leitura só ("Copiando o arquivo": pasta de rede no Citrix ficava lenta
  * com o leitor pulando entre partes); a cópia vai ao worker e fica guardada para "Reimportar bases".
  */
-async function importar(tipo, arquivo, aoAvancar) {
-  const copia = arquivo === estado.copias[tipo]?.arquivo ? arquivo
-    : await copiarParaMemoria(arquivo, { aoAvancar: (f) => aoAvancar?.(f, 'Copiando o arquivo') });
-  const dados = await importarSemLembrar(tipo, copia, aoAvancar);
-  lembrarArquivo(tipo, copia);
-  return dados;
+async function importar(tipo, arquivo, aoAvancar, sinal) {
+  // Uma importação por tipo: a caixa da tela vazia, a do diálogo e o Reimportar não correm juntas
+  // (a que terminasse por último venceria, mesmo sendo o arquivo mais antigo).
+  if (importando.has(tipo)) throw new Error(`Já há uma importação de ${ROTULOS[tipo] ?? 'Contratos'} em andamento: espere ela terminar ou cancele.`);
+  importando.add(tipo);
+  try {
+    const copia = arquivo === estado.copias[tipo]?.arquivo ? arquivo
+      : await copiarParaMemoria(arquivo, { sinal, aoAvancar: (f) => aoAvancar?.(f, 'Copiando o arquivo') });
+    const dados = await importarSemLembrar(tipo, copia, aoAvancar, sinal);
+    lembrarArquivo(tipo, copia);
+    return dados;
+  } finally {
+    importando.delete(tipo);
+  }
 }
+
+const importando = new Set();
 
 const ROTULOS = { base: 'Base', followUp: 'Follow-Up' };
 
@@ -190,10 +200,10 @@ async function reimportarBases(aoAvancar) {
   return resultado;
 }
 
-async function importarSemLembrar(tipo, arquivo, aoAvancar) {
+async function importarSemLembrar(tipo, arquivo, aoAvancar, sinal) {
   if (tipo === 'contratos') return importarContratos(arquivo);
   const hoje = hojeSerie();
-  const resultado = await importarNoWorker(tipo, arquivo, { hoje, config: estado.config, aoAvancar });
+  const resultado = await importarNoWorker(tipo, arquivo, { hoje, config: estado.config, aoAvancar, sinal });
   const dados = { registros: resultado.registros, brutos: brutosDe(tipo, resultado.registros), meta: resultado.meta, salvoEm: Date.now() };
   if (tipo === 'base' && estado.base && diaDaBase(estado.base.meta) < diaDaBase(resultado.meta)) {
     estado.anterior = { brutos: estado.base.brutos, meta: estado.base.meta, salvoEm: estado.base.salvoEm };
