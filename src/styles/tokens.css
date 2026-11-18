@@ -45,7 +45,7 @@
 
   --line: #e2e5ea;
   --line-strong: #c9ced6;
-  --control-border: #9aa1ab;
+  --control-border: #7f8692; /* >= 3:1 em surface, surface-2 e bg (WCAG 1.4.11); teste de contraste */
 
   --accent: #2f5bd3;
   --accent-hover: #2749ad;
@@ -62,7 +62,7 @@
   --recolhida-bg: #d9d9d9; /* cinza da planilha */
   --warning-fg: #9a6700;
   --warning-bg: #fff7e0;
-  --success-fg: #1a7f37;
+  --success-fg: #177533; /* >= 4.5:1 sobre --success-bg */
   --success-bg: #e3f4e8;
   --neutral-fg: #5f6672;
   --neutral-bg: #f1f3f5;
@@ -133,7 +133,7 @@ html[data-theme="dark"] {
 
   --line: #2e333c;
   --line-strong: #454c58;
-  --control-border: #5c6470;
+  --control-border: #6f7784; /* >= 3:1 nas superfícies escuras */
 
   --accent: #6b93f0;
   --accent-hover: #86a7f3;

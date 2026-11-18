@@ -16,6 +16,7 @@
 | `tabela-xlsx.test.js` | "Exportar Excel" (`src/ui/tabela-xlsx.js`): a planilha abre no leitor do app, número e data como número, % e R$ com formato do Excel, sem coluna de controle, cabeçalho congelado com filtro, nome de aba aceito pelo Excel |
 | `contratos.test.js` | Planilha de contratos (`src/contratos/`): cabeçalho abaixo do título, quadros com título, Renovações ignorada, vencimento da aba ME, prazo, cartões (sem INATIVO), filial ajustada, abas que faltam e arquivo errado |
 | `cores-planilha.test.js` | Cores da planilha antiga por status, prioridade e % saving; status separados no gráfico |
+| `contraste.test.js` | Contraste WCAG dos tokens (`src/styles/tokens.css`) nos dois temas: texto e selos >= 4,5:1, borda de campo >= 3:1 sobre `surface`, `surface-2` e `bg`. O `../giro-estoque` tem o mesmo teste |
 | `ajuda/` | Gerador de `.xlsx` em memória para os testes (também usado pelo `e2e/`) |
 
 Testes no navegador: `npm run test:e2e` (ver `e2e/`).

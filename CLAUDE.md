@@ -52,7 +52,7 @@ PÚBLICO `github.com/bwernerdev/dashboard-compras` (branch `main`), por decisão
 ## Convenções
 - Cada pasta tem um `README.md` com o mapa dos seus arquivos. Criou pasta: crie o README. Mudou arquivo: atualize o README da pasta.
 - Textos de interface e documentação em português do Brasil.
-- Seguir o padrão do `../giro-estoque` (tokens CSS, `node --test`, Playwright na fase 2).
+- Seguir o padrão do `../giro-estoque` (tokens CSS, `node --test`, Playwright na fase 2). Contraste dos tokens conferido em `tests/contraste.test.js` (texto 4,5:1, borda de campo 3:1, nos dois temas); o giro tem o mesmo teste, então cor compartilhada muda nos dois.
 - Regras de negócio só em `src/regras.js`; contas das telas só em `src/analise.js`; a UI não as reimplementa. Mudou regra: teste em `tests/regras.test.js`, `npm run conferir` e `PROJETO.md` seção 3.
 - Fidelidade à planilha antiga: célula vazia = 0 em conta; `""` não é vazia; comparação de texto sem maiúsculas; texto > número. Única correção aprovada: o erro de referência (PROJETO.md seção 2). Diferença de de-para pedida: Itajaí em HUB/Fatiados/CD (`NOMES_ANTIGOS` em `src/config/index.js`; o `conferir` usa os nomes antigos).
 - Testes só com dados fictícios. Dados reais só em scripts locais.
