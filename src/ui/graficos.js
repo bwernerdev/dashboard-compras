@@ -8,7 +8,8 @@ import { ligarDica } from './dica.js';
 
 /**
  * Barras horizontais de uma série.
- * itens: [{ id, rotulo, valor, detalhe? }]; formato(valor) -> texto.
+ * itens: [{ id, rotulo, valor, detalhe?, cor? }]; formato(valor) -> texto.
+ * cor: cor fixa da categoria (status), a mesma da legenda e da tabela; sem cor, a da série única.
  * aoClicar(id) opcional: cada barra vira botão (filtra); selecionado: id realçado.
  */
 export function barras({ itens, formato, aoClicar, selecionado = null, rotuloSerie = '' }) {
@@ -27,7 +28,7 @@ export function barras({ itens, formato, aoClicar, selecionado = null, rotuloSer
     },
     el('span', { class: 'gb-rotulo' }, item.rotulo),
     el('span', { class: 'gb-trilho' },
-      el('span', { class: 'gb-barra', style: { width: `${largura}%` } }),
+      el('span', { class: 'gb-barra', style: { width: `${largura}%`, background: item.cor ?? null } }),
       el('span', { class: 'gb-valor' }, formato(item.valor))));
     ligarDica(linha, item.rotulo, () => [
       { valor: formato(item.valor), rotulo: rotuloSerie },

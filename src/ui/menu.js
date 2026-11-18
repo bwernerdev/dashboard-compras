@@ -1,11 +1,12 @@
-// Menu de ações com nome (ex.: "Exportar ▾" no topo do app: Gerar painel e Imprimir).
+// Menu de ações com nome (ex.: "Exportar ▾" no topo do app: Gerar painel e Imprimir; "⋯" das tabelas).
+// Itens: role menuitem ou menuitemcheckbox.
 // O botão abre/fecha a lista; os itens são os próprios botões de ação (mesmos ids e eventos de antes).
 // Teclado: setas sobem/descem entre os itens ativos, Home/End, Esc fecha e volta ao botão; clique fora
 // ou num item fecha. Só no app da equipe (o painel publicado tem só Imprimir, sem menu).
 
 /** botao: abre o menu; painel: elemento com os itens (role=menu, hidden). */
 export function ligarMenu(botao, painel) {
-  const itens = () => [...painel.querySelectorAll('[role="menuitem"]')].filter((i) => !i.disabled && !i.hidden);
+  const itens = () => [...painel.querySelectorAll('[role^="menuitem"]')].filter((i) => !i.disabled && !i.hidden);
   const aberto = () => !painel.hidden;
 
   function fechar(focarBotao = false) {
@@ -47,9 +48,12 @@ export function ligarMenu(botao, painel) {
     lista[j].focus();
   });
   // Escolheu um item: fecha (a ação do item roda pelo evento dele).
-  painel.addEventListener('click', (ev) => { if (ev.target.closest('[role="menuitem"]')) fechar(); });
-  document.addEventListener('pointerdown', (ev) => {
+  painel.addEventListener('click', (ev) => { if (ev.target.closest('[role^="menuitem"]')) fechar(); });
+  // Menus das tabelas são recriados a cada desenho: o ouvinte sai quando o menu deixa a página.
+  const fora = (ev) => {
+    if (!painel.isConnected && !botao.isConnected) { document.removeEventListener('pointerdown', fora); return; }
     if (aberto() && !painel.contains(ev.target) && !botao.contains(ev.target)) fechar();
-  });
+  };
+  document.addEventListener('pointerdown', fora);
   return { fechar };
 }

@@ -1,12 +1,13 @@
 // Tabela com ordenação por coluna, pesquisa, paginação, linha de total, "Copiar tabela" e "Exportar Excel".
 // Partes em módulos próprios: tabela-exportar.js (copiar, baixar), tabela-xlsx.js (Excel), tabela-larguras.js (larguras e
 // caber na largura), tabela-colunas.js (colunas ocultas), tabela-densidade.js (botão "Compacta").
-import { el, substituir, novoId } from './dom.js';
+import { el, substituir, novoId, icone } from './dom.js';
 import { textoDaCelula, exportaveis, gerarTsv, baixar, copiarTexto, podeExportar } from './tabela-exportar.js';
 import { gerarXlsx, TIPO_XLSX } from './tabela-xlsx.js';
 import { criarLarguras, criarAjuste } from './tabela-larguras.js';
 import { criarColunasOcultas } from './tabela-colunas.js';
-import { botaoDensidade } from './tabela-densidade.js';
+import { itemDensidade } from './tabela-densidade.js';
+import { ligarMenu } from './menu.js';
 import { lerConjunto, salvarConjunto } from '../preferencias.js';
 
 // Um comparador só (criar o Intl a cada comparação, como no localeCompare, custava ~1 s na lista
@@ -41,7 +42,8 @@ const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '
  *            semDuploClique?: bool (clique e dois cliques nessa coluna não disparam aoClicarLinha nem
  *            aoDuploClique: servem para selecionar o texto e copiar),
  *            controle?: bool (coluna de botão: sem ordenar, fora do Excel, do "Copiar" e da pesquisa;
- *            o rótulo só para leitor de tela) }]
+ *            o rótulo só para leitor de tela),
+ *            fixa?: bool (nunca encolhe em caberNaLargura: valores em R$) }]
  * opções: titulo (legenda acessível), ordem { coluna, desc }, porPagina, pesquisa, nomeArquivo,
  *         rodape(linhas) -> [texto por coluna], vazio (texto sem linhas, ou função que o devolve), aoClicarLinha(linha),
  *         aoDuploClique(linha), classeLinha(linha) -> string,
@@ -84,9 +86,20 @@ export function criarTabela(opcoes) {
     oninput: (ev) => { estado.termo = normalizar(ev.target.value); estado.pagina = 0; render(); },
   }) : null;
   const contagem = el('span', { class: 'tabela-contagem', 'aria-live': 'polite' });
+  // Ações da barra (18/11/2026): uma ação à vista ("Excel"; onde não há download, "Copiar tabela") e o
+  // resto no menu "⋯" (Copiar tabela, Linhas compactas, Larguras originais). Antes eram três botões
+  // de texto repetidos em toda tabela. O aviso de "Copiado" fica num status ao lado.
   // nomeArquivo segue terminando em .csv: é a chave das larguras e colunas salvas no navegador.
+  const aviso = el('span', { class: 'tabela-aviso', role: 'status' });
+  async function copiar() {
+    const ok = await copiarTexto(gerarTsv(colunas, linhasVisiveis()));
+    aviso.textContent = ok ? 'Copiado: cole no Excel' : 'Não foi possível copiar';
+    clearTimeout(aviso.relogio);
+    aviso.relogio = setTimeout(() => { aviso.textContent = ''; }, 2500);
+  }
+  const TITULO_COPIAR = 'Copia as linhas filtradas para colar no Excel';
   const botaoExcel = podeExportar() ? el('button', {
-    type: 'button', class: 'botao botao-sec botao-pequeno', title: 'Baixa as linhas filtradas numa planilha do Excel',
+    type: 'button', class: 'botao botao-sec botao-pequeno', 'aria-label': 'Exportar Excel', title: 'Baixa as linhas filtradas numa planilha do Excel',
     onclick: async () => {
       botaoExcel.disabled = true;
       try {
@@ -96,16 +109,20 @@ export function criarTabela(opcoes) {
         botaoExcel.disabled = false;
       }
     },
-  }, 'Exportar Excel') : null;
-  const botaoCopiar = el('button', {
-    type: 'button', class: 'botao botao-sec botao-pequeno', title: 'Copia as linhas filtradas para colar no Excel',
-    onclick: async () => {
-      const ok = await copiarTexto(gerarTsv(colunas, linhasVisiveis()));
-      botaoCopiar.textContent = ok ? 'Copiado: cole no Excel' : 'Não foi possível copiar';
-      clearTimeout(botaoCopiar.relogio);
-      botaoCopiar.relogio = setTimeout(() => { botaoCopiar.textContent = 'Copiar tabela'; }, 2500);
-    },
-  }, 'Copiar tabela');
+  }, icone('baixar', 14), 'Excel') : null;
+  const botaoCopiar = botaoExcel ? null : el('button', {
+    type: 'button', class: 'botao botao-sec botao-pequeno', title: TITULO_COPIAR, onclick: copiar,
+  }, icone('copiar', 14), 'Copiar tabela');
+  const idMenu = novoId('menutab');
+  const botaoMais = el('button', {
+    type: 'button', class: 'botao botao-sec botao-pequeno botao-mais', 'aria-controls': idMenu,
+    'aria-label': `Mais ações: ${titulo}`, title: 'Mais ações da tabela',
+  }, icone('mais', 16));
+  const painelMais = el('div', { id: idMenu, class: 'menu-painel', role: 'menu', 'aria-label': `Ações: ${titulo}`, hidden: true },
+    botaoExcel ? el('button', { type: 'button', class: 'menu-item', role: 'menuitem', title: TITULO_COPIAR, onclick: copiar }, 'Copiar tabela') : null,
+    itemDensidade());
+  ligarMenu(botaoMais, painelMais);
+  const menuMais = el('div', { class: 'menu' }, botaoMais, painelMais);
 
   const cabeca = el('thead');
   const corpo = el('tbody');
@@ -115,9 +132,10 @@ export function criarTabela(opcoes) {
 
   // Larguras, colunas ocultas e caber na largura (cada uma chama ajuste.pedir ao mudar).
   const larguras = criarLarguras({ colunas, idTabela, indice, nomeArquivo, cabeca, corpo, aoMudar: () => ajuste.pedir() });
+  painelMais.append(larguras.botao); // "Larguras originais" no menu "⋯" (só com largura ajustada)
   const ocultas = criarColunasOcultas({ colunas, idTabela, indice, nomeArquivo, escolher: escolherColunas, aoMudar: () => ajuste.pedir() });
   /** Encolhem só as de texto que aceitam reticências (texto-longo/medio) e as com largura salva. */
-  const encolhivel = (c) => c.id !== larguras.ultimaAjustada() && (larguras.larguras.has(c.id)
+  const encolhivel = (c) => !c.fixa && c.id !== larguras.ultimaAjustada() && (larguras.larguras.has(c.id)
     || /texto-(longo|medio)/.test((estado.linhas[0] && c.classe?.(estado.linhas[0])) || ''));
   const ajuste = criarAjuste({
     ativo: caberNaLargura, colunas, idTabela, indice, tabela, cabeca, visivel: (c) => !ocultas.oculta(c.id), encolhivel,
@@ -252,7 +270,7 @@ export function criarTabela(opcoes) {
 
   const elemento = el('div', { class: 'tabela-bloco' },
     larguras.estilo, ocultas.estilo, ajuste.estilo,
-    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, larguras.botao, ocultas.botao, botaoDensidade(), botaoCopiar, botaoExcel),
+    el('div', { class: 'tabela-barra' }, campoPesquisa, contagem, aviso, ocultas.botao, botaoExcel ?? botaoCopiar, menuMais),
     ajuste.rolagem,
     paginacao);
 

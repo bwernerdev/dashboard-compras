@@ -102,8 +102,9 @@ export function criarLarguras({ colunas, idTabela, indice, nomeArquivo, cabeca, 
     return elemento;
   }
 
+  // Item do menu "⋯" da tabela (só aparece com alguma largura ajustada).
   const botao = el('button', {
-    type: 'button', class: 'botao botao-sec botao-pequeno', title: 'Volta todas as colunas à largura automática',
+    type: 'button', class: 'menu-item', role: 'menuitem', title: 'Volta todas as colunas à largura automática',
     onclick: () => { larguras.clear(); aplicar(); guardar(); },
   }, 'Larguras originais');
 

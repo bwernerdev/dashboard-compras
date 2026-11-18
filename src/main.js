@@ -25,7 +25,7 @@ import { caixasDeImportacao } from './telas/importacao.js';
 import { abrirConfiguracao } from './telas/configuracao.js';
 import { TELAS_PUBLICAS, reiniciarTelas } from './telas/publicas.js';
 import { ligarAtendidas } from './telas/regional.js';
-import { telaCompradores } from './telas/compradores.js';
+import { telaCompradores, filtrosCompradores } from './telas/compradores.js';
 import { gerarPainel, NOME_DO_ARQUIVO } from './painel/gerar.js';
 
 ligarAtendidas(); // olho "atendida" na lista de SCs: só no app da equipe, não no painel publicado
@@ -33,7 +33,7 @@ ligarAtendidas(); // olho "atendida" na lista de SCs: só no app da equipe, não
 // Ordem das abas da planilha antiga; SCs por Comprador (interna) depois da Regional. As internas
 // não vão para o painel. A aba Hoje saiu em 12/11/2026 (pedido da equipe).
 const TELAS = [...TELAS_PUBLICAS.flatMap((t) => (t.id === 'regional'
-  ? [t, { id: 'compradores', rotulo: 'SCs por Comprador', desenhar: telaCompradores }]
+  ? [t, { id: 'compradores', rotulo: 'SCs por Comprador', desenhar: telaCompradores, filtrosExtras: filtrosCompradores }]
   : [t]))];
 
 const configSalva = atualizarConfigSalva(lerConfig());

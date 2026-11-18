@@ -183,6 +183,8 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
       opcoes: estado.opcoes,
       aoMudar: (id, valores) => { estado.selecao[id] = valores; guardarSelecao(); agendarTela(); },
       aoLimpar: limparFiltros,
+      // Filtro só da tela (ex.: Período de SCs por Comprador): a tela muda o próprio estado e redesenha.
+      extras: telas.find((t) => t.id === estado.aba)?.filtrosExtras?.({ registros: estado.registros, redesenhar: desenharTela }) ?? [],
     }));
   }
 

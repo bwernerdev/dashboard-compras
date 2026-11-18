@@ -111,6 +111,7 @@ html.topo-compacto #periodo.selo-alerta[data-curto]::before { content: attr(data
 .tela { display: flex; flex-direction: column; gap: var(--s4); }
 .grade-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); align-items: start; }
 .grade-2-3 { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+.grade-esticada { align-items: stretch; } /* blocos lado a lado com a mesma altura (Spend, Saving) */
 .pilha { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
 
 @media (max-width: 1100px) {

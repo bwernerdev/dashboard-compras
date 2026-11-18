@@ -1,5 +1,6 @@
-// Densidade das tabelas (todas de uma vez): "Compacta" tira respiro das linhas. Lembrada no navegador.
-import { el } from './dom.js';
+// Densidade das tabelas (todas de uma vez): "Linhas compactas" (menu "⋯" de cada tabela) tira respiro
+// das linhas. Lembrada no navegador.
+import { el, icone } from './dom.js';
 import { lerPreferencia, salvarPreferencia } from '../preferencias.js';
 
 const CLASSE_COMPACTA = 'densidade-compacta';
@@ -16,15 +17,15 @@ function trocarDensidade() {
   const compacta = !ehCompacta();
   document.documentElement.classList.toggle(CLASSE_COMPACTA, compacta);
   salvarPreferencia('densidade', compacta ? 'compacta' : 'confortavel');
-  for (const b of document.querySelectorAll('.botao-densidade')) b.setAttribute('aria-pressed', String(compacta));
+  for (const b of document.querySelectorAll('.item-densidade')) b.setAttribute('aria-checked', String(compacta));
 }
 
-/** Botão "Compacta" da barra da tabela (aplica a densidade salva na primeira tabela). */
-export function botaoDensidade() {
+/** Item "Linhas compactas" do menu da tabela (aplica a densidade salva na primeira tabela). */
+export function itemDensidade() {
   lerDensidade();
   return el('button', {
-    type: 'button', class: 'botao botao-sec botao-pequeno botao-densidade', 'aria-pressed': String(ehCompacta()),
+    type: 'button', class: 'menu-item item-densidade', role: 'menuitemcheckbox', 'aria-checked': String(ehCompacta()),
     title: 'Linhas mais baixas: cabem mais na tela (vale para todas as tabelas, lembrado neste navegador)',
     onclick: trocarDensidade,
-  }, 'Compacta');
+  }, el('span', { class: 'menu-marca' }, icone('check', 14)), 'Linhas compactas');
 }

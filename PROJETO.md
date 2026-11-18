@@ -382,7 +382,7 @@ Pedido da equipe: tudo o que as abas visíveis da planilha mostram precisa estar
     - **Topo compacto** ao rolar: título, abas e emblema numa linha só; volta ao topo, expande.
     - **Barras** com gradiente e animação de crescer ao abrir a aba (sem animação com "reduzir movimento").
     - **Comparação de períodos** em Spend e Saving: mês (ou trimestre) atual até o dia de hoje contra o mesmo trecho do anterior, pela data do pedido. Ignora o filtro "Mês do pedido". Painel `VERSAO` 7 (leva `dataPedido`).
-    - **Densidade:** botão "Compacta" nas tabelas tira respiro das linhas (todas as tabelas; lembrado no navegador).
+    - **Densidade:** "Linhas compactas" no menu "⋯" das tabelas tira respiro das linhas (todas as tabelas; lembrado no navegador; até 18/11/2026 era o botão "Compacta").
     - Colunas fixas ao rolar para o lado: testadas e retiradas (a equipe não gostou).
     - Clicar na coluna SC não abre o detalhe (serve para selecionar e copiar, como no duplo clique).
   - Recorte de Status das listas (Regional, Status e Entrega) salvo no navegador: volta ao abrir o app (e o painel, onde o navegador deixar guardar) e continua ao importar outra base.
@@ -405,6 +405,7 @@ Pedido da equipe: tudo o que as abas visíveis da planilha mostram precisa estar
 - **Botões dos blocos padronizados (13/11/2026, pedido da equipe):** dentro dos blocos, seletores (Status, Colunas) e botões (Só pendências, Larguras originais, Compacta, Copiar tabela, Exportar Excel, Tela cheia) com o mesmo formato: 28 px, canto de 6 px, fundo cinza, texto 600. A pílula fica só nos filtros da faixa do topo. "Larguras originais" deixou de ser link.
 - **Fontes padronizadas:** uma família (Segoe UI); todos os tamanhos na escala de tokens (setas de 9/10 px, iniciais do organograma e texto de impressão estavam fora); peso 650 virou 700 (a Segoe UI desenhava 700 de qualquer jeito); título do topo subiu para 20 px, acima dos títulos de bloco (16 px).
 - **Listas de marcar como o filtro do Excel** (filtros globais e recortes de status): sem filtro, "Todos" e todas as opções aparecem marcados; desmarcar uma opção tira só ela; desmarcar "Todos" limpa a lista para marcar só o que interessa; marcar "Todos" volta a todas. Antes "Todos" era um botão que só limpava a seleção e ficava desativado sem filtro (parecia não funcionar).
+- **Revisão de UI (18/11/2026):** plural certo nos cartões ("1 item", "1 filial", `fmt.qtd`); barras de status na cor do status (Status e Entrega, iguais à legenda e à tabela) e todas as barras em cor chapada, sem degradê; Atendimento com o nome de cada grupo de botões à vista (SLA, Status Pré-Pedido); "Maior filial" (Spend) mostra o nome da filial e a fatia no detalhe; Spend e Saving com os blocos lado a lado na mesma altura e "Saving por comprador" na largura toda; janela Contratos com CNPJ, setor, observação, status da demanda e encerramento ocultos por padrão e o Valor em R$ nunca cortado; barra das tabelas com "Excel" à vista e o resto no menu "⋯" (Copiar tabela, Linhas compactas, Larguras originais; onde não há download, "Copiar tabela" fica à vista); Período de SCs por Comprador virou um chip na faixa de filtros.
 
 ### Bases de 11/11/2026
 - `npm run conferir`: tudo confere, inclusive a tabela dinâmica Spend, agora calculada com a função da tela (`spendPorFilial`).

@@ -103,17 +103,17 @@ export function telaRegional(ctx) {
 
   const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoEmAberto(itensEmAberto(ctx.anteriores.registros)) : null);
   const cartoes = linhaDeCartoes(
-    cartao({ icone: 'documento', rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.inteiro(resumo.itens)} itens sem pedido e não cancelados`, variacao: vs('scs', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.scs, resumo.scs) }),
+    cartao({ icone: 'documento', rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.qtd(resumo.itens, 'item', 'itens')} sem pedido e não ${resumo.itens === 1 ? 'cancelado' : 'cancelados'}`, variacao: vs('scs', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.scs, resumo.scs) }),
     // SLA conta SCs, como o Atendimento (SC fora = algum item fora).
     cartao({
       icone: 'check', rotulo: 'SLA no prazo', valor: fmt.pct(resumo.pctScsNoPrazo),
-      detalhe: `${fmt.inteiro(resumo.scsNoPrazo)} SCs no prazo, ${fmt.inteiro(resumo.scsFora)} fora`,
+      detalhe: `${fmt.qtd(resumo.scsNoPrazo, 'SC', 'SCs')} no prazo, ${fmt.inteiro(resumo.scsFora)} fora`,
       variacao: vs('pctScsNoPrazo', pontos, 'maior'),
       serie: serieDe(ctx.historico, (p) => p.aberto.pctScsNoPrazo, resumo.pctScsNoPrazo),
     }),
     cartao({
       icone: 'alerta', rotulo: 'SCs fora do prazo', valor: fmt.inteiro(resumo.scsFora), tom: resumo.scsFora ? 'critico' : null,
-      detalhe: `${fmt.inteiro(resumo.fora)} itens com mais de ${PRAZO_SLA_DIAS} dias úteis${resumo.scsSemPrazo ? `; ${fmt.inteiro(resumo.scsSemPrazo)} SCs sem prazo` : ''}`,
+      detalhe: `${fmt.qtd(resumo.fora, 'item', 'itens')} com mais de ${PRAZO_SLA_DIAS} dias úteis${resumo.scsSemPrazo ? `; ${fmt.qtd(resumo.scsSemPrazo, 'SC', 'SCs')} sem prazo` : ''}`,
       variacao: vs('scsFora', fmt.inteiro, 'menor'),
       serie: serieDe(ctx.historico, (p) => p.aberto.scsFora, resumo.scsFora),
     }),

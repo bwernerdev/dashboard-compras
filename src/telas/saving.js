@@ -42,7 +42,7 @@ export function telaSaving(ctx) {
     cartao({ icone: 'carrinho', rotulo: 'Total comprado', valor: fmt.moedaCompacta(r.total), detalhe: `${fmt.moedaCentavos(r.total)} em pedidos c/ impostos` }),
     cartao({ icone: 'moeda', rotulo: 'Economia', valor: fmt.moedaCompacta(r.economia), detalhe: fmt.moedaCentavos(r.economia) }),
     cartao({ icone: 'porcentagem', rotulo: '% Saving', valor: fmt.pctFino(r.pct), detalhe: 'Economia ÷ (total comprado + economia)' }),
-    cartao({ icone: 'lista', rotulo: 'Itens com saving', valor: fmt.inteiro(r.itensComSaving), detalhe: `de ${fmt.inteiro(regs.length)} itens` }),
+    cartao({ icone: 'lista', rotulo: 'Itens com saving', valor: fmt.inteiro(r.itensComSaving), detalhe: `de ${fmt.qtd(regs.length, 'item', 'itens')}` }),
   );
 
   const filiais = bloco(
@@ -102,5 +102,7 @@ export function telaSaving(ctx) {
     ];
   });
 
-  return el('div', { class: 'tela' }, cartoes, comparacao, el('div', { class: 'grade-2' }, filiais, el('div', { class: 'pilha' }, meses, compradores)));
+  // Filial e mês lado a lado na mesma altura; compradores na largura toda (antes ficava empilhado à direita
+  // e sobrava um buraco embaixo de "Economia por filial").
+  return el('div', { class: 'tela' }, cartoes, comparacao, el('div', { class: 'grade-2 grade-esticada' }, filiais, meses), compradores);
 }

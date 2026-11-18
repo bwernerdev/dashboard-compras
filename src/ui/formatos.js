@@ -22,6 +22,8 @@ export const pct = (v) => (vazio(v) ? '-' : fPct.format(v));
 const fPctFino = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 /** % saving costuma ser < 1%: sempre 2 casas (0,03%). */
 export const pctFino = (v) => (vazio(v) ? '-' : fPctFino.format(v));
+/** Quantidade com a palavra no singular ou no plural: qtd(1, 'item', 'itens') -> "1 item". */
+export const qtd = (n, um, varios) => `${inteiro(n)} ${n === 1 ? um : varios}`;
 export const data = (serie) => (vazio(serie) || serie === '' ? '-' : formatarSerie(serie));
 // Partículas que ficam minúsculas no meio do nome (Ezequias da Silva).
 const PARTICULAS = new Set(['da', 'de', 'do', 'das', 'dos', 'e']);

@@ -153,10 +153,65 @@ export function listaDeMarcar({
 }
 
 /**
+ * Filtro de período (De/Até) no formato dos outros filtros da barra: botão "Período Todos ▾" que abre
+ * os dois campos de data. Valores dos campos em "aaaa-mm-dd" ('' = sem limite).
+ * valor() -> { de, ate }; resumo() -> texto do botão (null = "Todos"); min/max: limites dos campos;
+ * nota: frase de como o período conta; aviso() -> texto de alerta ou null; aoMudar({ de, ate }).
+ * Com período, o "×" volta a Todos (como os filtros globais).
+ */
+export function filtroDePeriodo({ id = 'periodo', rotulo = 'Período', valor, resumo, min = null, max = null, nota = null, aviso = () => null, aoMudar }) {
+  ligarFechamento();
+  const idPainel = novoId('filtro');
+  const valorBotao = el('span', { class: 'filtro-valor' });
+  const botao = el('button', {
+    type: 'button', class: 'filtro-botao', 'aria-haspopup': 'true', 'aria-expanded': 'false', 'aria-controls': idPainel,
+  }, el('span', { class: 'filtro-nome' }, rotulo), valorBotao);
+  const ativo = () => { const v = valor(); return Boolean(v.de || v.ate); };
+  const textoAviso = el('p', { class: 'filtro-aviso', role: 'status' });
+  const campo = (chave, nome, descricao) => el('label', { class: 'filtro-data' }, nome,
+    el('input', {
+      type: 'date', class: 'campo', value: valor()[chave], min, max, 'aria-label': `${rotulo}: ${descricao}`,
+      onchange: (ev) => { aoMudar({ ...valor(), [chave]: ev.target.value }); mostrar(); },
+    }));
+  const campoDe = campo('de', 'De', 'data inicial');
+  const campoAte = campo('ate', 'Até', 'data final');
+  const botaoLimpar = el('button', {
+    type: 'button', class: 'filtro-limpar', 'aria-label': `Limpar filtro ${rotulo}`, title: `Limpar filtro ${rotulo}`,
+    onclick: () => { fecharAberto(); aoMudar({ de: '', ate: '' }); mostrar(); botao.focus(); },
+  }, '×');
+  function mostrar() {
+    valorBotao.textContent = resumo() ?? 'Todos';
+    botao.classList.toggle('ativo', ativo());
+    botaoLimpar.hidden = !ativo();
+    campoDe.querySelector('input').value = valor().de;
+    campoAte.querySelector('input').value = valor().ate;
+    textoAviso.textContent = aviso() ?? '';
+  }
+  const painel = el('div', { class: 'filtro-painel filtro-painel-periodo', id: idPainel, hidden: true, role: 'group', 'aria-label': rotulo },
+    el('div', { class: 'filtro-datas' }, campoDe, campoAte),
+    textoAviso,
+    nota ? el('p', { class: 'filtro-nota' }, nota) : null);
+  const raiz = el('div', { class: 'filtro filtro-limpavel', dataset: { filtro: id } }, botao, botaoLimpar, painel);
+  botao.addEventListener('click', () => {
+    const estavaAberto = abertoAtual?.raiz === raiz;
+    fecharAberto();
+    if (!estavaAberto) {
+      painel.hidden = false;
+      botao.setAttribute('aria-expanded', 'true');
+      abertoAtual = { raiz, painel, botao };
+      painel.querySelector('input')?.focus();
+    }
+  });
+  mostrar();
+  return raiz;
+}
+
+/**
  * Monta a barra. selecao: { idFiltro: Set }; opcoes: { idFiltro: [valores] }.
  * aoMudar(idFiltro, novoSet) a cada marcação; aoLimpar() no "Limpar filtros".
+ * extras: filtros só desta tela (ex.: Período de SCs por Comprador), depois dos globais.
  */
-export function barraDeFiltros({ tela, selecao, opcoes, aoMudar, aoLimpar }) {
+export function barraDeFiltros({ tela, selecao, opcoes, aoMudar, aoLimpar, extras = [] }) {
   const visiveis = FILTROS.filter((f) => filtroValeNaTela(f, tela));
   const atual = Object.fromEntries(visiveis.map((f) => [f.id, new Set(selecao[f.id] ?? [])]));
 
@@ -183,5 +238,5 @@ export function barraDeFiltros({ tela, selecao, opcoes, aoMudar, aoLimpar }) {
   atualizarLimpar();
 
   return el('div', { class: 'barra-filtros', role: 'region', 'aria-label': 'Filtros' },
-    el('span', { class: 'barra-filtros-titulo' }, 'Filtros', contagem), itens, limpar);
+    el('span', { class: 'barra-filtros-titulo' }, 'Filtros', contagem), itens, extras, limpar);
 }

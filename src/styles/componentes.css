@@ -47,6 +47,9 @@ input[type="search"].campo { min-width: 220px; }
   background: var(--surface-selected); color: var(--accent-text); font-size: var(--fs-sm); font-weight: 600;
 }
 
+.grupo-alternador { display: inline-flex; align-items: center; gap: var(--s2); margin-bottom: var(--s3); }
+.grupo-alternador-rotulo { color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; }
+.grupo-alternador .alternador { margin-bottom: 0; }
 .alternador { display: inline-flex; padding: 2px; border-radius: var(--r-sm); background: var(--button-bg); margin-bottom: var(--s3); }
 .linha-alternadores { display: flex; flex-wrap: wrap; gap: var(--s3); }
 .alternador-opcao {
@@ -75,6 +78,7 @@ input[type="search"].campo { min-width: 220px; }
   margin-top: 2px; font-size: var(--fs-3xl); font-weight: 700; line-height: 1.15; letter-spacing: -0.01em;
   color: var(--text-strong); font-variant-numeric: tabular-nums;
 }
+.cartao-valor-texto { font-size: var(--fs-xl); line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cartao-detalhe { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-xs); }
 /* Mini gráfico das últimas bases (cartoes.js): traço de 2 px na cor do tom. */
 .cartao-serie { display: block; width: 100%; height: 24px; margin-top: var(--s1); overflow: visible; }
@@ -249,6 +253,13 @@ input[type="search"].campo { min-width: 220px; }
   width: max-content; min-width: 220px; max-width: 320px; padding: var(--s2);
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-3);
 }
+/* Período (filtros.js, filtroDePeriodo): dois campos de data lado a lado e a nota de como conta. */
+.filtro-painel-periodo { max-width: 360px; padding: var(--s3); }
+.filtro-datas { display: flex; gap: var(--s3); }
+.filtro-data { display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-xs); font-weight: 600; color: var(--text-muted); }
+.filtro-aviso { color: var(--warning-fg); font-size: var(--fs-xs); font-weight: 600; }
+.filtro-aviso:empty { display: none; }
+.filtro-nota { color: var(--text-muted); font-size: var(--fs-xs); }
 /* Lista de marcar na barra da tabela ("Colunas"): abre para a esquerda, a barra fica à direita. */
 .tabela-barra .filtro-painel { left: auto; right: 0; }
 .filtro-lista { max-height: 300px; overflow: auto; display: flex; flex-direction: column; }
@@ -269,14 +280,15 @@ input[type="search"].campo { min-width: 220px; }
 }
 button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover); }
 .gb-linha.apagada .gb-barra, .gb-linha.apagada .gb-pilha { opacity: .35; }
+/* Selecionada: realce só na barra de cor única; barra com cor de status (inline) mantém a cor e as outras apagam. */
 .gb-linha.selecionada .gb-barra { background: var(--grafico-selecionado); }
 @media (prefers-reduced-motion: reduce) { .entrando .gb-barra, .entrando .gb-pilha { animation: none; } }
 .gb-linha.selecionada .gb-rotulo { font-weight: 700; }
 .gb-rotulo { font-size: var(--fs-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gb-trilho { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
 .gb-barra, .gb-pilha { height: 16px; border-radius: 0 4px 4px 0; min-width: 1px; }
-/* Barra com gradiente leve (mais clara na base) e que cresce ao trocar de aba (.entrando, casca.js). */
-.gb-barra { background: linear-gradient(90deg, color-mix(in srgb, var(--serie-unica) 70%, var(--surface)), var(--serie-unica)); transform-origin: left center; }
+/* Cor chapada (o degradê fazia a ponta parecer mais pesada que a base); cresce ao trocar de aba (.entrando, casca.js). */
+.gb-barra { background: var(--serie-unica); transform-origin: left center; }
 .entrando .gb-barra, .entrando .gb-pilha { animation: crescer .45s ease-out; transform-origin: left center; }
 @keyframes crescer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .gb-pilha { display: flex; gap: 2px; overflow: hidden; }
@@ -304,7 +316,7 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 }
 .gc-barra {
   width: min(48px, 70%); min-height: 1px; border-radius: 4px 4px 0 0;
-  background: linear-gradient(0deg, color-mix(in srgb, var(--serie-unica) 70%, var(--surface)), var(--serie-unica));
+  background: var(--serie-unica);
   transform-origin: center bottom;
 }
 .entrando .gc-barra { animation: crescer-coluna .45s ease-out; }
@@ -359,7 +371,17 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .tabela thead th { white-space: normal; }
 .tabela tfoot td { position: sticky; bottom: 0; background: var(--surface-2); font-weight: 700; border-top: 1px solid var(--line-strong); }
 .densidade-compacta .tabela td { padding-top: 2px; padding-bottom: 2px; font-size: var(--fs-xs); }
-.botao-densidade[aria-pressed="true"] { background: var(--surface-selected); color: var(--accent-text); border-color: var(--accent); }
+/* Ações da barra (tabela.js): "Excel" (ou "Copiar tabela") à vista e o menu "⋯" com o resto. */
+.tabela-barra .botao svg { flex: none; }
+.botao-mais { width: var(--h-control-sm); padding: 0; }
+.tabela-barra .menu-painel { min-width: 200px; }
+.tabela-aviso { color: var(--success-fg); font-size: var(--fs-sm); font-weight: 600; }
+.tabela-aviso:empty { display: none; }
+/* Item com visto (menuitemcheckbox): o espaço do visto fica reservado para os textos alinharem. */
+.menu-item { gap: var(--s2); }
+.menu-marca { display: inline-grid; place-items: center; width: 14px; flex: none; visibility: hidden; color: var(--accent-text); }
+.menu-item[aria-checked="true"] .menu-marca { visibility: visible; }
+.menu-painel:has(.menu-marca) .menu-item:not(:has(.menu-marca))::before { content: ""; width: 14px; flex: none; }
 .tabela .num { text-align: right; font-variant-numeric: tabular-nums; }
 /* Faixa alternada: por linha nas tabelas simples, por SC/OF nas agrupadas (tabela.js marca `faixa`). */
 .tabela tbody tr.faixa { background: var(--zebra); }

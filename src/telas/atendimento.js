@@ -65,12 +65,12 @@ export function telaAtendimento(ctx) {
   const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoEmAberto(itensEmAberto(ctx.anteriores.registros)) : null);
 
   const cartoes = linhaDeCartoes(
-    cartao({ icone: 'lista', rotulo: 'Itens em aberto', valor: fmt.inteiro(resumo.itens), detalhe: `${fmt.inteiro(resumo.scs)} SCs`, variacao: vs('itens', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.itens, resumo.itens) }),
+    cartao({ icone: 'lista', rotulo: 'Itens em aberto', valor: fmt.inteiro(resumo.itens), detalhe: `${fmt.qtd(resumo.scs, 'SC', 'SCs')}`, variacao: vs('itens', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.itens, resumo.itens) }),
     // No prazo e fora do prazo contam SCs (pedido da equipe, 12/11/2026): SC fora = algum item fora.
     cartao({ icone: 'check', rotulo: 'SCs no prazo', valor: fmt.inteiro(resumo.scsNoPrazo), detalhe: `${fmt.pct(resumo.pctScsNoPrazo)} das SCs com prazo`, variacao: vs('scsNoPrazo', fmt.inteiro), serie: serieDe(ctx.historico, (p) => p.aberto.scsNoPrazo, resumo.scsNoPrazo) }),
     cartao({
       icone: 'alerta', rotulo: 'SCs fora do prazo', valor: fmt.inteiro(resumo.scsFora), tom: resumo.scsFora ? 'critico' : null,
-      detalhe: resumo.scsSemPrazo ? `${fmt.inteiro(resumo.scsSemPrazo)} SCs sem prazo definido` : `Algum item com mais de ${PRAZO_SLA_DIAS} dias úteis em aberto`,
+      detalhe: resumo.scsSemPrazo ? `${fmt.qtd(resumo.scsSemPrazo, 'SC', 'SCs')} sem prazo definido` : `Algum item com mais de ${PRAZO_SLA_DIAS} dias úteis em aberto`,
       variacao: vs('scsFora', fmt.inteiro, 'menor'),
       serie: serieDe(ctx.historico, (p) => p.aberto.scsFora, resumo.scsFora),
     }),
@@ -79,11 +79,14 @@ export function telaAtendimento(ctx) {
 
   const doPre = (id) => RECORTES_PRE.find((p) => p[0] === id)?.[2] ?? (() => true);
   const recortar = () => abertos.filter((r) => (local.sla === 'todos' || r.sla === local.sla) && doPre(local.pre)(r));
-  const alternador = (rotuloGrupo, opcoes, chave) => el('div', { class: 'alternador', role: 'group', 'aria-label': rotuloGrupo },
-    opcoes.map(([id, rotulo]) => el('button', {
-      type: 'button', class: 'alternador-opcao', 'aria-pressed': String(local[chave] === id),
-      onclick: () => { local[chave] = id; salvarPreferencia(CHAVES[chave], id); ctx.redesenhar(); },
-    }, rotulo)));
+  // Rótulo visível em cada grupo: os dois começam por "Todos" e sem nome não se sabia qual filtrava o quê.
+  const alternador = (rotuloGrupo, opcoes, chave) => el('div', { class: 'grupo-alternador' },
+    el('span', { class: 'grupo-alternador-rotulo', 'aria-hidden': 'true' }, rotuloGrupo),
+    el('div', { class: 'alternador', role: 'group', 'aria-label': rotuloGrupo },
+      opcoes.map(([id, rotulo]) => el('button', {
+        type: 'button', class: 'alternador-opcao', 'aria-pressed': String(local[chave] === id),
+        onclick: () => { local[chave] = id; salvarPreferencia(CHAVES[chave], id); ctx.redesenhar(); },
+      }, rotulo))));
   const qtdAprovacao = abertos.filter(aguardandoAprovacao).length;
   const alternar = el('div', { class: 'linha-alternadores' },
     alternador('SLA', RECORTES, 'sla'),

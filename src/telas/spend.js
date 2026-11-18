@@ -17,9 +17,10 @@ export function telaSpend(ctx) {
 
   const cartoes = linhaDeCartoes(
     cartao({ icone: 'moeda', rotulo: 'Spend', valor: fmt.moedaCompacta(r.total), detalhe: `${fmt.moedaCentavos(r.total)} em OFs c/ impostos` }),
-    cartao({ icone: 'carrinho', rotulo: 'OFs', valor: fmt.inteiro(r.ofs), detalhe: `Pedidos distintos em ${fmt.inteiro(r.filiais)} filiais` }),
+    cartao({ icone: 'carrinho', rotulo: 'OFs', valor: fmt.inteiro(r.ofs), detalhe: `Pedidos distintos em ${fmt.qtd(r.filiais, 'filial', 'filiais')}` }),
     cartao({ icone: 'tendencia', rotulo: 'Média por OF', valor: fmt.moedaCompacta(r.ofs ? r.total / r.ofs : null), detalhe: 'Spend ÷ OFs' }),
-    cartao({ icone: 'predio', rotulo: 'Maior filial', valor: fmt.pct(r.maior?.pct), detalhe: r.maior ? `${r.maior.chave}: ${fmt.moeda(r.maior.valor)}` : '-' }),
+    // Nome da filial como valor e a fatia no detalhe (17/11/2026: "100%" sozinho não dizia qual filial).
+    cartao({ icone: 'predio', rotulo: 'Maior filial', valor: r.maior?.chave ?? '-', valorTexto: true, detalhe: r.maior ? `${fmt.pct(r.maior.pct)} do spend · ${fmt.moeda(r.maior.valor)}` : null }),
   );
 
   const filiais = bloco(
@@ -77,5 +78,6 @@ export function telaSpend(ctx) {
     ];
   });
 
-  return el('div', { class: 'tela' }, cartoes, comparacao, el('div', { class: 'grade-2' }, filiais, meses));
+  // Blocos lado a lado na mesma altura: sem buraco embaixo do mais curto.
+  return el('div', { class: 'tela' }, cartoes, comparacao, el('div', { class: 'grade-2 grade-esticada' }, filiais, meses));
 }

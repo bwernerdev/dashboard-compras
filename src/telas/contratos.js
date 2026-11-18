@@ -39,8 +39,11 @@ const textoOuNumero = (formatar) => (v) => (typeof v === 'number' ? formatar(v) 
 /**
  * Colunas de controle: começam ocultas na tela (botão "Colunas" mostra; o Excel leva todas).
  * Os números do contrato (Projuris e ME) aparecem (pedido da equipe, 17/11/2026).
+ * CNPJ, setor, observação, status da demanda e encerramento também começam ocultos (18/11/2026):
+ * com tudo à mostra eram 16 colunas e a tabela cortava cabeçalhos ("Setor responsáv") e valores.
+ * Quem já escolheu as colunas no botão "Colunas" continua com a escolha salva.
  */
-const OCULTAS_PADRAO = new Set(['ifrs16', 'minuta', 'item', 'servicoLocacao']);
+const OCULTAS_PADRAO = new Set(['ifrs16', 'minuta', 'item', 'servicoLocacao', 'cnpj', 'setor', 'observacao', 'statusDemanda', 'encerramento']);
 const CLASSES_TEXTO = {
   objeto: 'texto-longo', fornecedor: 'texto-medio', observacao: 'texto-medio', encerramento: 'texto-medio', setor: 'texto-medio',
   statusDemanda: 'texto-medio',
@@ -51,9 +54,9 @@ function colunaDoCampo(c) {
   const base = { id: c.id, rotulo: c.rotulo, valor: (r) => r[c.id] ?? null, ocultaPadrao: OCULTAS_PADRAO.has(c.id) };
   if (c.id === 'status') return { ...base, valor: statusDoContrato, exibir: seloStatus };
   if (c.tipo === 'data') return { ...base, tipo: 'data', centro: true };
-  // Valor às vezes é texto ("Conforme proposta"): encolhe com reticências como as colunas de texto.
+  // Valor nunca encolhe (dinheiro cortado com "…" não serve). Só o texto ("Conforme proposta") leva reticências.
   if (c.tipo === 'moeda') {
-    return { ...base, num: true, formato: textoOuNumero(fmt.moedaCentavos), formatoExcel: 'moeda', classe: () => 'texto-medio' };
+    return { ...base, num: true, fixa: true, formato: textoOuNumero(fmt.moedaCentavos), formatoExcel: 'moeda', classe: (r) => (typeof r[c.id] === 'number' ? '' : 'texto-medio') };
   }
   if (c.tipo === 'codigo') return { ...base, formato: String };
   if (CLASSES_TEXTO[c.id]) return { ...base, classe: () => CLASSES_TEXTO[c.id] };

@@ -50,7 +50,10 @@ test('detalhe da SC ao clicar, densidade compacta e comparação de períodos', 
   await page.waitForTimeout(400);
   await expect(detalhe).toBeHidden();
 
-  await lista.getByRole('button', { name: 'Compacta' }).click();
+  // Ações da tabela: "Excel" à vista e o resto no menu "⋯" (Linhas compactas vale para todas as tabelas).
+  await lista.getByRole('button', { name: /^Mais ações/ }).click();
+  await lista.getByRole('menuitemcheckbox', { name: 'Linhas compactas' }).click();
+  await expect(lista.getByRole('menu')).toBeHidden();
   await expect(page.locator('html')).toHaveClass(/densidade-compacta/);
   await page.reload();
   await expect(page.locator('html')).toHaveClass(/densidade-compacta/);
@@ -359,9 +362,13 @@ test('largura da coluna: arrastar, setas, autoajuste com dois cliques, lembrada 
   // Lembrada ao recarregar; "Larguras originais" volta ao automático.
   await page.reload();
   expect(await largura()).toBe(antes + 70);
-  await lista.getByRole('button', { name: 'Larguras originais' }).click();
+  await lista.getByRole('button', { name: /^Mais ações/ }).click();
+  await lista.getByRole('menuitem', { name: 'Larguras originais' }).click();
   expect(await largura()).toBe(antes);
-  await expect(lista.getByRole('button', { name: 'Larguras originais' })).toBeHidden();
+  await lista.getByRole('button', { name: /^Mais ações/ }).click();
+  await expect(lista.getByRole('menuitem', { name: 'Larguras originais' })).toBeHidden(); // sem largura ajustada, sai do menu
+  await expect(lista.getByRole('menuitem', { name: 'Copiar tabela' })).toBeVisible();
+  await page.keyboard.press('Escape');
 
   // Estreita com reticências; dois cliques na borda ajustam ao conteúdo (nada cortado).
   const cortadas = () => lista.locator('tbody td.c-6').evaluateAll((tds) => tds.filter((td) => td.scrollWidth > td.clientWidth + 1).length);
@@ -406,11 +413,18 @@ test('SCs por Comprador (com período De/Até) e Saving', async ({ page }) => {
   // Período pela criação da SC: a SC criada há 100 dias sai; fica salvo; "Limpar período" volta.
   const iso = (d) => d.toISOString().slice(0, 10);
   const ha30 = new Date(Date.now() - 30 * 864e5);
+  // Período é um chip na faixa de filtros, como os outros.
+  const chipPeriodo = page.locator('.faixa-filtros [data-filtro="periodo"] .filtro-botao');
+  await expect(chipPeriodo).toContainText('Todos');
+  await chipPeriodo.click();
   await page.getByLabel('Período: data inicial').fill(iso(ha30));
   await expect(valorDoCartao(page, 'SCs no período')).toHaveText('2');
+  await expect(chipPeriodo).toContainText('desde');
   await page.reload();
   await expect(valorDoCartao(page, 'SCs no período')).toHaveText('2');
-  await page.getByRole('button', { name: 'Limpar período' }).click();
+  await expect(chipPeriodo).toContainText('desde');
+  await page.getByRole('button', { name: 'Limpar filtro Período' }).click();
+  await expect(chipPeriodo).toContainText('Todos');
   await expect(valorDoCartao(page, 'SCs no período')).toHaveText('3');
 
   await expect(valorDoCartao(page, 'Pré-pedidos')).toHaveText('2'); // PP-1 + vazio (como na planilha)
@@ -553,6 +567,12 @@ test('Contratos: anexo opcional abre numa janela separada, com as abas da planil
   const linhas = await lerAbaInteira(await abrirPasta(new Blob([await readFile(await planilha.path())])), 'Contratos');
   expect(linhas.length).toBe(5);
   expect(linhas[0]).toContain('Contrato Projuris');
+  expect(linhas[0]).toContain('CNPJ/CPF'); // oculta na tela por padrão, mas o Excel leva todas
+  // Na tela: CNPJ, setor e observação começam ocultos; cabeçalho e R$ nunca cortados.
+  await expect(janela.locator('thead th', { hasText: 'CNPJ' })).toBeHidden();
+  const cortados = (seletor) => janela.locator(seletor).evaluateAll((els) => els.filter((e) => e.offsetWidth && e.scrollWidth > e.clientWidth + 1).map((e) => e.textContent));
+  expect(await cortados('thead th')).toEqual([]);
+  expect((await cortados('tbody td.num')).filter((t) => t.includes('R$'))).toEqual([]); // texto ("Conforme proposta") pode levar "…"
 
   await janela.getByRole('tab', { name: /Inativos/ }).click();
   await expect(janela.locator('tbody tr')).toContainText(['FORNECEDOR G']);
@@ -751,4 +771,39 @@ test('celular (390 px): topo baixo, abas numa linha com rolagem lateral, aba abe
     const { width, height } = await botao.boundingBox();
     expect(Math.min(width, height)).toBeGreaterThanOrEqual(24);
   }
+});
+
+test('textos e cores: plural, cor por status nas barras, rótulos do Atendimento, Maior filial e barra da tabela', async ({ page }) => {
+  await importarBase(page);
+  await page.locator('#acao-importar').click();
+  await page.locator('dialog input[data-tipo="followUp"]').setInputFiles(await arquivoFollowUp());
+  await expect(page.locator('dialog .arquivo[data-tipo="followUp"][data-estado="ok"]')).toBeVisible();
+  await page.locator('dialog').getByRole('button', { name: 'Fechar' }).last().click();
+
+  // Plural: "1 item", nunca "1 itens".
+  await page.getByRole('tab', { name: 'Entrega' }).click();
+  await expect(page.locator('.cartao-detalhe', { hasText: /^1 item$/ }).first()).toBeVisible();
+  await expect(page.locator('.cartao-detalhe', { hasText: /\b1 itens\b/ })).toHaveCount(0);
+  // Barras de status na cor do status (a mesma do gráfico por filial e da tabela), não todas azuis.
+  const corDaBarra = (rotulo) => page.locator('.gb-linha', { hasText: rotulo }).locator('.gb-barra').first().evaluate((b) => getComputedStyle(b).backgroundColor);
+  expect(await corDaBarra('NÃO ENTREGUE')).not.toBe(await corDaBarra('ENTREGUE PARCIAL'));
+
+  await page.getByRole('tab', { name: 'Status' }).click();
+  expect(await corDaBarra('Em Pedido')).not.toBe(await corDaBarra('Em Cotação'));
+  // Barra da tabela: "Excel" à vista e "⋯"; "Compacta" e "Copiar tabela" não ficam mais soltos.
+  const lista = page.locator('.bloco', { hasText: 'Lista de SCs' });
+  await expect(lista.getByRole('button', { name: 'Exportar Excel' })).toBeVisible();
+  await expect(lista.getByRole('button', { name: /^Mais ações/ })).toBeVisible();
+  await expect(lista.getByRole('button', { name: 'Copiar tabela' })).toHaveCount(0);
+  await expect(lista.getByRole('button', { name: 'Compacta' })).toHaveCount(0);
+
+  // Atendimento: cada grupo de botões com o nome à vista.
+  await page.getByRole('tab', { name: 'Atendimento' }).click();
+  await expect(page.locator('.grupo-alternador-rotulo')).toHaveText(['SLA', 'Status Pré-Pedido']);
+
+  // Spend: "Maior filial" mostra o nome da filial; a fatia vai no detalhe.
+  await page.getByRole('tab', { name: 'Spend' }).click();
+  const maior = page.locator('.tela > .cartoes > .cartao', { has: page.locator('.cartao-rotulo', { hasText: 'Maior filial' }) });
+  await expect(maior.locator('.cartao-valor')).not.toHaveText(/%/);
+  await expect(maior.locator('.cartao-detalhe')).toContainText('do spend');
 });

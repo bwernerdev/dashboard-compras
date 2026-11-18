@@ -77,10 +77,10 @@ export function telaEntrega(ctx) {
   const conta = (s) => doStatus.get(s)?.ofs ?? 0;
 
   const cartoes = linhaDeCartoes(
-    cartao({ icone: 'carrinho', rotulo: 'OFs', valor: fmt.inteiro(ofs), detalhe: `${fmt.inteiro(regs.length)} itens` }),
-    cartao({ icone: 'caminhao', rotulo: 'OFs não entregues', valor: fmt.inteiro(conta('NÃO ENTREGUE')), tom: conta('NÃO ENTREGUE') ? 'critico' : null, detalhe: `${fmt.inteiro(doStatus.get('NÃO ENTREGUE')?.itens ?? 0)} itens` }),
-    cartao({ icone: 'parcial', rotulo: 'OFs entregues em parte', valor: fmt.inteiro(conta('ENTREGUE PARCIAL')), detalhe: `${fmt.inteiro(doStatus.get('ENTREGUE PARCIAL')?.itens ?? 0)} itens` }),
-    cartao({ icone: 'check', rotulo: 'OFs entregues', valor: fmt.inteiro(conta('ENTREGUE')), detalhe: `${fmt.inteiro(doStatus.get('ENTREGUE')?.itens ?? 0)} itens` }),
+    cartao({ icone: 'carrinho', rotulo: 'OFs', valor: fmt.inteiro(ofs), detalhe: fmt.qtd(regs.length, 'item', 'itens') }),
+    cartao({ icone: 'caminhao', rotulo: 'OFs não entregues', valor: fmt.inteiro(conta('NÃO ENTREGUE')), tom: conta('NÃO ENTREGUE') ? 'critico' : null, detalhe: fmt.qtd(doStatus.get('NÃO ENTREGUE')?.itens ?? 0, 'item', 'itens') }),
+    cartao({ icone: 'parcial', rotulo: 'OFs entregues em parte', valor: fmt.inteiro(conta('ENTREGUE PARCIAL')), detalhe: fmt.qtd(doStatus.get('ENTREGUE PARCIAL')?.itens ?? 0, 'item', 'itens') }),
+    cartao({ icone: 'check', rotulo: 'OFs entregues', valor: fmt.inteiro(conta('ENTREGUE')), detalhe: fmt.qtd(doStatus.get('ENTREGUE')?.itens ?? 0, 'item', 'itens') }),
   );
 
   const status = porStatus.map((s) => s.status);
@@ -88,7 +88,7 @@ export function telaEntrega(ctx) {
     { titulo: 'OFs por status de entrega', subtitulo: 'OFs distintas. Clique numa barra para recortar a lista.',
       ajuda: 'Uma OF com itens em status diferentes conta em cada um deles.' },
     barras({
-      itens: porStatus.map((s) => ({ id: s.status, rotulo: s.status, valor: s.ofs, detalhe: [{ valor: fmt.inteiro(s.itens), rotulo: 'itens' }] })),
+      itens: porStatus.map((s) => ({ id: s.status, rotulo: s.status, valor: s.ofs, cor: corDe(s.status), detalhe: [{ valor: fmt.inteiro(s.itens), rotulo: 'itens' }] })),
       formato: fmt.inteiro,
       rotuloSerie: 'OFs',
       selecionado: local.status.size === 1 ? [...local.status][0] : null,
@@ -121,7 +121,7 @@ export function telaEntrega(ctx) {
     id: 'status-entrega',
     rotulo: 'Status da entrega',
     valores,
-    rotuloValor: (s) => `${s} (${fmt.inteiro(doStatus.get(s)?.ofs ?? 0)} OFs)`,
+    rotuloValor: (s) => `${s} (${fmt.qtd(doStatus.get(s)?.ofs ?? 0, 'OF', 'OFs')})`,
     resumoValor: (s) => s,
     selecionados: local.status,
     aoMudar: () => { guardarStatus(); tabela.atualizar(recortar()); },

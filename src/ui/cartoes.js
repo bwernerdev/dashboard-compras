@@ -3,18 +3,20 @@ import { el, icone as desenharIcone } from './dom.js';
 import { ligarDicaTexto } from './dica.js';
 
 /**
+ * valorTexto: o valor é um nome (ex.: a maior filial), não um número: fonte menor, corta com "…" e
+ * mostra o nome inteiro no title.
  * tom: 'bom' | 'alerta' | 'critico' | null — sempre acompanhado de texto, nunca só a cor.
  * variacao: resultado de `variacao()` (linha "+5 desde 10/11") ou null.
  * icone: nome de um ícone de `dom.js` (decorativo, no canto; a cor acompanha o tom).
  * serie: valores das últimas bases (o último é o atual) para o mini gráfico; decorativo (os números
  * estão no cartão e na variação).
  */
-export function cartao({ rotulo, valor, detalhe = null, tom = null, variacao: v = null, icone = null, serie = null }) {
+export function cartao({ rotulo, valor, detalhe = null, tom = null, variacao: v = null, icone = null, serie = null, valorTexto = false }) {
   return el('div', { class: `cartao${tom ? ` cartao-${tom}` : ''}` },
     el('div', { class: 'cartao-topo' },
       el('div', { class: 'cartao-rotulo' }, rotulo),
       icone ? el('span', { class: 'cartao-icone' }, desenharIcone(icone, 18)) : null),
-    el('div', { class: 'cartao-valor' }, valor),
+    el('div', { class: `cartao-valor${valorTexto ? ' cartao-valor-texto' : ''}`, title: valorTexto ? valor : null }, valor),
     serie ? miniGrafico(serie) : null,
     detalhe ? el('div', { class: 'cartao-detalhe' }, detalhe) : null,
     v ? el('div', { class: `cartao-variacao variacao-${v.tom}`, title: v.ligacao === 'x' ? `Comparado com ${v.rotulo}` : `Comparado com a base do ME de ${v.rotulo}` },
