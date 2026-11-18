@@ -150,6 +150,12 @@ export function criarNavegador({ telas, raiz, abaInicial, telaVazia, aoTrocarAba
       'aria-controls': raiz.conteudo.id, tabindex: estado.aba === t.id ? '0' : '-1', class: 'aba',
       onclick: () => trocarAba(t.id),
     }, t.rotulo)));
+    // Abas com rolagem lateral (celular, topo compacto): a aba aberta fica à vista.
+    const ativa = raiz.abas.querySelector('[aria-selected="true"]');
+    if (ativa && raiz.abas.scrollWidth > raiz.abas.clientWidth) {
+      const deslocamento = ativa.getBoundingClientRect().left - raiz.abas.getBoundingClientRect().left;
+      raiz.abas.scrollLeft += deslocamento - (raiz.abas.clientWidth - ativa.offsetWidth) / 2;
+    }
   }
 
   raiz.abas.addEventListener('keydown', (ev) => {

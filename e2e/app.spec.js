@@ -732,3 +732,23 @@ test('tema escuro alterna e fica salvo', async ({ page }) => {
   await page.reload();
   await expect(html).toHaveAttribute('data-theme', novo);
 });
+
+test('celular (390 px): topo baixo, abas numa linha com rolagem lateral, aba aberta à vista e alvos >= 24 px', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await importarBase(page);
+  const abas = page.locator('#abas [role="tab"]');
+  const topos = await abas.evaluateAll(lista => lista.map(aba => Math.round(aba.getBoundingClientRect().top)));
+  expect(new Set(topos).size).toBe(1); // uma linha só (antes: quatro)
+  expect(await page.locator('.topo').evaluate(topo => topo.offsetHeight)).toBeLessThan(240);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.getByRole('tab', { name: 'Organograma' }).click();
+  const caixa = await page.locator('#abas').boundingBox();
+  const aba = await page.getByRole('tab', { name: 'Organograma' }).boundingBox();
+  expect(aba.x).toBeGreaterThanOrEqual(caixa.x - 1);
+  expect(aba.x + aba.width).toBeLessThanOrEqual(caixa.x + caixa.width + 1);
+  await page.getByRole('tab', { name: 'Regional' }).click();
+  for (const botao of await page.locator('.botao-ajuda, .botao-link').filter({ visible: true }).all()) {
+    const { width, height } = await botao.boundingBox();
+    expect(Math.min(width, height)).toBeGreaterThanOrEqual(24);
+  }
+});

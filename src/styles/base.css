@@ -118,6 +118,13 @@ html.topo-compacto #periodo.selo-alerta[data-curto]::before { content: attr(data
 }
 @media (max-width: 640px) {
   .topo, .faixa-filtros, .aviso, .pagina { padding-left: var(--s4); padding-right: var(--s4); }
+  /* Celular: emblema menor só ao lado do título; ações e abas em linhas inteiras. As abas ficam numa
+     linha só, com rolagem lateral (casca.js mantém a aba aberta à vista), em vez de quatro linhas. */
+  .topo { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "emblema marca" "acoes acoes" "abas abas"; padding-top: var(--s2); }
+  .topo-emblema { height: 44px; padding: 0; }
+  .topo h1 { font-size: var(--fs-lg); }
+  .abas { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-left: calc(-1 * var(--s2)); margin-right: calc(-1 * var(--s4)); padding-right: var(--s4); }
+  .aba { flex: none; padding: 0 var(--s2); }
 }
 
 @media (prefers-reduced-motion: reduce) {
