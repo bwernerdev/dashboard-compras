@@ -70,22 +70,38 @@ export async function salvarImportacao(tipo, registros, meta) {
   }
 }
 
+/** Quanto tempo a cópia do arquivo vale (pedido da equipe, 18/11/2026: algumas horas, um dia de trabalho). */
+export const VALIDADE_COPIA_MS = 8 * 60 * 60 * 1000;
+
+/** A cópia { arquivo, salvoEm } ainda vale em `agora`? */
+export function copiaValida(copia, agora = Date.now()) {
+  return Boolean(copia?.arquivo) && typeof copia.salvoEm === 'number' && agora - copia.salvoEm < VALIDADE_COPIA_MS;
+}
+
 /**
  * Cópia do último arquivo importado de cada tipo (Base e Follow-Up, o .xlsx como veio), para "Reimportar
- * bases" ler de novo sem escolher o arquivo (filial nova no de-para). Tipo 'arquivo-<tipo>'. Ocupa o
- * tamanho do arquivo (~83 MB a Base, ~11 MB o Follow-Up) e é trocada a cada importação. Também apaga a
+ * bases" ler de novo sem escolher o arquivo (filial nova no de-para). Tipo 'arquivo-<tipo>' com
+ * { arquivo, salvoEm }. Ocupa o tamanho do arquivo (~83 MB a Base, ~11 MB o Follow-Up), é trocada a cada
+ * importação e vale 8 horas (`VALIDADE_COPIA_MS`; vencida, `apagarCopia` ao abrir o app). Também apaga a
  * referência ao arquivo da versão de 17/11/2026 ('alca-<tipo>'), que não é mais usada.
  */
-export async function salvarCopia(tipo, arquivo) {
+export async function salvarCopia(tipo, { arquivo, salvoEm }) {
   try {
     await transacao('readwrite', (loja) => {
       loja.delete(`alca-${tipo}`);
-      return loja.put({ tipo: `arquivo-${tipo}`, arquivo, salvoEm: Date.now() });
+      return loja.put({ tipo: `arquivo-${tipo}`, arquivo, salvoEm });
     });
     return true;
   } catch {
     return false; // sem espaço ou navegador bloqueando: a cópia fica só enquanto a página estiver aberta
   }
+}
+
+/** Apaga a cópia do arquivo deste tipo (vencida). */
+export async function apagarCopia(tipo) {
+  try {
+    await transacao('readwrite', (loja) => loja.delete(`arquivo-${tipo}`));
+  } catch { /* sem armazenamento */ }
 }
 
 /** Anexo de contratos (planilha CONTROLE DE CONTRATOS já lida): { abas, meta }. Tipo 'contratos' na mesma loja. */

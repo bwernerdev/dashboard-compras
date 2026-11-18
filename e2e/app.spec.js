@@ -594,6 +594,33 @@ test('configuração: "Reimportar bases" lê a cópia do arquivo escolhido por c
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('3');
 });
 
+test('configuração: cópia guardada vence em 8 horas; ao abrir o app, é apagada e o Reimportar pede a caixa', async ({ page }) => {
+  await importarBase(page);
+  // Volta o horário da cópia 8 h e 1 min.
+  await page.evaluate(() => new Promise((ok, falha) => {
+    const req = indexedDB.open('dashboard-compras');
+    req.onsuccess = () => {
+      const tx = req.result.transaction('importacoes', 'readwrite');
+      const loja = tx.objectStore('importacoes');
+      loja.get('arquivo-base').onsuccess = (ev) => loja.put({ ...ev.target.result, salvoEm: Date.now() - (8 * 60 + 1) * 60 * 1000 });
+      tx.oncomplete = () => { req.result.close(); ok(); };
+      tx.onerror = () => falha(tx.error);
+    };
+  }));
+  await page.reload();
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2'); // os dados importados continuam
+  await expect.poll(() => page.evaluate(() => new Promise((ok) => {
+    const req = indexedDB.open('dashboard-compras');
+    req.onsuccess = () => {
+      const g = req.result.transaction('importacoes').objectStore('importacoes').get('arquivo-base');
+      g.onsuccess = () => { req.result.close(); ok(g.result === undefined); };
+    };
+  }))).toBe(true); // cópia vencida apagada
+  await page.getByRole('button', { name: 'Configuração' }).click();
+  await page.getByRole('button', { name: 'Reimportar bases' }).click();
+  await expect(page.locator('.config-avisos')).toContainText('Base: escolha o arquivo de novo pela caixa em "Atualizar bases".');
+});
+
 test('configuração: "Reimportar bases" sem cópia guardada pede a caixa', async ({ page }) => {
   await importarBase(page);
   // Simula o navegador sem a cópia (dados do site limpos ou sem espaço): apaga e recarrega.

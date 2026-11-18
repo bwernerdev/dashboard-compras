@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { importar } from '../src/importar.js';
 import { copiarParaMemoria } from '../src/leitor/arquivo.js';
+import { copiaValida, VALIDADE_COPIA_MS } from '../src/memoria.js';
 import { criarConfig } from '../src/config/index.js';
 import { BASE, FOLLOW_UP } from '../src/esquema.js';
 import { serie } from '../src/datas.js';
@@ -120,4 +121,14 @@ test('importar com copiar: false (worker recebe a cópia da tela) não copia de 
   const r = await importar('base', blob, cfg, { hoje: HOJE, copiar: false, aoAvancar: (f, fase) => fases.add(fase) });
   assert.equal(r.meta.mantidas, 1);
   assert.ok(!fases.has('Copiando o arquivo'));
+});
+
+test('cópia do arquivo para "Reimportar bases" vale 8 horas', () => {
+  const arquivo = new Blob(['x']);
+  const agora = Date.now();
+  assert.equal(VALIDADE_COPIA_MS, 8 * 60 * 60 * 1000);
+  assert.ok(copiaValida({ arquivo, salvoEm: agora - VALIDADE_COPIA_MS + 1000 }, agora));
+  assert.ok(!copiaValida({ arquivo, salvoEm: agora - VALIDADE_COPIA_MS }, agora));
+  assert.ok(!copiaValida({ arquivo }, agora)); // sem horário: não vale
+  assert.ok(!copiaValida(undefined, agora));
 });

@@ -7,7 +7,7 @@ import { criarConfig, CONFIG_PADRAO, atualizarConfigSalva } from './config/index
 import { hojeSerie, formatarSerie } from './datas.js';
 import {
   brutosDe, recalcular, salvarImportacao, salvarAnterior, salvarHistorico, juntarAoHistorico, lerImportacoes, lerConfig, salvarConfig, apagarConfig,
-  salvarContratos, salvarCopia,
+  salvarContratos, salvarCopia, apagarCopia, copiaValida,
 } from './memoria.js';
 import { copiarParaMemoria } from './leitor/arquivo.js';
 import { lerContratos } from './contratos/ler.js';
@@ -47,7 +47,7 @@ const estado = {
   anterior: null, // base de outro dia do ME { brutos, meta, salvoEm }: variação nos cartões
   historico: [], // [{ dia, status, aberto }]: mini gráficos dos cartões (ver memoria.js)
   contratos: null, // anexo opcional (CONTROLE DE CONTRATOS): { abas, meta, salvoEm }, janela Contratos
-  copias: {}, // cópia do último arquivo de Base e Follow-Up (memoria.js): "Reimportar bases" lê de novo
+  copias: {}, // { arquivo, salvoEm }: cópia do último arquivo de Base e Follow-Up (memoria.js, vale 8 h): "Reimportar bases" lê de novo
   carregando: true, // lendo as bases salvas ao abrir: esqueleto no lugar da tela de importação
 };
 
@@ -126,10 +126,10 @@ async function importarContratos(arquivo) {
 }
 
 /** Guarda a cópia do arquivo importado (Base e Follow-Up), na página e no navegador. */
-function lembrarArquivo(tipo, copia) {
-  if (tipo === 'contratos' || copia === estado.copias[tipo]) return;
-  estado.copias[tipo] = copia;
-  salvarCopia(tipo, copia);
+function lembrarArquivo(tipo, arquivo) {
+  if (tipo === 'contratos' || arquivo === estado.copias[tipo]?.arquivo) return; // reimportou a mesma cópia: vale o horário dela
+  estado.copias[tipo] = { arquivo, salvoEm: Date.now() };
+  salvarCopia(tipo, estado.copias[tipo]);
 }
 
 /**
@@ -138,7 +138,7 @@ function lembrarArquivo(tipo, copia) {
  * com o leitor pulando entre partes); a cópia vai ao worker e fica guardada para "Reimportar bases".
  */
 async function importar(tipo, arquivo, aoAvancar) {
-  const copia = arquivo === estado.copias[tipo] ? arquivo
+  const copia = arquivo === estado.copias[tipo]?.arquivo ? arquivo
     : await copiarParaMemoria(arquivo, { aoAvancar: (f) => aoAvancar?.(f, 'Copiando o arquivo') });
   const dados = await importarSemLembrar(tipo, copia, aoAvancar);
   lembrarArquivo(tipo, copia);
@@ -147,16 +147,21 @@ async function importar(tipo, arquivo, aoAvancar) {
 
 const ROTULOS = { base: 'Base', followUp: 'Follow-Up' };
 
-/** Cópia guardada do último arquivo deste tipo, se ainda der para ler; sem ela, pede a caixa. */
+/** Cópia guardada do último arquivo deste tipo, se ainda vale (8 h) e dá para ler; sem ela, pede a caixa. */
 async function arquivoDeNovo(tipo) {
   const copia = estado.copias[tipo];
+  if (copia && !copiaValida(copia)) {
+    delete estado.copias[tipo];
+    apagarCopia(tipo);
+    throw new Error('a cópia do arquivo vale 8 horas e venceu: escolha o arquivo de novo pela caixa em "Atualizar bases"');
+  }
   if (!copia) throw new Error('escolha o arquivo de novo pela caixa em "Atualizar bases"');
   try {
-    await copia.slice(0, 4).arrayBuffer(); // o navegador pode ter descartado a cópia (limpeza de dados)
+    await copia.arquivo.slice(0, 4).arrayBuffer(); // o navegador pode ter descartado a cópia (limpeza de dados)
   } catch {
     throw new Error('a cópia guardada do arquivo não pôde ser lida: escolha de novo pela caixa em "Atualizar bases"');
   }
-  return copia;
+  return copia.arquivo;
 }
 
 /**
@@ -220,7 +225,11 @@ async function restaurar() {
     const s = salvas[tipo];
     if (s?.brutos) definirBase(tipo, { brutos: s.brutos, meta: s.meta, salvoEm: s.salvoEm, registros: recalcular(tipo, s.brutos, estado.cfg, estado.hoje) });
   }
-  for (const tipo of ['base', 'followUp']) if (salvas[`arquivo-${tipo}`]?.arquivo) estado.copias[tipo] = salvas[`arquivo-${tipo}`].arquivo;
+  for (const tipo of ['base', 'followUp']) {
+    const copia = salvas[`arquivo-${tipo}`];
+    if (copiaValida(copia)) estado.copias[tipo] = { arquivo: copia.arquivo, salvoEm: copia.salvoEm };
+    else if (copia) apagarCopia(tipo); // vencida (8 h): libera o espaço
+  }
   if (salvas.contratos?.abas) estado.contratos = { abas: salvas.contratos.abas, meta: salvas.contratos.meta, salvoEm: salvas.contratos.salvoEm };
   const a = salvas['base-anterior'];
   if (a?.brutos && estado.base && diaDaBase(a.meta) < diaDaBase(estado.base.meta)) {
