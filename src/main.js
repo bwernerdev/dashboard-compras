@@ -20,7 +20,7 @@ import { esqueleto } from './ui/cartoes.js';
 import { criarNavegador, ligarTema, ligarImpressao, ligarTopoCompacto, diasDesdeABase, BASE_ANTIGA_DIAS } from './ui/casca.js';
 import { aplicarMarca } from './ui/marca.js';
 import { baixar } from './ui/tabela-exportar.js';
-import { caixasDeImportacao, escolherComPastaLembrada } from './telas/importacao.js';
+import { caixasDeImportacao } from './telas/importacao.js';
 import { abrirConfiguracao } from './telas/configuracao.js';
 import { TELAS_PUBLICAS, reiniciarTelas } from './telas/publicas.js';
 import { ligarAtendidas } from './telas/regional.js';
@@ -130,15 +130,16 @@ function lembrarArquivo(tipo, alca) {
   salvarAlca(tipo, alca ?? null);
 }
 
+/** alca: referência ao arquivo (ou promessa dela, ao arrastar); null no seletor comum. */
 async function importar(tipo, arquivo, aoAvancar, alca = null) {
   const dados = await importarSemLembrar(tipo, arquivo, aoAvancar);
-  lembrarArquivo(tipo, alca);
+  lembrarArquivo(tipo, await alca);
   return dados;
 }
 
 const ROTULOS = { base: 'Base', followUp: 'Follow-Up' };
 
-/** Arquivo de novo pela referência guardada (pede permissão de leitura se preciso); sem ela, o seletor do tipo. */
+/** Arquivo de novo pela referência guardada (pede permissão de leitura se preciso); sem ela, pede a caixa. */
 async function arquivoDeNovo(tipo) {
   const alca = estado.alcas[tipo];
   if (alca) {
@@ -146,16 +147,15 @@ async function arquivoDeNovo(tipo) {
     if (permissao !== 'granted' && (await alca.requestPermission({ mode: 'read' })) !== 'granted') {
       throw new Error('o navegador não liberou a leitura do arquivo: clique de novo e escolha "Permitir"');
     }
+    // Pasta de rede pode não responder (Citrix): depois de 10 s desiste e pede a caixa.
+    const prazo = new Promise((_, falha) => { setTimeout(() => falha(new Error('prazo')), 10_000); });
     try {
-      return { arquivo: await alca.getFile(), alca };
+      return { arquivo: await Promise.race([alca.getFile(), prazo]), alca };
     } catch {
-      throw new Error('o arquivo não está mais no mesmo lugar: importe pela caixa em "Atualizar bases"');
+      throw new Error('não deu para ler o arquivo no mesmo lugar: escolha de novo pela caixa em "Atualizar bases"');
     }
   }
-  const escolhido = await escolherComPastaLembrada(tipo);
-  if (escolhido) return escolhido;
-  if (escolhido === undefined) return null; // cancelou
-  throw new Error('este navegador não lembra o arquivo: importe pela caixa em "Atualizar bases"');
+  throw new Error('escolha o arquivo de novo pela caixa em "Atualizar bases"');
 }
 
 /**
@@ -293,7 +293,9 @@ function abrirDialogo({ id, titulo, corpo }) {
       el('h2', { id }, titulo),
       el('button', { type: 'button', class: 'botao botao-link', onclick: fechar, 'aria-label': 'Fechar' }, '✕')),
     ...corpo,
-    el('footer', { class: 'dialogo-rodape' }, el('span', { class: 'espaco' }), el('button', { type: 'button', class: 'botao', onclick: fechar }, 'Fechar')));
+    el('footer', { class: 'dialogo-rodape' },
+      el('span', { class: 'espaco dialogo-versao' }, `Versão do app: ${typeof __VERSAO__ === 'string' ? __VERSAO__ : 'local'}`),
+      el('button', { type: 'button', class: 'botao', onclick: fechar }, 'Fechar')));
   dialogo.addEventListener('cancel', (ev) => { ev.preventDefault(); fechar(); });
   document.body.append(dialogo);
   dialogo.showModal();

@@ -6,7 +6,7 @@ export default [
   { ignores: ['dist/', '.painel-build/', 'node_modules/', '.npm-cache/', 'test-results/', 'playwright-report/', 'src/painel/modelo.gerado.html'] },
   js.configs.recommended,
   {
-    languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.browser } },
+    languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.browser, __VERSAO__: 'readonly' } },
     rules: {
       'no-unused-vars': ['error', { args: 'after-used', caughtErrors: 'none' }],
       eqeqeq: ['error', 'always'],

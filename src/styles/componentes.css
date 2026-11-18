@@ -447,6 +447,7 @@ body:has(.th-alca.arrastando) { cursor: col-resize; user-select: none; }
 .dialogo > .texto-fraco { margin-bottom: var(--s4); }
 .dialogo-corpo { display: flex; flex-direction: column; gap: var(--s5); }
 .dialogo-rodape { display: flex; gap: var(--s2); margin-top: var(--s5); padding-top: var(--s4); border-top: 1px solid var(--line); }
+.dialogo-versao { align-self: center; font-size: var(--fs-xs); color: var(--text-muted); }
 .config-secao h3 { font-size: var(--fs-lg); color: var(--text-strong); }
 .config-secao .texto-fraco { margin: 2px 0 var(--s2); }
 .config-secao .tabela-rolagem { max-height: 320px; margin-bottom: var(--s2); }

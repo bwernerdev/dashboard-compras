@@ -70,84 +70,46 @@ test('sem bases mostra a importação; arquivo errado mostra o motivo', async ({
   await expect(page.locator('.arquivo[data-tipo="base"] .arquivo-status')).toContainText('não parece ser o relatório');
 });
 
-test('cada caixa de importação abre o seletor com a pasta lembrada do seu tipo', async ({ page }) => {
-  // Seletor do navegador simulado: a janela do sistema não abre no teste. Guarda o id de cada chamada.
-  const base = await arquivoBase();
-  await page.addInitScript((bytes) => {
-    window.chamadasSeletor = [];
-    window.showOpenFilePicker = async ({ id }) => {
-      window.chamadasSeletor.push(id);
-      if (id !== 'importar-base') throw new DOMException('cancelou', 'AbortError');
-      return [{ name: 'base.xlsx', getFile: async () => new File([new Uint8Array(bytes)], 'base.xlsx') }];
-    };
-  }, [...base.buffer]);
+test('clique na caixa abre o seletor comum, mesmo com o seletor do navegador disponível (Citrix)', async ({ page }) => {
+  // showOpenFilePicker não devolvia o arquivo de pasta de rede no Citrix: não pode ser chamado.
+  await page.addInitScript(() => {
+    window.chamadasSeletor = 0;
+    window.showOpenFilePicker = async () => { window.chamadasSeletor++; return new Promise(() => {}); };
+  });
   await page.goto('./');
+  let escolha = page.waitForEvent('filechooser');
   await page.locator('.arquivo[data-tipo="base"]').click();
-  await expect(valorDoCartao(page, 'SCs em aberto')).toBeVisible();
+  await (await escolha).setFiles(await arquivoBase());
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
+  // Follow-Up pelo "Atualizar bases" (rodapé mostra a versão do build, para conferir o cache).
   await page.locator('#acao-importar').click();
-  await page.locator('dialog .arquivo[data-tipo="followUp"]').click();
-  await page.locator('dialog .arquivo[data-tipo="contratos"]').click();
-  await expect(page.locator('dialog .arquivo[data-tipo="contratos"] .arquivo-status')).toContainText('Opcional'); // cancelou: nada muda
-  expect(await page.evaluate(() => window.chamadasSeletor)).toEqual(['importar-base', 'importar-followUp', 'importar-contratos']);
-});
-
-test('arquivo que o seletor do navegador não entrega (pasta de rede no Citrix): avisa e passa ao seletor comum', async ({ page }) => {
-  await page.addInitScript(() => {
-    window.chamadasSeletor = 0;
-    window.showOpenFilePicker = async () => {
-      window.chamadasSeletor++;
-      return [{ name: 'Follow-Up.xlsx', getFile: async () => { throw new DOMException('não leu', 'NotReadableError'); } }];
-    };
-  });
-  await page.goto('./');
-  const caixa = page.locator('.arquivo[data-tipo="followUp"]');
-  await caixa.click();
-  await expect(caixa.locator('.arquivo-status')).toContainText('O navegador não entregou o arquivo Follow-Up.xlsx (NotReadableError)');
-  await expect(caixa).toHaveAttribute('data-estado', 'erro');
-  // Clique seguinte: seletor comum, que lê o arquivo direto.
-  const escolha = page.waitForEvent('filechooser');
+  await expect(page.locator('dialog .dialogo-versao')).toHaveText(/^Versão do app: \d{2}\/\d{2}\/\d{4}, \d{2}:\d{2} \(\w+\)$/);
+  const caixa = page.locator('dialog .arquivo[data-tipo="followUp"]');
+  escolha = page.waitForEvent('filechooser');
   await caixa.click();
   await (await escolha).setFiles(await arquivoFollowUp());
   await expect(caixa.locator('.arquivo-status')).toContainText('linhas');
-  expect(await page.evaluate(() => window.chamadasSeletor)).toBe(1);
+  expect(await page.evaluate(() => window.chamadasSeletor)).toBe(0);
 });
 
-test('seletor do navegador com erro (bloqueado): avisa e o próximo clique usa o seletor comum', async ({ page }) => {
-  await page.addInitScript(() => {
-    window.chamadasSeletor = 0;
-    window.showOpenFilePicker = async () => { window.chamadasSeletor++; throw new DOMException('bloqueado', 'SecurityError'); };
-  });
-  await page.goto('./');
-  const caixa = page.locator('.arquivo[data-tipo="followUp"]');
-  await caixa.click();
-  await expect(caixa.locator('.arquivo-status')).toHaveText('O seletor de arquivos do navegador não abriu. Clique de novo para escolher o arquivo.');
-  const escolha = page.waitForEvent('filechooser');
-  await caixa.click();
-  await (await escolha).setFiles(await arquivoFollowUp());
-  await expect(caixa.locator('.arquivo-status')).toContainText('linhas');
-  // A Base também vai direto ao seletor comum, sem tentar de novo o do navegador.
-  const escolhaBase = page.waitForEvent('filechooser');
-  await page.locator('.arquivo[data-tipo="base"]').click();
-  await escolhaBase;
-  expect(await page.evaluate(() => window.chamadasSeletor)).toBe(1);
-});
+/** Solta um arquivo na caixa; `alca` simula a referência que o Chrome/Edge dá ao arrastar ('nunca': não responde). */
+async function soltarNaCaixa(page, tipo, { name: nome, buffer }, alca) {
+  await page.evaluate(([tipo, nome, bytes, alca]) => {
+    const arquivo = new File([new Uint8Array(bytes)], nome);
+    const referencia = alca === 'nunca' ? new Promise(() => {}) : Promise.resolve(alca && {
+      kind: 'file', queryPermission: async () => 'granted',
+      getFile: async () => { window.leituras = (window.leituras ?? 0) + 1; return new File([new Uint8Array(bytes)], nome); },
+    });
+    const ev = new Event('drop', { bubbles: true, cancelable: true });
+    Object.defineProperty(ev, 'dataTransfer', { value: { files: [arquivo], items: [{ getAsFileSystemHandle: () => referencia }] } });
+    document.querySelector(`.arquivo[data-tipo="${tipo}"]`).dispatchEvent(ev);
+  }, [tipo, nome, [...buffer], alca]);
+}
 
-test('seletor do navegador parado: avisa em 10 s e o próximo clique usa o seletor comum', async ({ page }) => {
-  await page.clock.install();
-  await page.addInitScript(() => {
-    window.showOpenFilePicker = async () => [{ name: 'Follow-Up.xlsx', getFile: () => new Promise(() => {}) }];
-  });
+test('arrastar importa na hora, mesmo se a referência ao arquivo não vier (pasta de rede)', async ({ page }) => {
   await page.goto('./');
-  const caixa = page.locator('.arquivo[data-tipo="followUp"]');
-  await caixa.click();
-  await expect(caixa.locator('.arquivo-status')).toHaveText('Abrindo Follow-Up.xlsx...');
-  await page.clock.runFor(10_000);
-  await expect(caixa.locator('.arquivo-status')).toContainText('clique de novo para escolher pelo seletor comum');
-  const escolha = page.waitForEvent('filechooser');
-  await caixa.click();
-  await (await escolha).setFiles(await arquivoFollowUp());
-  await expect(caixa.locator('.arquivo-status')).toContainText('linhas');
-  await expect(caixa).toHaveAttribute('data-estado', 'ok');
+  await soltarNaCaixa(page, 'base', await arquivoBase(), 'nunca');
+  await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
 });
 
 test('Regional: cartões, período, faixa e filtro por clique', async ({ page }) => {
@@ -616,15 +578,9 @@ test('configuração: editar o de-para recalcula; restaurar padrão volta', asyn
 });
 
 test('configuração: "Reimportar bases" lê o mesmo arquivo de novo e traz a filial incluída', async ({ page }) => {
-  // Seletor e referência ao arquivo simulados (a janela do sistema não abre no teste); conta as leituras.
-  const base = await arquivoBase();
-  await page.addInitScript((bytes) => {
-    window.leituras = 0;
-    const alca = { kind: 'file', queryPermission: async () => 'granted', getFile: async () => { window.leituras++; return new File([new Uint8Array(bytes)], 'base.xlsx'); } };
-    window.showOpenFilePicker = async () => [alca];
-  }, [...base.buffer]);
+  // Arquivo arrastado com a referência simulada (Chrome/Edge); conta as leituras pela referência.
   await page.goto('./');
-  await page.locator('.arquivo[data-tipo="base"]').click();
+  await soltarNaCaixa(page, 'base', await arquivoBase(), true);
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
 
   // Filial 99999 (está na base fictícia, fora do de-para): incluída e reimportada sem escolher arquivo.
@@ -637,9 +593,16 @@ test('configuração: "Reimportar bases" lê o mesmo arquivo de novo e traz a fi
   await page.getByLabel(`Filiais, linha ${n}, Regional`).fill('Regional Nova');
   await page.getByRole('button', { name: 'Reimportar bases' }).click();
   await expect(page.locator('.config-avisos')).toContainText('Base: base.xlsx, 5 linhas das filiais do de-para');
-  expect(await page.evaluate(() => window.leituras)).toBe(2);
+  expect(await page.evaluate(() => window.leituras)).toBe(1); // a importação usou o arquivo solto; a reimportação, a referência
   await page.getByRole('button', { name: 'Fechar configuração' }).click();
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('3');
+});
+
+test('configuração: "Reimportar bases" sem referência ao arquivo pede a caixa', async ({ page }) => {
+  await importarBase(page); // seletor comum: não dá referência ao arquivo
+  await page.getByRole('button', { name: 'Configuração' }).click();
+  await page.getByRole('button', { name: 'Reimportar bases' }).click();
+  await expect(page.locator('.config-avisos')).toContainText('Base: escolha o arquivo de novo pela caixa em "Atualizar bases".');
 });
 
 test('configuração: exportar e importar o arquivo da equipe', async ({ page }) => {

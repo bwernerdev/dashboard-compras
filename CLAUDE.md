@@ -38,7 +38,7 @@ Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configura�
 |---|---|
 | `PROJETO.md` | Diagnóstico da planilha, erro encontrado, regras, decisões, telas, fases, perguntas |
 | `README.md` | Visão para quem usa e mapa das pastas |
-| `index.html`, `vite.config.js` (`base: './'`), `package.json`, `playwright.config.js` | Entrada, build e e2e |
+| `index.html`, `vite.config.js` (`base: './'`; `__VERSAO__` = data do build e commit, no rodapé dos diálogos), `package.json`, `playwright.config.js` | Entrada, build e e2e |
 | `eslint.config.js`, `tsconfig.json` | Lint e checagem de tipos (`npm run lint`, `npm run tipos`; os dois rodam no CI) |
 | `vite.painel.config.js` | Build do modelo do painel (JS + CSS num script só, encaixados em `src/painel/modelo.html`) |
 | `.painel-build/`, `painel-compras*.html` | Gerados/ignorados |
