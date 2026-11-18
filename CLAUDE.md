@@ -58,4 +58,4 @@ PÚBLICO `github.com/bwernerdev/dashboard-compras` (branch `main`), por decisão
 - Testes só com dados fictícios. Dados reais só em scripts locais.
 - Cores de status, prioridade e % saving vêm da planilha antiga (`src/ui/cores-planilha.js`). Nas tabelas usam o fundo exato (`--pl-*`): selo para status e % saving, marca para prioridade. No gráfico, a mesma família de cor em tons validados (`--graf-*`). Pedido da equipe; não trocar pela paleta. Detalhes: `PROJETO.md`, "Cores da planilha".
 - Gráficos: padrão da skill de visualização (paleta validada em `tokens.css`, cor fixa por status, legenda com 2+ séries, sempre uma tabela com os mesmos números). Contagem de SC = distinta por Solicitação. Pré-pedidos: vazio conta 1 por grupo, igual à planilha (`PROJETO.md` seção 9).
-- Sessões usam as skills do caveman: respostas terse (`caveman`), exploração ampla com `caveman-explore`.
+- Sessões usam a skill `aero` (persona Aero com a voz curta do caveman, em frases completas; injetada pelo hook global), exploração ampla com `caveman-explore`.
