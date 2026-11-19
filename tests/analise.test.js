@@ -108,8 +108,9 @@ test('resumoEmAberto: SCs distintas, SLA, média e máximo', () => {
     reg({ solicitacao: 'P2', diasEmAberto: 3, status: 'Em Pré-Pedido' }),
     reg({ solicitacao: 'P2', diasEmAberto: 3, status: 'Em Cotação' }),
     reg({ solicitacao: 'P3', diasEmAberto: 3, status: 'Em pendências de compra' }),
+    reg({ solicitacao: 'P4', diasEmAberto: 3, status: 'EM PRÉ-PEDIDO' }), // sem diferenciar maiúsculas, como o Excel
   ]);
-  assert.deepEqual([comPre.scs, comPre.itens, comPre.scsSemPre, comPre.itensSemPre], [3, 4, 2, 2]);
+  assert.deepEqual([comPre.scs, comPre.itens, comPre.scsSemPre, comPre.itensSemPre], [4, 5, 2, 2]);
   const vazio = resumoEmAberto([]);
   assert.equal(vazio.pctNoPrazo, null);
   assert.equal(vazio.mediaDias, null);

@@ -9,18 +9,19 @@
 // Comparação sem maiúsculas, como o "É igual a" do Excel.
 import { el } from './dom.js';
 import { ehRegularizacao } from '../analise.js';
+import { STATUS as ST } from '../regras.js';
 
 const chave = (v) => String(v ?? '').trim().toLowerCase();
 
 const STATUS = new Map([
-  ['em pedido', 'pedido'],
-  ['em pré-pedido', 'pre-pedido'],
-  ['em cotação', 'cotacao'],
-  ['em pendências de compra', 'pend-compra'],
-  ['em pendências de contrato', 'pend-contrato'],
-  ['sel. comprador', 'sel-comprador'],
-  ['cancelado', 'cancelado'],
-]);
+  [ST.PEDIDO, 'pedido'],
+  [ST.PRE_PEDIDO, 'pre-pedido'],
+  [ST.COTACAO, 'cotacao'],
+  [ST.PENDENCIA_COMPRA, 'pend-compra'],
+  [ST.PENDENCIA_CONTRATO, 'pend-contrato'],
+  [ST.SEL_COMPRADOR, 'sel-comprador'],
+  [ST.CANCELADO, 'cancelado'],
+].map(([status, cor]) => [chave(status), cor]));
 /** Status que a planilha pinta (Sel. Comprador não tem cor lá). */
 const STATUS_COM_COR = new Set(['pedido', 'pre-pedido', 'cotacao', 'pend-compra', 'pend-contrato', 'cancelado']);
 

@@ -20,10 +20,27 @@ import { dias, diasUteis, partesDaSerie } from './datas.js';
 export const ERRO_ND = '#N/D';
 export const PENDENTE = 'Pendente';
 
+/**
+ * Status da SC como o ME escreve na coluna Status. Um nome só para cada texto: regras e telas usam
+ * estas constantes, e a comparação ignora maiúsculas (mesmoStatus), como o Excel.
+ */
+export const STATUS = Object.freeze({
+  PEDIDO: 'Em Pedido',
+  PRE_PEDIDO: 'Em Pré-Pedido',
+  COTACAO: 'Em Cotação',
+  PENDENCIA_COMPRA: 'Em pendências de compra',
+  PENDENCIA_CONTRATO: 'Em pendências de contrato',
+  SEL_COMPRADOR: 'Sel. Comprador',
+  CANCELADO: 'Cancelado',
+});
+
 const vazia = (v) => v === null || v === undefined; // ÉCÉL.VAZIA
 const preenchida = (v) => !(v === null || v === undefined || v === ''); // valor <> ""
 const igual = (a, b) => String(a ?? '').toUpperCase() === String(b ?? '').toUpperCase();
 const texto = (v) => (v === null || v === undefined ? '' : String(v));
+
+/** Status igual ao outro, sem diferenciar maiúsculas (comparação de texto do Excel). */
+export const mesmoStatus = (a, b) => igual(a, b);
 
 /** EXT(texto; 5; 7): "FDS-7652633" -> "7652633". */
 export function extrairNumero(valor) {
@@ -81,7 +98,7 @@ export function ehServico(unidade) {
  */
 export const PRAZO_SLA_DIAS = 30;
 
-const STATUS_SEM_SLA = ['Cancelado', 'Em Pedido', 'Em Pré-Pedido'];
+const STATUS_SEM_SLA = [STATUS.CANCELADO, STATUS.PEDIDO, STATUS.PRE_PEDIDO];
 
 /** "No Prazo" / "Fora do Prazo"; null se o item não está em aberto ou o status não conta SLA. */
 export function situacaoSla(status, diasEmAberto) {
@@ -120,17 +137,17 @@ export function temposPorEtapa(r, hoje) {
   const st = r.status;
   return {
     cancelado: preenchida(r.dataCancelamento) ? dias(r.dataCancelamento, r.criacao) : null,
-    emCotacao: igual(st, 'Em Cotação')
+    emCotacao: igual(st, STATUS.COTACAO)
       ? dias(hoje, r.dataCotacao)
       : (preenchida(r.numeroCotacao) && preenchida(r.dataPrePedido) ? dias(r.dataPrePedido, r.dataCotacao) : null),
     emPedido: preenchida(r.dataPedido) ? dias(r.dataPedido, r.dataPrePedido) : null,
-    pendenciaCompra: igual(st, 'Em pendências de compra')
+    pendenciaCompra: igual(st, STATUS.PENDENCIA_COMPRA)
       ? dias(hoje, r.criacao)
       : (preenchida(r.numeroCotacao) ? dias(r.dataCotacao, r.criacao) : null),
     emPrePedido: preenchida(r.dataPrePedido) ? dias(r.dataPrePedido, r.criacao) : null,
-    pendenciaContrato: preenchida(r.contrato) && igual(st, 'Em Pedido')
+    pendenciaContrato: preenchida(r.contrato) && igual(st, STATUS.PEDIDO)
       ? dias(r.dataPrePedido, r.criacao)
-      : (igual(st, 'Em pendências de contrato') ? dias(hoje, r.criacao) : null),
+      : (igual(st, STATUS.PENDENCIA_CONTRATO) ? dias(hoje, r.criacao) : null),
   };
 }
 

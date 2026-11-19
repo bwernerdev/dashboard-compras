@@ -8,7 +8,7 @@
 /** @typedef {import('./tipos').Linha} Linha */
 
 import { serie, partesDaSerie } from './datas.js';
-import { PENDENTE } from './regras.js';
+import { PENDENTE, STATUS, mesmoStatus } from './regras.js';
 
 const SEM_VALOR = '-';
 const nomeOuTraco = (v) => (v === null || v === undefined || v === '' ? SEM_VALOR : String(v));
@@ -101,8 +101,8 @@ export function resumoStatus(/** @type {Registro[]} */ registros) {
     scs: distintas(registros),
     itens: registros.length,
     abertas: distintas(registros.filter((r) => r.diasEmAberto !== null && r.diasEmAberto !== undefined)),
-    emPedido: doStatus.get('Em Pedido') ?? 0,
-    canceladas: doStatus.get('Cancelado') ?? 0,
+    emPedido: doStatus.get(STATUS.PEDIDO) ?? 0,
+    canceladas: doStatus.get(STATUS.CANCELADO) ?? 0,
   };
 }
 
@@ -124,7 +124,7 @@ export function resumoEmAberto(/** @type {Registro[]} */ abertos) {
   const scsFora = scsCom('Fora do Prazo');
   // Cartão "SCs em aberto" da Regional (pedido da equipe, 19/11/2026): sem os itens Em Pré-Pedido.
   // SC com algum item em outro status continua contando.
-  const semPre = abertos.filter((r) => r.status !== 'Em Pré-Pedido');
+  const semPre = abertos.filter((r) => !mesmoStatus(r.status, STATUS.PRE_PEDIDO));
   return {
     scs: distintas(abertos),
     scsSemPre: distintas(semPre),
@@ -171,7 +171,7 @@ export function emAbertoPor(abertos, campo) {
  * Status do acompanhamento diário. No ME esses itens nunca têm "Selecionado por",
  * então ficam no comprador "Pendente".
  */
-export const STATUS_PENDENCIAS = ['Em pendências de compra', 'Em pendências de contrato'];
+export const STATUS_PENDENCIAS = [STATUS.PENDENCIA_COMPRA, STATUS.PENDENCIA_CONTRATO];
 const mesmoTexto = (a, b) => String(a ?? '').toLowerCase() === String(b ?? '').toLowerCase();
 export const ehPendencia = (/** @type {Linha} */ r) => STATUS_PENDENCIAS.some((s) => mesmoTexto(r.status, s));
 
@@ -210,8 +210,8 @@ export function itensPorStatus(/** @type {Linha[]} */ registros) {
 
 /** Ordem fixa dos status (processo) e cor por status: a cor segue o status, nunca a posição. */
 export const STATUS_SC = [
-  'Em Pedido', 'Em Pré-Pedido', 'Em Cotação', 'Em pendências de compra',
-  'Em pendências de contrato', 'Sel. Comprador', 'Cancelado',
+  STATUS.PEDIDO, STATUS.PRE_PEDIDO, STATUS.COTACAO, STATUS.PENDENCIA_COMPRA,
+  STATUS.PENDENCIA_CONTRATO, STATUS.SEL_COMPRADOR, STATUS.CANCELADO,
 ];
 export const OUTROS = 'Outros';
 const statusDoGrafico = (s) => (STATUS_SC.includes(s) ? s : OUTROS);
