@@ -153,7 +153,7 @@ test('Regional: cartões, período, faixa e filtro por clique', async ({ page })
   await importarBase(page);
   await expect(page.locator('#periodo')).toContainText('12/09/2026 a 11/11/2026');
   await expect(valorDoCartao(page, 'SCs em aberto')).toHaveText('2');
-  await expect(page.locator('.cartao', { hasText: 'SCs em aberto' }).locator('.cartao-detalhe')).toContainText('3 itens');
+  await expect(page.locator('.cartao', { hasText: 'SCs em aberto sem pré-pedido' }).locator('.cartao-detalhe')).toHaveText('de 2 em aberto; nenhuma em pré-pedido');
   // SLA por SC: 1 SC fora (2 itens) e 1 no prazo.
   await expect(valorDoCartao(page, 'SCs fora do prazo')).toHaveText('1');
   await expect(page.locator('.cartao', { hasText: 'SCs fora do prazo' }).locator('.cartao-detalhe')).toContainText('2 itens');

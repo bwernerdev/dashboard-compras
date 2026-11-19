@@ -154,7 +154,7 @@ Ocultas hoje: Base, Follow-UP, sla, Base Analitico, Botão, Contr - Cot, scs Fil
 
 **Filtros globais** (barra superior, valem para todas as telas): Regional, Filial, Comprador, Prioridade, Status, Período (mês/ano do pedido), Contrato sim/não.
 
-1. **Regional** — cartões: SCs abertas (desde 19/11/2026, pedido da equipe, o cartão "SCs em aberto" não conta os itens Em Pré-Pedido: SC só com itens em pré-pedido sai, SC com algum item em outro status fica; gráfico, tabela e os outros cartões seguem com todas as em aberto; `scsSemPre`/`itensSemPre` em `resumoEmAberto`), % no prazo, dias médios em aberto, mais antiga. Gráfico de SCs abertas por faixa de dias. Tabela das SCs abertas (ordenável, pesquisa, cor por SLA). Clique na regional/filial filtra.
+1. **Regional** — cartões: SCs abertas (desde 19/11/2026, pedido da equipe, o cartão "SCs em aberto sem pré-pedido" (rótulo assim desde 19/11/2026, com "de N em aberto; M só em pré-pedido" no detalhe, para bater com a tabela e a tela Status) não conta os itens Em Pré-Pedido: SC só com itens em pré-pedido sai, SC com algum item em outro status fica; gráfico, tabela e os outros cartões seguem com todas as em aberto; `scsSemPre`/`itensSemPre` em `resumoEmAberto`), % no prazo, dias médios em aberto, mais antiga. Gráfico de SCs abertas por faixa de dias. Tabela das SCs abertas (ordenável, pesquisa, cor por SLA). Clique na regional/filial filtra.
 2. **Compradores** (`sc p Compr`) — por comprador: SCs por status (barras empilhadas), pré-pedidos distintos por regional, % de SCs atendidas, SLA no prazo. Linha "Pendente" destacada (SC sem comprador).
 3. **Saving** — por filial e por comprador: total comprado, economia, % saving; evolução mensal; ranking.
 

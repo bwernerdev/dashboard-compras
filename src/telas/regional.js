@@ -101,10 +101,12 @@ export function telaRegional(ctx) {
     return estadoVazio('Nenhuma SC em aberto com os filtros atuais.', ctx);
   }
 
+  const soPre = resumo.scs - resumo.scsSemPre; // SCs com todos os itens em aberto Em Pré-Pedido
   const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoEmAberto(itensEmAberto(ctx.anteriores.registros)) : null);
   const cartoes = linhaDeCartoes(
     // Sem as SCs em pré-pedido (pedido da equipe, 19/11/2026); o resto da tela segue com todas as em aberto.
-    cartao({ icone: 'documento', rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.scsSemPre), detalhe: `${fmt.qtd(resumo.itensSemPre, 'item', 'itens')} sem pedido nem pré-pedido`, variacao: vs('scsSemPre', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.scsSemPre, resumo.scsSemPre) }),
+    // O rótulo diz isso e o detalhe traz o total, para bater com a tabela, a lista e a tela Status (32 = 16 + 16).
+    cartao({ icone: 'documento', rotulo: 'SCs em aberto sem pré-pedido', valor: fmt.inteiro(resumo.scsSemPre), detalhe: `de ${fmt.inteiro(resumo.scs)} em aberto; ${soPre ? `${fmt.inteiro(soPre)} só em pré-pedido` : 'nenhuma em pré-pedido'}`, variacao: vs('scsSemPre', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.scsSemPre, resumo.scsSemPre) }),
     // SLA conta SCs, como o Atendimento (SC fora = algum item fora).
     cartao({
       icone: 'check', rotulo: 'SLA no prazo', valor: fmt.pct(resumo.pctScsNoPrazo),
