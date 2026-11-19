@@ -67,7 +67,7 @@ export const corDoStatus = (s) => (s === OUTROS ? 'var(--serie-outros)' : corDoS
 const destacarPendente = (linha) => (linha.comprador === PENDENTE ? 'linha-destaque' : '');
 
 // Cor fixa por regional (a cor acompanha a regional, nunca a posição). Regional nova: cinza.
-const CORES_REGIONAL = ['Filiais Bruno', 'Filiais Thayane', 'Filiais Vitor', 'Central Compras - Itajaí', 'Seara Matriz'];
+const CORES_REGIONAL = ['Filiais Lili', 'Filiais Thayane', 'Filiais Vitor', 'Central Compras - Itajaí', 'Seara Matriz'];
 const corDaRegional = (r) => {
   const i = CORES_REGIONAL.indexOf(r);
   return i >= 0 ? `var(--serie-${i + 1})` : 'var(--serie-outros)';

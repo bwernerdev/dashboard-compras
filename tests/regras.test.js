@@ -231,6 +231,28 @@ test('Itajaí separada: HUB (570), Fatiados (572) e CD (573); configuração sal
   assert.equal(atualizarConfigSalva(null), null);
 });
 
+test('Lili Beth: regional "Filiais Lili" no padrão e apelido; configuração salva acompanha', () => {
+  const cfg = criarConfig();
+  assert.deepEqual(['570', '572', '573', '733', '329'].map((a) => cfg.dadosFilial(a).regional), Array(5).fill('Filiais Lili'));
+  assert.equal(cfg.apelidoComprador('Lili Beth Carlos da Silva Melo'), 'Lili Beth');
+  assert.equal(cfg.apelidoComprador('Bruno Matheus de Freitas Werner'), 'Bruno W.'); // registros antigos continuam com o apelido
+  const salva = {
+    filiais: [
+      { codigo: '30570', ajustada: '570', nome: 'Itajaí - HUB', regional: 'Filiais Bruno' },
+      { codigo: '30733', ajustada: '733', nome: 'CD Cambé', regional: 'FILIAIS BRUNO ' },
+      { codigo: '30901', ajustada: '901', nome: 'Campinas', regional: 'Regional da equipe' }, // editada: fica
+    ],
+    compradores: [{ nome: 'Bruno Matheus de Freitas Werner', apelido: 'Bruno W.' }],
+  };
+  const nova = atualizarConfigSalva(salva);
+  assert.deepEqual(nova.filiais.map((f) => f.regional), ['Filiais Lili', 'Filiais Lili', 'Regional da equipe']);
+  assert.deepEqual(nova.compradores.map((c) => c.apelido), ['Bruno W.', 'Lili Beth']);
+  assert.equal(salva.compradores.length, 1); // não altera o objeto lido
+  // Já tem a Lili (com outro apelido, escolhido pela equipe): não duplica nem troca.
+  const comLili = { filiais: [], compradores: [{ nome: 'LILI BETH CARLOS DA SILVA MELO', apelido: 'Lili' }] };
+  assert.deepEqual(atualizarConfigSalva(comLili).compradores.map((c) => c.apelido), ['Lili']);
+});
+
 test('aprovador GA: configuração salva sem o campo usa o padrão; campo apagado fica sem nome', () => {
   const semCampo = criarConfig({ filiais: [{ codigo: '30570', ajustada: '570', nome: 'X', regional: 'R' }], compradores: [] });
   const padrao = criarConfig().aprovadorGA('30.570');

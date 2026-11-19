@@ -23,18 +23,31 @@ const padraoPorCodigo = primeiraOcorrencia(CONFIG_PADRAO.filiais, (f) => normali
 /** Nomes de filial que mudaram no padrão: código -> nome antigo (o novo é o do padrão). */
 export const NOMES_ANTIGOS = { 30570: 'Itajai', 30572: 'Itajai', 30573: 'Itajai' };
 
+/** Regionais que mudaram de nome no padrão: nome novo -> nome antigo (Lili Beth no lugar do Bruno, 19/11/2026). */
+export const REGIONAIS_ANTIGAS = { 'Filiais Lili': 'Filiais Bruno' };
+const regionalNova = new Map(Object.entries(REGIONAIS_ANTIGAS).map(([nova, antiga]) => [chave(antiga), nova]));
+
+/** Compradores que entraram no padrão depois que a equipe já podia ter salvo a configuração (nome completo). */
+export const COMPRADORES_NOVOS = ['Lili Beth Carlos da Silva Melo'];
+
 /**
  * Configuração salva no navegador antes de um nome mudar no padrão: troca o nome antigo pelo novo
- * (Itajaí separada em HUB, Fatiados e CD, 17/11/2026). Nome editado pela equipe fica como está.
+ * (Itajaí separada em HUB, Fatiados e CD, 17/11/2026; regional "Filiais Bruno" -> "Filiais Lili",
+ * 19/11/2026). Nome editado pela equipe fica como está. Comprador novo do padrão que não está na
+ * lista salva entra no fim dela (Lili Beth, 19/11/2026).
  */
 export function atualizarConfigSalva(config) {
   if (!config?.filiais) return config;
   const filiais = config.filiais.map((f) => {
     const k = normalizarCodigoFilial(f.codigo);
     const antigo = NOMES_ANTIGOS[k];
-    return antigo && chave(f.nome).trim() === chave(antigo) ? { ...f, nome: padraoPorCodigo.get(k).nome } : f;
+    const g = antigo && chave(f.nome).trim() === chave(antigo) ? { ...f, nome: padraoPorCodigo.get(k).nome } : f;
+    const nova = regionalNova.get(chave(g.regional).trim());
+    return nova ? { ...g, regional: nova } : g;
   });
-  return { ...config, filiais };
+  const salvos = new Set((config.compradores ?? []).map((c) => chave(c.nome).trim()));
+  const novos = CONFIG_PADRAO.compradores.filter((c) => COMPRADORES_NOVOS.includes(c.nome) && !salvos.has(chave(c.nome)));
+  return { ...config, filiais, compradores: [...(config.compradores ?? []), ...novos] };
 }
 
 /**

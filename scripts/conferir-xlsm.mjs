@@ -6,7 +6,7 @@
 
 import { openAsBlob } from 'node:fs';
 import { importar } from '../src/importar.js';
-import { criarConfig, CONFIG_PADRAO, NOMES_ANTIGOS, normalizarCodigoFilial } from '../src/config/index.js';
+import { criarConfig, CONFIG_PADRAO, NOMES_ANTIGOS, REGIONAIS_ANTIGAS, normalizarCodigoFilial } from '../src/config/index.js';
 import { diasUteis, formatarSerie } from '../src/datas.js';
 import { abrirPasta, lerAbaInteira } from '../src/leitor/xlsx.js';
 import {
@@ -15,10 +15,13 @@ import {
 
 const caminho = process.argv[2] ?? 'DASHBOARD COMPRAS 2026.xlsm';
 const blob = await openAsBlob(caminho);
-// Nomes de filial como na planilha (o app separou Itajaí em HUB, Fatiados e CD em 17/11/2026).
+// Nomes de filial e de regional como na planilha (o app separou Itajaí em HUB, Fatiados e CD em
+// 17/11/2026 e renomeou "Filiais Bruno" para "Filiais Lili" em 19/11/2026).
 const cfg = criarConfig({
   ...CONFIG_PADRAO,
-  filiais: CONFIG_PADRAO.filiais.map((f) => ({ ...f, nome: NOMES_ANTIGOS[normalizarCodigoFilial(f.codigo)] ?? f.nome })),
+  filiais: CONFIG_PADRAO.filiais.map((f) => ({
+    ...f, nome: NOMES_ANTIGOS[normalizarCodigoFilial(f.codigo)] ?? f.nome, regional: REGIONAIS_ANTIGAS[f.regional] ?? f.regional,
+  })),
 });
 let falhas = 0;
 

@@ -6,10 +6,12 @@ export const CONFIG_PADRAO = {
   // Código da filial (como vem do ME, sem ponto) -> filial ajustada, nome e regional.
   // aprovadorGA: nome do "Ag. aprovação" do nível 1 do pré-pedido (passado pela equipe em 12/11/2026; não existe na planilha).
   // Itajaí separada em HUB (570), Fatiados (572) e CD (573) a pedido da equipe (17/11/2026); na planilha as três eram "Itajai".
+  // Regional "Filiais Bruno" renomeada para "Filiais Lili" em 19/11/2026 (Lili Beth assumiu as filiais do Bruno);
+  // configuração salva no navegador acompanha por REGIONAIS_ANTIGAS (config/index.js).
   filiais: [
-    { codigo: '30570', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - ARMAZEM', ajustada: '570', nome: 'Itajaí - HUB', regional: 'Filiais Bruno', aprovadorGA: 'FABIANO LECHINSKI' },
-    { codigo: '30573', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - CD', ajustada: '573', nome: 'Itajaí - CD', regional: 'Filiais Bruno', aprovadorGA: 'FABIANO LECHINSKI' },
-    { codigo: '30572', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - FATIADOS', ajustada: '572', nome: 'Itajaí - Fatiados', regional: 'Filiais Bruno', aprovadorGA: 'MARANA BORGES' },
+    { codigo: '30570', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - ARMAZEM', ajustada: '570', nome: 'Itajaí - HUB', regional: 'Filiais Lili', aprovadorGA: 'FABIANO LECHINSKI' },
+    { codigo: '30573', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - CD', ajustada: '573', nome: 'Itajaí - CD', regional: 'Filiais Lili', aprovadorGA: 'FABIANO LECHINSKI' },
+    { codigo: '30572', descricao: 'SEARA ALIMENTOS LTDA  -  ITAJAI - FATIADOS', ajustada: '572', nome: 'Itajaí - Fatiados', regional: 'Filiais Lili', aprovadorGA: 'MARANA BORGES' },
     { codigo: '178716', descricao: 'SEARA COMERCIO DE ALIMENTOS LT  -  BAURU - CD', ajustada: '716', nome: 'CDA', regional: 'Central Compras - Itajaí' },
     { codigo: '30901', descricao: 'SEARA ALIMENTOS LTDA  -  CAMPINAS - CD', ajustada: '901', nome: 'Campinas', regional: 'Filiais Thayane', aprovadorGA: 'BRUNO SOUSA MELO' },
     { codigo: '178692', descricao: 'SEARA COMERCIO DE ALIMENTOS LT  -  CAMPINAS - CD', ajustada: '692', nome: 'Campinas', regional: 'Filiais Thayane', aprovadorGA: 'BRUNO SOUSA MELO' },
@@ -30,15 +32,18 @@ export const CONFIG_PADRAO = {
     { codigo: '178677', descricao: 'SEARA COMERCIO DE ALIMENTOS LT  -  SAO GONCALO DO AMARANTE - CD', ajustada: '677', nome: 'Cabo St. Ago.', regional: 'Central Compras - Itajaí', aprovadorGA: 'EZEQUIAS DA SILVA' },
     { codigo: '30910', descricao: 'SEARA ALIMENTOS LTDA  -  SALVADOR - CD', ajustada: '910', nome: 'Salvador', regional: 'Filiais Vitor', aprovadorGA: 'CLEA SANTOS' },
     { codigo: '30965', descricao: 'SEARA ALIMENTOS LTDA  -  VITORIA DA CONQUISTA - CD', ajustada: '965', nome: 'Vit. Conq.', regional: 'Filiais Vitor', aprovadorGA: 'MARIANA CRUZ' },
-    { codigo: '30733', descricao: 'SEARA ALIMENTOS LTDA  -  CAMBE - CD', ajustada: '733', nome: 'CD Cambé', regional: 'Filiais Bruno', aprovadorGA: 'LEONARDO AMORIM' },
+    { codigo: '30733', descricao: 'SEARA ALIMENTOS LTDA  -  CAMBE - CD', ajustada: '733', nome: 'CD Cambé', regional: 'Filiais Lili', aprovadorGA: 'LEONARDO AMORIM' },
     { codigo: '30555', descricao: 'SEARA ALIMENTOS LTDA - SP ANHANGUERA - MATRIZ', ajustada: '555', nome: 'Matriz ', regional: 'Seara Matriz' },
-    { codigo: '178329', descricao: 'SEARA COMERCIO DE ALIMENTOS LT - CAMBE - CD', ajustada: '329', nome: 'CD Cambé', regional: 'Filiais Bruno', aprovadorGA: 'LEONARDO AMORIM' },
+    { codigo: '178329', descricao: 'SEARA COMERCIO DE ALIMENTOS LT - CAMBE - CD', ajustada: '329', nome: 'CD Cambé', regional: 'Filiais Lili', aprovadorGA: 'LEONARDO AMORIM' },
   ],
 
   // Nome completo do comprador (depois do prefixo "FDS - ") -> apelido.
   // Quem não está aqui aparece como "-" (igual à planilha).
   compradores: [
     { nome: 'Bruno Matheus de Freitas Werner', apelido: 'Bruno W.' },
+    // Lili Beth entrou em 19/11/2026 (nome como vem no "Selecionado por" da base). Configuração salva sem ela
+    // ganha a linha ao abrir (COMPRADORES_NOVOS, config/index.js).
+    { nome: 'Lili Beth Carlos da Silva Melo', apelido: 'Lili Beth' },
     { nome: 'Vitor Eduardo Antunes da Cruz', apelido: 'Vitor' },
     { nome: 'Matheus Alexandre Fortunato Petuco', apelido: 'Matheus' },
     { nome: 'Thayane da Silva Afonso Morlus', apelido: 'Thayane' },
