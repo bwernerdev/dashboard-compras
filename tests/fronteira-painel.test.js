@@ -40,7 +40,8 @@ function alcancados(entrada) {
     if (!/\.m?js$/.test(atual)) continue; // .html, .webp, .css: sem imports
     for (const proximo of importsDe(atual)) {
       if (vistos.has(proximo)) continue;
-      assert.ok(existsSync(proximo), `import quebrado em ${relative(raiz, atual)}: ${relative(raiz, proximo)}`);
+      // Só código: o modelo.gerado.html do painel só existe depois do build (no CI, os testes vêm antes).
+      if (/\.m?js$/.test(proximo)) assert.ok(existsSync(proximo), `import quebrado em ${relative(raiz, atual)}: ${relative(raiz, proximo)}`);
       vistos.set(proximo, [...vistos.get(atual), proximo]);
       fila.push(proximo);
     }
