@@ -122,8 +122,13 @@ export function resumoEmAberto(/** @type {Registro[]} */ abertos) {
   const scsCom = (sla) => [...slaDaSc.values()].filter((v) => v === sla).length;
   const scsNoPrazo = scsCom('No Prazo');
   const scsFora = scsCom('Fora do Prazo');
+  // Cartão "SCs em aberto" da Regional (pedido da equipe, 19/11/2026): sem os itens Em Pré-Pedido.
+  // SC com algum item em outro status continua contando.
+  const semPre = abertos.filter((r) => r.status !== 'Em Pré-Pedido');
   return {
     scs: distintas(abertos),
+    scsSemPre: distintas(semPre),
+    itensSemPre: semPre.length,
     scsNoPrazo,
     scsFora,
     scsSemPrazo: slaDaSc.size - scsNoPrazo - scsFora,

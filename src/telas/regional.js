@@ -103,7 +103,8 @@ export function telaRegional(ctx) {
 
   const vs = comparar(ctx.anteriores?.rotulo, resumo, ctx.anteriores ? resumoEmAberto(itensEmAberto(ctx.anteriores.registros)) : null);
   const cartoes = linhaDeCartoes(
-    cartao({ icone: 'documento', rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.scs), detalhe: `${fmt.qtd(resumo.itens, 'item', 'itens')} sem pedido e não ${resumo.itens === 1 ? 'cancelado' : 'cancelados'}`, variacao: vs('scs', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.scs, resumo.scs) }),
+    // Sem as SCs em pré-pedido (pedido da equipe, 19/11/2026); o resto da tela segue com todas as em aberto.
+    cartao({ icone: 'documento', rotulo: 'SCs em aberto', valor: fmt.inteiro(resumo.scsSemPre), detalhe: `${fmt.qtd(resumo.itensSemPre, 'item', 'itens')} sem pedido nem pré-pedido`, variacao: vs('scsSemPre', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.scsSemPre, resumo.scsSemPre) }),
     // SLA conta SCs, como o Atendimento (SC fora = algum item fora).
     cartao({
       icone: 'check', rotulo: 'SLA no prazo', valor: fmt.pct(resumo.pctScsNoPrazo),
