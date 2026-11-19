@@ -17,6 +17,7 @@ const PROIBIDOS = [
   /^src\/importar\.js$/,
   /^src\/importacao(\.worker)?\.js$/,
   /^src\/memoria\.js$/,
+  /^src\/bases\.js$/,
   /^src\/telas\/compradores\.js$/,
   /^src\/telas\/configuracao\.js$/,
   /^src\/telas\/importacao\.js$/,

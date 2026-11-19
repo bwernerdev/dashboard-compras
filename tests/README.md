@@ -8,6 +8,7 @@
 | `regras.test.js` | Cada regra de `src/regras.js`: filial, comprador, dias em aberto, SLA (fora só com mais de 30 dias úteis, qualquer prioridade), Saving Real em texto pt-BR, tempos por etapa, Follow-Up |
 | `leitor.test.js` | Leitor de xlsx: tipos de célula, XML picado em pedaços, filtro de colunas, xlsx completo, mensagens de erro |
 | `importar.test.js` | Importação ponta a ponta com xlsx fictício: filtro de filial, conversão de tipos, Dados Gerais, coluna faltando, cancelamento |
+| `bases.test.js` | Fluxo de dados do app (`src/bases.js`) com as bases fictícias do e2e, armazenamento e vista falsos: importar (cópia, histórico, uma por tipo), base anterior de outro dia, Follow-Up e Contratos, Reimportar pela cópia (vencida pede a caixa), restaurar ao abrir, aviso de filial nova, virada do dia |
 | `analise.test.js` | Agregações e filtros das telas (`src/analise.js`, inclusive `ehPendencia`, `ehRegularizacao`, spend, status e entregas), memória (`brutosDe`, `recalcular`), `validarConfig`, `nomeProprio` (nome em caixa alta para exibir) |
 | `painel.test.js` | Dados do painel publicado (`src/painel/dados.js`): só campos públicos, detalhe só de SC em aberto, versão, compactar/descompactar; texto do "Copiar tabela" (`gerarTsv`) |
 | `fronteira-painel.test.js` | Percorre os imports a partir de `src/painel/painel.js` e falha se o painel publicado alcançar `src/config/`, `importar.js`, `importacao*.js`, `memoria.js` ou as telas internas (Compradores, Configuração, Importação); mostra o caminho de imports que entrou |

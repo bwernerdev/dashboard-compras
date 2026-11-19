@@ -18,7 +18,7 @@ Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configura�
 ## Pastas (cada uma tem `README.md` com o mapa dos arquivos)
 | Pasta | Conteúdo |
 |---|---|
-| `src/` | App: casca (`main.js`), importação, regras, agregações (`analise.js`), memória local |
+| `src/` | App: tela (`main.js`), dados e fluxo de importação sem DOM (`bases.js`), importação, regras, agregações (`analise.js`), memória local |
 | `src/painel/` | Painel publicado: dados públicos, entrada, modelo, geração. Nada de `config/` pode entrar nele (`tests/fronteira-painel.test.js` confere os imports) |
 | `src/telas/` | Telas (públicas em `publicas.js` + SCs por Comprador, `compradores.js`); diálogos de importação e configuração |
 | `src/ui/` | Componentes: casca (abas, filtros, tema), tabela, gráficos, filtros, cartões, dica, formatos |
