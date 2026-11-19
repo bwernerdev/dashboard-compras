@@ -7,6 +7,7 @@
 // tirado das bases (nomeFilial de cada filial); filial sem linha na base usa o nome padrão daqui.
 // O texto da planilha ("30.570 - Itajaí - Armazém") fica no title. Sem filtros (telas/publicas.js).
 // Mudou a equipe ou a carteira de filiais: editar ARVORE abaixo (equipe = quem responde a ela).
+// 19/11/2026: Lili Beth no lugar de Bruno Werner (mesmo cargo e mesmas filiais), a pedido do usuário.
 import { el } from '../ui/dom.js';
 import { bloco } from '../ui/cartoes.js';
 import { FOTOS } from './organograma-fotos.js';
@@ -28,7 +29,7 @@ const ARVORE = {
             ],
           },
           {
-            nome: 'Bruno Werner', cargo: 'Comprador',
+            nome: 'Lili Beth', cargo: 'Comprador',
             filiais: [['570', 'Itajaí - HUB', '30.570 - Itajaí - Armazém'], ['572', 'Itajaí - Fatiados', '30.572 - Itajaí - Fatiados'], ['573', 'Itajaí - CD', '30.573 - Itajaí - CD'], ['733', 'CD Cambé', '30.733 - Cambé - CD']],
           },
           { nome: 'Sandro Pereira', cargo: 'Assessoria de Suprimentos' },
