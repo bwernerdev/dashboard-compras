@@ -10,6 +10,7 @@
 | `importar.test.js` | Importação ponta a ponta com xlsx fictício: filtro de filial, conversão de tipos, Dados Gerais, coluna faltando, cancelamento |
 | `analise.test.js` | Agregações e filtros das telas (`src/analise.js`, inclusive `ehPendencia`, `ehRegularizacao`, spend, status e entregas), memória (`brutosDe`, `recalcular`), `validarConfig`, `nomeProprio` (nome em caixa alta para exibir) |
 | `painel.test.js` | Dados do painel publicado (`src/painel/dados.js`): só campos públicos, detalhe só de SC em aberto, versão, compactar/descompactar; texto do "Copiar tabela" (`gerarTsv`) |
+| `fronteira-painel.test.js` | Percorre os imports a partir de `src/painel/painel.js` e falha se o painel publicado alcançar `src/config/`, `importar.js`, `importacao*.js`, `memoria.js` ou as telas internas (Compradores, Configuração, Importação); mostra o caminho de imports que entrou |
 | `atendidas.test.js` | SCs atendidas (`src/atendidas.js`): marcar, desmarcar, guardar, vencer em 120 dias, armazenamento estragado (localStorage de mentira) |
 | `preferencias.test.js` | Estado lembrado das telas (`src/preferencias.js`): `lerJson`, `lerEscolha` (só opções válidas), `lerConjunto`, armazenamento bloqueado |
 | `tabela-ordem.test.js` | Ordenação das tabelas (`ordenarLinhas`): texto com número e acento em pt-BR, número como número, vazios no fim nas duas direções, empate estável, valor lido uma vez por linha |

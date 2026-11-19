@@ -19,7 +19,7 @@ Status: fases 1 (leitor + regras), 2 (telas, filtros, memória local, configura�
 | Pasta | Conteúdo |
 |---|---|
 | `src/` | App: casca (`main.js`), importação, regras, agregações (`analise.js`), memória local |
-| `src/painel/` | Painel publicado: dados públicos, entrada, modelo, geração. Nada de `config/` pode entrar nele |
+| `src/painel/` | Painel publicado: dados públicos, entrada, modelo, geração. Nada de `config/` pode entrar nele (`tests/fronteira-painel.test.js` confere os imports) |
 | `src/telas/` | Telas (públicas em `publicas.js` + SCs por Comprador, `compradores.js`); diálogos de importação e configuração |
 | `src/ui/` | Componentes: casca (abas, filtros, tema), tabela, gráficos, filtros, cartões, dica, formatos |
 | `src/leitor/` | Leitor de `.xlsx` por fluxo (zip + XML, sem dependência) |
