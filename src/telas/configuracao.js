@@ -5,6 +5,7 @@
 import { el, substituir } from '../ui/dom.js';
 import { CONFIG_PADRAO, normalizarCodigoFilial } from '../config/index.js';
 import { baixar } from '../ui/tabela-exportar.js';
+import { abrirDialogo } from '../ui/dialogo.js';
 
 export const NOME_ARQUIVO_CONFIG = 'configuracao-compras.json';
 
@@ -105,8 +106,6 @@ export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar
   for (const f of rascunho.filiais) if (!('aprovadorGA' in f)) f.aprovadorGA = padrao.get(normalizarCodigoFilial(f.codigo)) ?? '';
   const comoAbriu = JSON.stringify(rascunho);
   const avisos = el('div', { class: 'config-avisos', role: 'alert' });
-  const dialogo = el('dialog', { class: 'dialogo dialogo-largo', 'aria-labelledby': 'titulo-config' });
-
   const corpo = el('div', { class: 'dialogo-corpo' });
   const desenharCorpo = () => substituir(corpo, SECOES.map((s) => editorDeLista(s, rascunho[s.id])));
   desenharCorpo();
@@ -125,7 +124,7 @@ export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar
     },
   });
 
-  const fechar = () => { dialogo.close(); dialogo.remove(); };
+  let fechar = () => {}; // do diálogo comum, aberto no fim
   const salvar = () => {
     const erros = validarConfig(rascunho);
     if (erros.length) {
@@ -161,16 +160,12 @@ export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar
     },
   }, 'Reimportar bases') : null;
 
-  dialogo.append(
-    el('header', { class: 'dialogo-cabecalho' },
-      el('h2', { id: 'titulo-config' }, 'Configuração'),
-      el('button', { type: 'button', class: 'botao botao-link', onclick: fechar, 'aria-label': 'Fechar configuração' }, '✕')),
-    el('p', { class: 'texto-fraco' },
+  ({ fechar } = abrirDialogo({
+    id: 'titulo-config', titulo: 'Configuração', classe: 'dialogo-largo', rotuloFechar: 'Fechar configuração',
+    corpo: [el('p', { class: 'texto-fraco' },
       personalizada ? 'Usando configuração editada neste navegador. ' : 'Usando a configuração padrão (copiada da planilha antiga). ',
-      'Vale a primeira linha que bate, como o PROCV. Fica salva só neste navegador.'),
-    avisos,
-    corpo,
-    el('footer', { class: 'dialogo-rodape' },
+      'Vale a primeira linha que bate, como o PROCV. Fica salva só neste navegador.'), avisos, corpo],
+    rodape: [
       el('button', {
         type: 'button', class: 'botao botao-sec',
         onclick: () => {
@@ -188,12 +183,10 @@ export function abrirConfiguracao({ config, personalizada, aoSalvar, aoRestaurar
       arquivo,
       botaoReimportar,
       el('span', { class: 'espaco' }),
-      el('button', { type: 'button', class: 'botao botao-sec', onclick: fechar }, 'Cancelar'),
-      el('button', { type: 'button', class: 'botao', onclick: salvar }, 'Salvar')));
-
-  dialogo.addEventListener('cancel', (ev) => { ev.preventDefault(); fechar(); });
-  document.body.append(dialogo);
-  dialogo.showModal();
+      el('button', { type: 'button', class: 'botao botao-sec', onclick: () => fechar() }, 'Cancelar'),
+      el('button', { type: 'button', class: 'botao', onclick: salvar }, 'Salvar'),
+    ],
+  }));
 }
 
 export { CONFIG_PADRAO };

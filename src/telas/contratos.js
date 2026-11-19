@@ -7,6 +7,7 @@ import { criarTabela } from '../ui/tabela.js';
 import { listaDeMarcar } from '../ui/filtros.js';
 import * as fmt from '../ui/formatos.js';
 import { lerEscolha, salvarPreferencia } from '../preferencias.js';
+import { abrirDialogo } from '../ui/dialogo.js';
 import {
   ABAS, statusDoContrato, prazoDias, resumoContratos, contarPor, fimDoContrato, PRAZO_AVISO_DIAS,
 } from '../contratos/dados.js';
@@ -176,25 +177,14 @@ export function abrirContratos({ contratos, hoje, nomeDaFilial = null }) {
   }
 
   const quando = contratos.salvoEm ? new Date(contratos.salvoEm).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : null;
-  const dialogo = el('dialog', { class: 'dialogo janela', 'aria-labelledby': 'titulo-contratos' });
-  const fechar = () => { dialogo.close(); dialogo.remove(); };
   conteudo.id = 'contratos-conteudo';
   conteudo.setAttribute('role', 'tabpanel');
-  dialogo.append(
-    el('header', { class: 'dialogo-cabecalho janela-cabecalho' },
-      el('div', { class: 'janela-titulo' },
-        el('h2', { id: 'titulo-contratos' }, 'Contratos'),
-        el('span', { class: 'texto-fraco' }, [contratos.meta?.arquivo, quando ? `importado em ${quando}` : null, `prazo contado até ${fmt.data(hoje)}`].filter(Boolean).join(' · '))),
-      el('button', { type: 'button', class: 'botao botao-link', onclick: fechar, 'aria-label': 'Fechar' }, '✕')),
-    lista,
-    conteudo);
-  // Esc com uma lista de marcar aberta fecha só a lista.
-  dialogo.addEventListener('cancel', (ev) => {
-    ev.preventDefault();
-    if (!dialogo.querySelector('.filtro-painel:not([hidden])')) fechar();
-  });
-  document.body.append(dialogo);
   desenhar();
-  dialogo.showModal();
-  return { dialogo, fechar };
+  return abrirDialogo({
+    id: 'titulo-contratos', titulo: 'Contratos', classe: 'janela', classeCabecalho: 'janela-cabecalho',
+    subtitulo: [contratos.meta?.arquivo, quando ? `importado em ${quando}` : null, `prazo contado até ${fmt.data(hoje)}`].filter(Boolean).join(' · '),
+    corpo: [lista, conteudo],
+    // Esc com uma lista de marcar aberta fecha só a lista.
+    fecharNoEsc: (dialogo) => !dialogo.querySelector('.filtro-painel:not([hidden])'),
+  });
 }

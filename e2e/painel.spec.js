@@ -26,6 +26,8 @@ async function gerarPainel(page, info) {
   expect(download.suggestedFilename()).toBe('painel-compras.html');
   await expect(page.getByRole('heading', { name: 'Painel gerado' })).toBeVisible();
   await expect(page.getByText('Leva também a planilha de contratos')).toBeVisible();
+  // Com Follow-Up o aviso "Sem a base Follow-Up" é null no corpo: não pode aparecer escrito "null".
+  await expect(page.locator('dialog[open]')).not.toContainText('null');
   // Com extensão .html (o download.path() não tem), senão o navegador abre como texto.
   const caminho = info.outputPath('painel-compras.html');
   await download.saveAs(caminho);

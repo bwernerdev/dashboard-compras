@@ -16,6 +16,7 @@ import { abrirContratos } from './telas/contratos.js';
 import { resumoStatus, resumoEmAberto, itensEmAberto } from './analise.js';
 import { lerPreferencia, salvarPreferencia } from './preferencias.js';
 import { el } from './ui/dom.js';
+import { abrirDialogo as abrirDialogoComum, versaoDoApp } from './ui/dialogo.js';
 import { ligarMenu } from './ui/menu.js';
 import { esqueleto } from './ui/cartoes.js';
 import { criarNavegador, ligarTema, ligarImpressao, ligarTopoCompacto, diasDesdeABase, BASE_ANTIGA_DIAS } from './ui/casca.js';
@@ -302,20 +303,11 @@ function desenharTudo() {
 
 // ---------- Ações do topo ----------
 
+/** Diálogo simples do topo: corpo e rodapé com a versão do app e "Fechar". */
 function abrirDialogo({ id, titulo, corpo }) {
-  const dialogo = el('dialog', { class: 'dialogo', 'aria-labelledby': id });
-  const fechar = () => { dialogo.close(); dialogo.remove(); };
-  dialogo.append(
-    el('header', { class: 'dialogo-cabecalho' },
-      el('h2', { id }, titulo),
-      el('button', { type: 'button', class: 'botao botao-link', onclick: fechar, 'aria-label': 'Fechar' }, '✕')),
-    ...corpo,
-    el('footer', { class: 'dialogo-rodape' },
-      el('span', { class: 'espaco dialogo-versao' }, `Versão do app: ${typeof __VERSAO__ === 'string' ? __VERSAO__ : 'local'}`),
-      el('button', { type: 'button', class: 'botao', onclick: fechar }, 'Fechar')));
-  dialogo.addEventListener('cancel', (ev) => { ev.preventDefault(); fechar(); });
-  document.body.append(dialogo);
-  dialogo.showModal();
+  const botaoFechar = el('button', { type: 'button', class: 'botao' }, 'Fechar');
+  const { fechar } = abrirDialogoComum({ id, titulo, corpo, rodape: [versaoDoApp(), botaoFechar] });
+  botaoFechar.addEventListener('click', fechar);
 }
 
 function abrirImportacao() {
