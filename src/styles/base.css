@@ -38,19 +38,25 @@ button:disabled { cursor: default; }
   display: grid; align-items: center; gap: var(--s2) var(--s4);
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas: "emblema marca acoes" "emblema abas abas";
-  padding: var(--s3) var(--s5) var(--s2);
-  background: var(--surface);
-  border-bottom: 1px solid var(--line);
+  padding: var(--s3) var(--s5) 0;
+  background: var(--surface); color: var(--text);
+  border-bottom: 1px solid #6b5f40; /* filete latão apagado sob o cabeçalho */
+  /* Cabeçalho de jornal: faixa tinta (azul-noite) nos dois temas, texto creme, destaque latão.
+     Tokens locais: botões, selo e abas do topo herdam sem regra própria. Impressão volta ao claro. */
+  color-scheme: dark;
+  --surface: #161d33; --surface-hover: #212a45; --text: #ece6d8; --text-strong: #faf6ec; --text-muted: #aab0c2;
+  --line: #2b3450; --line-strong: #4a5475; --control-border: #6f7896;
+  --accent: #d9c08a; --accent-hover: #e6d2a6; --accent-ink: #161d33; --accent-text: #e6d2a6; --ring: #d9c08a;
 }
 /* Logo completo, fundo transparente; no tema escuro, a versão com texto clareado (ui/marca.js). */
 .topo-emblema { grid-area: emblema; display: block; width: auto; height: 76px; box-sizing: content-box; padding: 3px 0; }
-.topo-emblema-escuro, html[data-theme="dark"] .topo-emblema-claro { display: none; }
-html[data-theme="dark"] .topo-emblema-escuro { display: block; }
+/* Topo sempre escuro: logo com texto clareado nos dois temas (o claro só na impressão). */
+.topo-emblema-claro { display: none; }
 .topo-marca { grid-area: marca; display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
-.topo h1 { font-size: var(--fs-xl); font-weight: 700; color: var(--text-strong); white-space: nowrap; }
+.topo h1 { font-family: var(--font-display); font-size: 27px; font-weight: 600; letter-spacing: -.005em; line-height: 1.1; color: var(--text-strong); white-space: nowrap; }
 .selo {
-  font-size: var(--fs-xs); padding: 2px var(--s2); border-radius: var(--r-pill);
-  background: var(--surface-selected); color: var(--accent-text); font-variant-numeric: tabular-nums;
+  font-size: var(--fs-xs); padding: 2px var(--s2); border-radius: var(--r-sm);
+  background: transparent; color: var(--text-muted); border: 1px solid var(--line); font-variant-numeric: tabular-nums;
 }
 /* Base com 2+ dias úteis (main.js / painel.js): o texto diz quanto, o amarelo reforça. */
 .selo.selo-alerta { background: var(--warning-bg); color: var(--warning-fg); font-weight: 600; }
@@ -81,13 +87,16 @@ html.topo-compacto .aba { height: var(--h-control-sm); padding: 0 var(--s2); }
 html.topo-compacto #periodo.selo-alerta[data-curto] { font-size: 0; white-space: nowrap; }
 html.topo-compacto #periodo.selo-alerta[data-curto]::before { content: attr(data-curto); font-size: var(--fs-xs); }
 
-.abas { grid-area: abas; display: flex; flex-wrap: wrap; gap: var(--s1); margin-left: calc(-1 * var(--s3)); }
+.abas { grid-area: abas; display: flex; flex-wrap: wrap; gap: var(--s2); margin-left: calc(-1 * var(--s3)); }
+/* Aba sublinhada: sem fundo preenchido, a linha diz qual está aberta. */
 .aba {
-  height: var(--h-control); padding: 0 var(--s3); white-space: nowrap;
-  border: 0; border-radius: var(--r-sm); background: transparent; color: var(--text-muted); font-weight: 600;
+  height: 38px; padding: 0 var(--s3); white-space: nowrap;
+  border: 0; border-radius: 0; background: transparent; color: var(--text-muted);
+  font-family: var(--font-display); font-size: 16px; font-weight: 500;
+  transition: color .12s, box-shadow .12s;
 }
-.aba:hover { background: var(--surface-hover); color: var(--text); }
-.aba[aria-selected="true"] { background: var(--surface-selected); color: var(--accent-text); }
+.aba:hover { color: var(--text); box-shadow: inset 0 -2px 0 var(--line-strong); }
+.aba[aria-selected="true"] { color: var(--text-strong); font-weight: 600; box-shadow: inset 0 -3px 0 var(--accent); }
 
 /* Faixa de filtros: uma linha acima de tudo, fica visível ao rolar. */
 .faixa-filtros {
@@ -108,11 +117,11 @@ html.topo-compacto #periodo.selo-alerta[data-curto]::before { content: attr(data
 .pagina:focus { outline: none; }
 @media (max-width: 1500px) { .pagina { padding: var(--s4); } }
 
-.tela { display: flex; flex-direction: column; gap: var(--s4); }
-.grade-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); align-items: start; }
+.tela { display: flex; flex-direction: column; gap: var(--s6); }
+.grade-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s6) var(--s6); align-items: start; }
 .grade-2-3 { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
 .grade-esticada { align-items: stretch; } /* blocos lado a lado com a mesma altura (Spend, Saving) */
-.pilha { display: flex; flex-direction: column; gap: var(--s4); min-width: 0; }
+.pilha { display: flex; flex-direction: column; gap: var(--s6); min-width: 0; }
 
 @media (max-width: 1100px) {
   .grade-2 { grid-template-columns: minmax(0, 1fr); }

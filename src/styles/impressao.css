@@ -9,6 +9,10 @@
   .so-impressao { display: block; padding: 0 0 6px; font-size: var(--fs-2xs); color: #333; }
   .topo { position: static; padding: 0 0 6px; border: 0; grid-template-areas: "emblema marca"; grid-template-columns: auto minmax(0, 1fr); }
   .topo-emblema { height: 40px; }
+  /* O topo é escuro na tela; no papel, texto escuro sem faixa e o logo claro. */
+  .topo { background: none; color-scheme: light; --text: #23211c; --text-strong: #15140f; --text-muted: #635e54; }
+  .topo .topo-emblema-claro { display: block; }
+  .topo .topo-emblema-escuro { display: none; }
   .pagina { padding: 0; max-width: none; }
   .bloco, .cartao { box-shadow: none; break-inside: avoid; }
   .tabela-rolagem { max-height: none; overflow: visible; border: 0; }

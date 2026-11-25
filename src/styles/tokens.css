@@ -5,14 +5,16 @@
 :root {
   color-scheme: light;
 
-  --font-body: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  /* Títulos, abas e números dos cartões: serifa de relatório (Sitka vem no Windows; sem download, painel offline). */
+  --font-display: "Sitka Heading", "Sitka Display", Sitka, Cambria, Georgia, serif;
   --fs-2xs: 11px;
   --fs-xs: 12px;
   --fs-sm: 13px;
   --fs-md: 14px;
   --fs-lg: 16px;
   --fs-xl: 20px;
-  --fs-3xl: 30px; /* só o número dos cartões de indicador */
+  --fs-3xl: 38px; /* só o número dos cartões de indicador */
 
   --s1: 4px;
   --s2: 8px;
@@ -21,38 +23,38 @@
   --s5: 24px;
   --s6: 32px;
 
-  --r-sm: 6px;
-  --r-md: 8px;
-  --r-lg: 12px; /* cartões, blocos e estados vazios */
+  --r-sm: 3px;
+  --r-md: 4px;
+  --r-lg: 6px; /* cartões, blocos e estados vazios */
   --r-pill: 999px;
   --h-control: 34px;
   --h-control-sm: 28px;
 
-  --bg: #f1f3f6; /* um tom abaixo do branco: blocos e cartões se destacam */
-  --surface: #fff;
-  --surface-2: #f9fafb;
-  --surface-hover: #edf1f8;
-  --zebra: #f8f9fb; /* faixa alternada das tabelas simples (Por regional, resumos) */
-  --zebra-grupo: #f2f4f7; /* faixa por SC/OF nas tabelas agrupadas: mais forte para ver onde a SC acaba (17/11/2026) */
-  --esqueleto: #e6e9ee;
-  --esqueleto-brilho: #f3f5f8;
-  --surface-selected: #eef3fd;
-  --ring: #2f5bd3;
+  --bg: #f3f0e8; /* papel creme: blocos sem caixa, separados por régua */
+  --surface: #fbf9f4;
+  --surface-2: #f6f3ec;
+  --surface-hover: #ebe6da;
+  --zebra: #f5f2ea; /* faixa alternada das tabelas simples (Por regional, resumos) */
+  --zebra-grupo: #ece7db; /* faixa por SC/OF nas tabelas agrupadas: mais forte para ver onde a SC acaba (17/11/2026) */
+  --esqueleto: #e6e0d3;
+  --esqueleto-brilho: #f2eee5;
+  --surface-selected: #e5e8f1;
+  --ring: #1d2b53;
 
-  --text: #1f2328;
-  --text-strong: #111418;
-  --text-muted: #5f6672;
+  --text: #23211c;
+  --text-strong: #15140f;
+  --text-muted: #635e54;
 
-  --line: #e2e5ea;
-  --line-strong: #c9ced6;
-  --control-border: #7f8692; /* >= 3:1 em surface, surface-2 e bg (WCAG 1.4.11); teste de contraste */
+  --line: #e0d9cb;
+  --line-strong: #c6bdac;
+  --control-border: #8a8274; /* >= 3:1 em surface, surface-2 e bg (WCAG 1.4.11); teste de contraste */
 
-  --accent: #2f5bd3;
-  --accent-hover: #2749ad;
+  --accent: #1d2b53;
+  --accent-hover: #111a36;
   --accent-ink: #fff;
-  --accent-text: #2f5bd3;
-  --button-bg: #e8ebef;
-  --button-hover: #dde1e7;
+  --accent-text: #24376b;
+  --button-bg: #ebe6da;
+  --button-hover: #e0d9ca;
 
   --danger-fg: #c62828;
   --danger-bg: #fdf2f2;
@@ -67,7 +69,7 @@
   --neutral-fg: #5f6672;
   --neutral-bg: #f1f3f5;
 
-  --shadow-1: 0 1px 2px rgba(17, 20, 24, .04), 0 2px 8px rgba(17, 20, 24, .04);
+  --shadow-1: none;
   --shadow-2: 0 6px 16px rgba(17, 20, 24, .08), 0 1px 3px rgba(17, 20, 24, .06);
   --shadow-3: 0 12px 32px rgba(17, 20, 24, .16);
   --backdrop: rgba(17, 20, 24, .25);
@@ -116,31 +118,32 @@
 html[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg: #17191e;
-  --surface: #1f2229;
-  --surface-2: #232730;
-  --surface-hover: #2a303b;
-  --zebra: #22252c;
-  --zebra-grupo: #272a32;
-  --esqueleto: #2a2e36;
-  --esqueleto-brilho: #333843;
-  --surface-selected: #222c40;
-  --ring: #6b93f0;
+  /* Noite azul-tinta, da família do topo (não preto); destaque latão, o mesmo do cabeçalho. */
+  --bg: #0e1322;
+  --surface: #141a2d;
+  --surface-2: #171e33;
+  --surface-hover: #1f2741;
+  --zebra: #161c30;
+  --zebra-grupo: #1d2540;
+  --esqueleto: #1f2741;
+  --esqueleto-brilho: #28314e;
+  --surface-selected: #262f4d;
+  --ring: #d9c08a;
 
-  --text: #e6e8eb;
-  --text-strong: #f3f4f6;
-  --text-muted: #a3aab4;
+  --text: #e8e3d7;
+  --text-strong: #f8f4ea;
+  --text-muted: #a4abbf;
 
-  --line: #2e333c;
-  --line-strong: #454c58;
-  --control-border: #6f7784; /* >= 3:1 nas superfícies escuras */
+  --line: #252e48;
+  --line-strong: #3a4566;
+  --control-border: #737d9c; /* >= 3:1 nas superfícies escuras */
 
-  --accent: #6b93f0;
-  --accent-hover: #86a7f3;
-  --accent-ink: #0f1115;
-  --accent-text: #86a7f3;
-  --button-bg: #2b3039;
-  --button-hover: #353b46;
+  --accent: #d9c08a;
+  --accent-hover: #e6d2a6;
+  --accent-ink: #141a2d;
+  --accent-text: #e2cb98;
+  --button-bg: #1f2741;
+  --button-hover: #28314e;
 
   --danger-fg: #f07a7a;
   --danger-bg: #2e1f21;
@@ -155,7 +158,7 @@ html[data-theme="dark"] {
   --neutral-fg: #a3aab4;
   --neutral-bg: #262a32;
 
-  --shadow-1: 0 1px 2px rgba(0, 0, 0, .25);
+  --shadow-1: none;
   --shadow-2: 0 6px 18px rgba(0, 0, 0, .4);
   --shadow-3: 0 12px 32px rgba(0, 0, 0, .55);
   --backdrop: rgba(0, 0, 0, .45);

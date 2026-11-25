@@ -6,11 +6,13 @@
   height: var(--h-control); padding: 0 var(--s3);
   border: 0; border-radius: var(--r-sm);
   background: var(--accent); color: var(--accent-ink); font-weight: 600; white-space: nowrap;
+  transition: background-color .12s, transform .06s;
 }
 .botao:hover:not(:disabled) { background: var(--accent-hover); }
+.botao:active:not(:disabled) { transform: translateY(1px); }
 /* Contorno igual ao dos seletores de filtro: só o fundo cinza quase some no topo (1,2:1). */
-.botao-sec { background: var(--button-bg); color: var(--text); border: 1px solid var(--line-strong); }
-.botao-sec:hover:not(:disabled) { background: var(--button-hover); }
+.botao-sec { background: transparent; color: var(--text); border: 1px solid var(--line-strong); }
+.botao-sec:hover:not(:disabled) { background: var(--surface-hover); border-color: var(--control-border); }
 .botao-pequeno { height: var(--h-control-sm); padding: 0 var(--s2); font-size: var(--fs-sm); }
 .botao:disabled { opacity: .5; }
 /* Menu de ações com nome (ui/menu.js): "Exportar ▾" no topo do app. */
@@ -43,43 +45,57 @@ input[type="search"].campo { min-width: 220px; }
 .chip {
   display: inline-flex; align-items: center; gap: var(--s1);
   height: var(--h-control-sm); padding: 0 var(--s3);
-  border: 1px solid var(--line-strong); border-radius: var(--r-pill);
+  border: 1px solid var(--line-strong); border-radius: var(--r-sm);
   background: var(--surface-selected); color: var(--accent-text); font-size: var(--fs-sm); font-weight: 600;
 }
 
 .grupo-alternador { display: inline-flex; align-items: center; gap: var(--s2); margin-bottom: var(--s3); }
 .grupo-alternador-rotulo { color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; }
 .grupo-alternador .alternador { margin-bottom: 0; }
-.alternador { display: inline-flex; padding: 2px; border-radius: var(--r-sm); background: var(--button-bg); margin-bottom: var(--s3); }
+/* Alternador como texto sublinhado (igual às abas), sem trilho cinza nem pílula. */
+.alternador { display: inline-flex; gap: var(--s3); border-bottom: 1px solid var(--line); margin-bottom: var(--s3); }
 .linha-alternadores { display: flex; flex-wrap: wrap; gap: var(--s3); }
 .alternador-opcao {
-  height: var(--h-control-sm); padding: 0 var(--s3); border: 0; border-radius: 5px;
+  height: var(--h-control-sm); padding: 0 2px; margin-bottom: -1px; border: 0; border-radius: 0;
   background: transparent; color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600;
+  transition: color .12s, box-shadow .12s;
 }
-.alternador-opcao[aria-pressed="true"] { background: var(--surface); color: var(--text-strong); box-shadow: var(--shadow-1); }
+.alternador-opcao:hover { color: var(--text); box-shadow: inset 0 -2px 0 var(--line-strong); }
+.alternador-opcao[aria-pressed="true"] { color: var(--text-strong); box-shadow: inset 0 -2px 0 var(--accent); }
 
 /* Cartões de indicador */
-.cartoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--s3); }
-.cartao {
-  padding: var(--s4);
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-1);
+/* Faixa de números de relatório: sem caixa, filete vertical entre os indicadores, réguas em cima e embaixo. */
+.cartoes {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--s3) 0;
+  border-top: 2px solid var(--accent); border-bottom: 1px solid var(--line); /* régua de destaque: tinta no claro, latão no escuro */
 }
+.cartao { padding: var(--s4) var(--s5); border-left: 1px solid var(--line); }
+.cartao:first-child { border-left: 0; padding-left: 0; }
 .cartao-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s2); }
-.cartao-rotulo { color: var(--text-muted); font-size: var(--fs-sm); font-weight: 600; } /* 13 px desde 17/11/2026: o texto mais lido do cartão */
+.cartao-rotulo { color: var(--text-muted); font-size: var(--fs-sm); font-weight: 500; }
+/* Tom do indicador: ponto antes do rótulo (o texto e o número dizem o resto). */
+.cartao-critico .cartao-rotulo::before, .cartao-alerta .cartao-rotulo::before, .cartao-bom .cartao-rotulo::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; vertical-align: 1px;
+  background: var(--success-fg);
+}
+.cartao-critico .cartao-rotulo::before { background: var(--danger-fg); }
+.cartao-alerta .cartao-rotulo::before { background: var(--warning-fg); } /* 13 px desde 17/11/2026: o texto mais lido do cartão */
 /* Ícone decorativo no canto: fundo claro da cor do tom (azul sem tom). */
 .cartao-icone {
-  display: grid; place-items: center; flex: none; width: 32px; height: 32px; margin: -4px -4px 0 0;
-  border-radius: var(--r-md); background: var(--surface-selected); color: var(--accent-text);
+  display: none; /* ícone decorativo fora: o rótulo já diz o que é */
 }
-.cartao-critico .cartao-icone { background: var(--danger-bg); color: var(--danger-fg); }
-.cartao-alerta .cartao-icone { background: var(--warning-bg); color: var(--warning-fg); }
-.cartao-bom .cartao-icone { background: var(--success-bg); color: var(--success-fg); }
+.cartao-critico .cartao-icone { color: var(--danger-fg); }
+.cartao-alerta .cartao-icone { color: var(--warning-fg); }
+.cartao-bom .cartao-icone { color: var(--success-fg); }
 .cartao-valor {
-  margin-top: 2px; font-size: var(--fs-3xl); font-weight: 700; line-height: 1.15; letter-spacing: -0.01em;
-  color: var(--text-strong); font-variant-numeric: tabular-nums;
+  margin-top: var(--s2); font-family: var(--font-display); font-size: var(--fs-3xl); font-weight: 500; line-height: 1;
+  color: var(--text-strong); font-variant-numeric: lining-nums tabular-nums; letter-spacing: -.01em;
 }
-.cartao-valor-texto { font-size: var(--fs-xl); line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cartao-detalhe { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-xs); }
+/* Cartões dentro de um bloco (Comparação de períodos): número menor que o da faixa do topo. */
+.bloco .cartao-valor { font-size: 26px; }
+.bloco .cartao { padding: var(--s3) var(--s4); }
+.cartao-valor-texto { font-size: 24px; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cartao-detalhe { margin-top: var(--s2); color: var(--text-muted); font-size: var(--fs-xs); }
 /* Mini gráfico das últimas bases (cartoes.js): traço de 2 px na cor do tom. */
 .cartao-serie { display: block; width: 100%; height: 24px; margin-top: var(--s1); overflow: visible; }
 .cartao-serie polyline { fill: none; stroke: var(--serie-unica); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
@@ -89,14 +105,11 @@ input[type="search"].campo { min-width: 220px; }
 .variacao-neutro { color: var(--text-muted); }
 .variacao-melhor { color: var(--success-fg); }
 .variacao-pior { color: var(--danger-fg); }
-.cartao-critico { border-left: 3px solid var(--danger-fg); }
-.cartao-alerta { border-left: 3px solid var(--warning-fg); }
-.cartao-bom { border-left: 3px solid var(--success-fg); }
 
 /* Bloco (gráfico/tabela com título) */
 .bloco {
-  min-width: 0; padding: var(--s4);
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-1);
+  min-width: 0; padding: var(--s4) 0 0;
+  border-top: 1px solid var(--text-strong); /* sem caixa: régua fina no topo, como relatório */
 }
 .bloco-cabecalho { display: flex; align-items: flex-start; gap: var(--s3); margin-bottom: var(--s3); }
 .bloco-titulos { flex: 1; min-width: 0; }
@@ -105,7 +118,7 @@ input[type="search"].campo { min-width: 220px; }
 /* Bloco em tela cheia (lista de SCs em aberto): cobre a janela, a tabela ocupa a altura que sobra. */
 .bloco.tela-cheia {
   position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column;
-  padding: var(--s3) 0 0; border: 0; border-radius: 0; box-shadow: none; overflow: hidden;
+  padding: var(--s3) 0 0; border: 0; border-radius: 0; box-shadow: none; overflow: hidden; background: var(--surface);
 }
 /* Tabela de borda a borda (sem margem à esquerda, à direita e embaixo); título, recortes e barra
    com respiro só nas laterais. Paginação sobe para a linha da barra: nada embaixo da tabela. */
@@ -121,23 +134,18 @@ input[type="search"].campo { min-width: 220px; }
   grid-column: 1 / -1; grid-row: 2; min-height: 0; max-height: none; overscroll-behavior: contain;
   border-width: 1px 0 0; border-radius: 0;
 }
-.bloco-cabecalho h2 { font-size: var(--fs-lg); font-weight: 700; color: var(--text-strong); }
+.bloco-cabecalho h2 { font-family: var(--font-display); font-size: 23px; font-weight: 600; line-height: 1.15; color: var(--text-strong); }
 .bloco-subtitulo { margin-top: 2px; color: var(--text-muted); font-size: var(--fs-sm); }
 .bloco-titulo-linha { display: flex; align-items: center; gap: var(--s2); }
 /* Botão "?" de ajuda ao lado do título do bloco (texto longo na dica). */
-/* Alvo de 24 px (WCAG 2.5.8); o círculo desenhado (::before) tem 20 px. */
+/* Alvo de 24 px (WCAG 2.5.8); só o "?" em texto fraco, sem círculo. */
 .botao-ajuda {
   position: relative; isolation: isolate;
   display: inline-grid; place-items: center; flex: none; width: 24px; height: 24px; padding: 0;
-  border: 0; border-radius: 50%; background: transparent;
-  color: var(--text-muted); font-size: var(--fs-xs); font-weight: 700; line-height: 1; cursor: help;
+  border: 0; border-radius: var(--r-sm); background: transparent;
+  color: var(--text-muted); font-size: var(--fs-md); font-weight: 600; line-height: 1; cursor: help;
 }
-.botao-ajuda::before {
-  content: ""; position: absolute; inset: 2px; z-index: -1;
-  border: 1px solid var(--line-strong); border-radius: 50%; background: var(--surface);
-}
-.botao-ajuda:hover, .botao-ajuda:focus-visible { color: var(--accent-text); }
-.botao-ajuda:hover::before, .botao-ajuda:focus-visible::before { border-color: var(--accent); }
+.botao-ajuda:hover, .botao-ajuda:focus-visible { color: var(--accent-text); background: var(--surface-hover); }
 .bloco > * + .tabela-bloco { margin-top: var(--s4); }
 /* Tabela de gráfico recolhida (tabela.js, recolhida): "Ver tabela (N linhas)" abaixo do gráfico. */
 .bloco > * + .tabela-recolhivel { margin-top: var(--s3); }
@@ -222,10 +230,10 @@ input[type="search"].campo { min-width: 220px; }
 .filtro-botao {
   display: inline-flex; align-items: center; gap: var(--s1);
   height: var(--h-control-sm); padding: 0 var(--s3);
-  border: 1px solid var(--line-strong); border-radius: var(--r-pill);
-  background: var(--surface); color: var(--text); font-size: var(--fs-sm);
+  border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+  background: transparent; color: var(--text); font-size: var(--fs-sm);
 }
-.filtro-botao:hover { background: var(--surface-hover); }
+.filtro-botao:hover { background: var(--surface-hover); border-color: var(--control-border); }
 .filtro-botao::after { content: "▾"; color: var(--text-muted); font-size: var(--fs-2xs); }
 .filtro-nome { color: var(--text-muted); }
 .filtro-valor { font-weight: 600; max-width: 18ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -345,7 +353,7 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .dica-chave { width: 8px; height: 8px; border-radius: 2px; flex: none; }
 
 /* Selos de status (sempre com ícone e texto) */
-.selo-status { display: inline-flex; align-items: center; gap: 4px; padding: 1px var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 600; }
+.selo-status { display: inline-flex; align-items: center; gap: 4px; padding: 1px var(--s2); border-radius: var(--r-sm); font-size: var(--fs-xs); font-weight: 600; }
 .selo-status.bom { background: var(--success-bg); color: var(--success-fg); }
 .selo-status.critico { background: var(--danger-bg); color: var(--danger-fg); }
 .selo-status.neutro { background: var(--warning-bg); color: var(--warning-fg); }
@@ -366,7 +374,7 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .tabela { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
 .tabela th, .tabela td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
 .tabela td { font-variant-numeric: tabular-nums; } /* datas, códigos e números alinham coluna abaixo */
-.tabela thead th { position: sticky; top: 0; z-index: 1; background: var(--surface-2); padding: 0; font-weight: 600; }
+.tabela thead th { position: sticky; top: 0; z-index: 1; background: var(--surface); padding: 0; font-weight: 600; border-bottom: 1px solid var(--text-strong); }
 /* Cabeçalho quebra em 2 linhas quando falta largura (ex.: "Dias da aprovação"), em vez de rolar para o lado. */
 .tabela thead th { white-space: normal; }
 .tabela tfoot td { position: sticky; bottom: 0; background: var(--surface-2); font-weight: 700; border-top: 1px solid var(--line-strong); }
@@ -394,7 +402,7 @@ button.gb-linha:hover, .gb-linha:focus-visible { background: var(--surface-hover
 .tabela tbody tr.grupo-continua td { border-bottom-color: transparent; }
 .th-botao {
   display: flex; align-items: center; gap: 4px; width: 100%; padding: 8px 10px;
-  border: 0; background: none; font-weight: 600; color: var(--text); text-align: inherit;
+  border: 0; background: none; font-size: var(--fs-xs); font-weight: 600; color: var(--text-muted); text-align: inherit;
 }
 .num .th-botao { justify-content: flex-end; }
 /* Borda para mudar a largura da coluna (ui/tabela.js): arrastar, setas ou dois cliques. */
@@ -544,7 +552,7 @@ body:has(.th-alca.arrastando) { cursor: col-resize; user-select: none; }
 .org-no {
   display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center;
   width: 220px; padding: var(--s3); background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r-md); box-shadow: var(--shadow-1);
+  border-top: 2px solid var(--text-strong); border-radius: 0; box-shadow: var(--shadow-1); /* régua no topo, como os blocos */
 }
 .org-avatar {
   width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; margin-bottom: var(--s2);
