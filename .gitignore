@@ -13,3 +13,4 @@ playwright-report/
 .painel-build/
 src/painel/modelo.gerado.html
 painel-compras*.html
+graphify-out/
