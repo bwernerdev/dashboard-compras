@@ -50,7 +50,7 @@ export function abrirDetalhe(linhas) {
         el('p', { class: 'texto-fraco' }, [primeiro(linhas, 'nomeFilial'), primeiro(linhas, 'filial')].filter(Boolean).join(' · '))),
       fechar),
     el('div', { class: 'detalhe-selos' },
-      dias >= 0 ? el('span', { class: `selo-status ${fora ? 'critico' : 'bom'}` }, `${fmt.inteiro(dias)} dias úteis em aberto${fora ? ' (fora do prazo)' : ''}`)
+      dias >= 0 ? el('span', { class: `selo-status ${fora ? 'critico' : 'bom'}` }, `${fmt.inteiro(dias)} dias em aberto${fora ? ' (fora do prazo)' : ''}`)
         : el('span', { class: 'selo-status neutro' }, 'Sem item em aberto'),
       primeiro(linhas, 'prioridade') ? marcaDaPrioridade(primeiro(linhas, 'prioridade')) : null,
       regularizacao ? el('span', { class: 'selo-status critico' }, 'Regularização') : null),

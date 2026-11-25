@@ -168,8 +168,8 @@ test('virou o dia com a página aberta: recalcula dias em aberto; mesmo dia não
   assert.equal(bases.virouODia(), false);
   const dias = (regs) => regs.find((r) => r.solicitacao === 'FDS-1000001').diasEmAberto;
   const antes = dias(vista.bases.base.registros);
-  dia += 7; // uma semana depois: 5 dias úteis a mais
+  dia += 7; // uma semana depois: 7 dias corridos a mais
   assert.equal(bases.virouODia(), true);
   assert.equal(bases.estado.hoje, dia);
-  assert.equal(dias(vista.bases.base.registros), antes + 5);
+  assert.equal(dias(vista.bases.base.registros), antes + 7);
 });

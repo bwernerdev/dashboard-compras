@@ -1,4 +1,4 @@
-// Tela Regional: SCs em aberto (sem pedido e não canceladas), dias úteis em aberto e SLA.
+// Tela Regional: SCs em aberto (sem pedido e não canceladas), dias em aberto (corridos) e SLA.
 // Substitui a aba "Regional" (e cobre a "Atendimento") da planilha antiga, com os dias corrigidos.
 import { PRAZO_SLA_DIAS } from '../regras.js';
 import { el, icone } from '../ui/dom.js';
@@ -116,11 +116,11 @@ export function telaRegional(ctx) {
     }),
     cartao({
       icone: 'alerta', rotulo: 'SCs fora do prazo', valor: fmt.inteiro(resumo.scsFora), tom: resumo.scsFora ? 'critico' : null,
-      detalhe: `${fmt.qtd(resumo.fora, 'item', 'itens')} com mais de ${PRAZO_SLA_DIAS} dias úteis${resumo.scsSemPrazo ? `; ${fmt.qtd(resumo.scsSemPrazo, 'SC', 'SCs')} sem prazo` : ''}`,
+      detalhe: `${fmt.qtd(resumo.fora, 'item', 'itens')} com mais de ${PRAZO_SLA_DIAS} dias em aberto${resumo.scsSemPrazo ? `; ${fmt.qtd(resumo.scsSemPrazo, 'SC', 'SCs')} sem prazo` : ''}`,
       variacao: vs('scsFora', fmt.inteiro, 'menor'),
       serie: serieDe(ctx.historico, (p) => p.aberto.scsFora, resumo.scsFora),
     }),
-    cartao({ icone: 'relogio', rotulo: 'Média de dias em aberto', valor: fmt.decimal(resumo.mediaDias), detalhe: `Mais antiga: ${fmt.inteiro(resumo.maxDias)} dias úteis`, variacao: vs('mediaDias', fmt.decimal, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.mediaDias, resumo.mediaDias) }),
+    cartao({ icone: 'relogio', rotulo: 'Média de dias em aberto', valor: fmt.decimal(resumo.mediaDias), detalhe: `Mais antiga: ${fmt.inteiro(resumo.maxDias)} dias`, variacao: vs('mediaDias', fmt.decimal, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.mediaDias, resumo.mediaDias) }),
   );
 
   const faixas = porFaixaDeDias(abertos);

@@ -4,7 +4,7 @@ import { criarConfig, normalizarCodigoFilial, atualizarConfigSalva } from '../sr
 import {
   calcularLinhaBase, calcularLinhaFollowUp, extrairNumero, savingReal, numeroExcel, ehServico, PRAZO_SLA_DIAS, aprovacaoPrePedido,
 } from '../src/regras.js';
-import { serie, diasUteis } from '../src/datas.js';
+import { serie } from '../src/datas.js';
 
 // Configuração fictícia.
 const cfg = criarConfig({
@@ -76,9 +76,9 @@ test('comprador: tira "FDS - ", vazio vira Pendente, sem apelido vira null ("-")
   assert.equal(outro.comprador, null);
 });
 
-test('SC em aberto: dias úteis desde a criação, horas = dias x 8,8, SLA no prazo', () => {
+test('SC em aberto: dias em aberto = dias da aprovação (corridos), horas = dias úteis x 8,8, SLA no prazo', () => {
   const r = calcularLinhaBase(linha(), cfg, HOJE);
-  assert.equal(r.diasEmAberto, 7);
+  assert.equal(r.diasEmAberto, 8);
   assert.ok(Math.abs(r.horasEmAberto - 61.6) < 1e-9);
   assert.equal(r.data, linha().criacao);
   assert.equal(r.servico, 'NÃO');
@@ -86,10 +86,12 @@ test('SC em aberto: dias úteis desde a criação, horas = dias x 8,8, SLA no pr
   assert.equal(r.diasDaAprovacao, 8);
 });
 
-test('SLA: só fica fora com mais de 30 dias úteis em aberto, qualquer prioridade', () => {
+test('SLA: só fica fora com mais de 30 dias da aprovação (corridos), qualquer prioridade', () => {
   assert.equal(PRAZO_SLA_DIAS, 30);
-  // Criação com exatamente n dias úteis em aberto até HOJE (contando os dois extremos).
-  const criadaHa = (n) => { let d = HOJE; while (diasUteis(d, HOJE) < n) d--; return d + 0.4; };
+  const criadaHa = (n) => HOJE - n + 0.4;
+  // Caso real (SC 7709618): 36 dias corridos = 27 úteis; antes ficava no prazo.
+  const sc = calcularLinhaBase(linha({ criacao: criadaHa(36) }), cfg, HOJE);
+  assert.deepEqual([sc.diasDaAprovacao, sc.diasEmAberto, sc.sla], [36, 36, 'Fora do Prazo']);
   for (const prioridade of ['NORMAL', 'URGENTE', 'EMERGENCIAL', 'XYZ']) {
     const no30 = calcularLinhaBase(linha({ prioridade, criacao: criadaHa(30) }), cfg, HOJE);
     const no31 = calcularLinhaBase(linha({ prioridade, criacao: criadaHa(31) }), cfg, HOJE);
@@ -97,7 +99,7 @@ test('SLA: só fica fora com mais de 30 dias úteis em aberto, qualquer priorida
     assert.deepEqual([no31.diasEmAberto, no31.sla], [31, 'Fora do Prazo'], prioridade);
   }
   const serv = calcularLinhaBase(linha({ prioridade: 'URGENTE', unidade: 'serv' }), cfg, HOJE);
-  assert.deepEqual([serv.servico, serv.sla], ['SIM', 'No Prazo']); // 7 dias: antes estourava o urgente
+  assert.deepEqual([serv.servico, serv.sla], ['SIM', 'No Prazo']); // 8 dias: antes estourava o urgente
 });
 
 test('SLA: status Cancelado / Em Pedido / Em Pré-Pedido não conta', () => {

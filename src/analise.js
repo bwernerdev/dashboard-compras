@@ -143,7 +143,7 @@ export function resumoEmAberto(/** @type {Registro[]} */ abertos) {
   };
 }
 
-/** SCs e itens por faixa de dias úteis em aberto. */
+/** SCs e itens por faixa de dias em aberto (corridos). */
 export function porFaixaDeDias(/** @type {Registro[]} */ abertos) {
   return FAIXAS_DIAS.map((f) => {
     const linhas = abertos.filter((r) => faixaDe(r.diasEmAberto) === f.id);

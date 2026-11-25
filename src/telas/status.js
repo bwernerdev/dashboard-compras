@@ -25,7 +25,7 @@ const COLUNAS = [
   { id: 'descricao', rotulo: 'Produto', valor: (r) => r.descricao, classe: () => 'texto-longo' },
   { id: 'solicitante', rotulo: 'Solicitante', valor: (r) => r.solicitante, classe: () => 'texto-medio' },
   { id: 'data', rotulo: 'Data', tipo: 'data', valor: (r) => r.data },
-  { id: 'dias', rotulo: 'Dias em aberto', num: true, centro: true, valor: (r) => r.diasEmAberto, formato: fmt.inteiro, titulo: 'Dias úteis; "-" = já tem pedido ou foi cancelada' },
+  { id: 'dias', rotulo: 'Dias em aberto', num: true, centro: true, valor: (r) => r.diasEmAberto, formato: fmt.inteiro, titulo: 'Dias corridos desde a criação; "-" = já tem pedido ou foi cancelada' },
   { id: 'filial', rotulo: 'Filial', valor: (r) => r.filial },
   { id: 'nomeFilial', rotulo: 'Nome da filial', valor: (r) => r.nomeFilial, classe: () => 'texto-medio' },
   { id: 'comprador', rotulo: 'Comprador', valor: (r) => r.comprador ?? '-' },

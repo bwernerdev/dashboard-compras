@@ -65,7 +65,7 @@ test('base: descarta outras filiais, converte tipos e aplica as regras', async (
   assert.equal(a.sc, '1234567');
   assert.equal(a.nomeFilial, 'Filial Teste');
   assert.equal(a.comprador, 'Fulano');
-  assert.equal(a.diasEmAberto, 7);
+  assert.equal(a.diasEmAberto, 8);
   assert.equal(a.sla, 'No Prazo');
   assert.equal(a.savingReal, 7.5);
   assert.equal(a.requisicaoMe, 111);

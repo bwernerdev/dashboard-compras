@@ -1,5 +1,5 @@
 // Diálogo "Configuração": de-para de filiais e apelidos de compradores. O prazo do SLA é fixo
-// (30 dias úteis, `PRAZO_SLA_DIAS` em regras.js).
+// (30 dias corridos desde a criação, `PRAZO_SLA_DIAS` em regras.js).
 // Fica salvo neste navegador (localStorage). A ordem das linhas importa: vale a primeira
 // que bate, como o PROCV da planilha antiga.
 import { el, substituir } from '../ui/dom.js';

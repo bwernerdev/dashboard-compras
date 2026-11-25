@@ -44,13 +44,13 @@ function seloSla(sla) {
 }
 
 const COLUNAS = [
-  { id: 'dias', rotulo: 'Dias em aberto', num: true, centro: true, valor: (r) => r.diasEmAberto, formato: fmt.inteiro, titulo: 'Dias úteis desde a criação (ou do pedido, se posterior)' },
+  { id: 'dias', rotulo: 'Dias em aberto', num: true, centro: true, valor: (r) => r.diasEmAberto, formato: fmt.inteiro, titulo: 'Dias corridos desde a criação (Dias da aprovação)' },
   { id: 'sc', rotulo: 'SC', semDuploClique: true, valor: (r) => r.sc, exibir: (r) => (ehRegularizacao(r) ? [r.sc, el('span', { class: 'so-leitor' }, ' (regularização)')] : r.sc) },
   { id: 'nomeFilial', rotulo: 'Nome da filial', valor: (r) => r.nomeFilial, classe: () => 'texto-medio' },
   { id: 'regional', rotulo: 'Regional', valor: (r) => r.regional },
   { id: 'filial', rotulo: 'Filial', valor: (r) => r.filial },
   { id: 'solicitante', rotulo: 'Solicitante', valor: (r) => r.solicitante, classe: () => 'texto-medio' },
-  { id: 'sla', rotulo: 'SLA', valor: (r) => r.sla, exibir: (r) => seloSla(r.sla), titulo: `Fora do prazo: mais de ${PRAZO_SLA_DIAS} dias úteis em aberto` },
+  { id: 'sla', rotulo: 'SLA', valor: (r) => r.sla, exibir: (r) => seloSla(r.sla), titulo: `Fora do prazo: mais de ${PRAZO_SLA_DIAS} dias em aberto` },
   { id: 'descricao', rotulo: 'Produto', valor: (r) => r.descricao, classe: () => 'texto-longo' },
   { id: 'status', rotulo: 'Status', valor: (r) => r.status, exibir: (r) => seloDoStatus(r.status) },
   // Nome do aprovador sem caixa alta só na tela ("Ag. aprovação Fabiano Lechinski"); Excel e pesquisa usam o texto do ME.
@@ -70,11 +70,11 @@ export function telaAtendimento(ctx) {
     cartao({ icone: 'check', rotulo: 'SCs no prazo', valor: fmt.inteiro(resumo.scsNoPrazo), detalhe: `${fmt.pct(resumo.pctScsNoPrazo)} das SCs com prazo`, variacao: vs('scsNoPrazo', fmt.inteiro), serie: serieDe(ctx.historico, (p) => p.aberto.scsNoPrazo, resumo.scsNoPrazo) }),
     cartao({
       icone: 'alerta', rotulo: 'SCs fora do prazo', valor: fmt.inteiro(resumo.scsFora), tom: resumo.scsFora ? 'critico' : null,
-      detalhe: resumo.scsSemPrazo ? `${fmt.qtd(resumo.scsSemPrazo, 'SC', 'SCs')} sem prazo definido` : `Algum item com mais de ${PRAZO_SLA_DIAS} dias úteis em aberto`,
+      detalhe: resumo.scsSemPrazo ? `${fmt.qtd(resumo.scsSemPrazo, 'SC', 'SCs')} sem prazo definido` : `Algum item com mais de ${PRAZO_SLA_DIAS} dias em aberto`,
       variacao: vs('scsFora', fmt.inteiro, 'menor'),
       serie: serieDe(ctx.historico, (p) => p.aberto.scsFora, resumo.scsFora),
     }),
-    cartao({ icone: 'relogio', rotulo: 'Mais antigo', valor: `${fmt.inteiro(resumo.maxDias)} dias`, detalhe: `Média: ${fmt.decimal(resumo.mediaDias)} dias úteis`, variacao: vs('maxDias', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.maxDias, resumo.maxDias) }),
+    cartao({ icone: 'relogio', rotulo: 'Mais antigo', valor: `${fmt.inteiro(resumo.maxDias)} dias`, detalhe: `Média: ${fmt.decimal(resumo.mediaDias)} dias`, variacao: vs('maxDias', fmt.inteiro, 'menor'), serie: serieDe(ctx.historico, (p) => p.aberto.maxDias, resumo.maxDias) }),
   );
 
   const doPre = (id) => RECORTES_PRE.find((p) => p[0] === id)?.[2] ?? (() => true);

@@ -94,7 +94,8 @@ export function ehServico(unidade) {
 
 /**
  * SLA (pedido da equipe, 12/11/2026; substitui a tabela por prioridade e serviço da aba `sla`):
- * item em aberto só fica "Fora do Prazo" com mais de 30 dias úteis em aberto, qualquer prioridade.
+ * item em aberto só fica "Fora do Prazo" com mais de 30 dias em aberto, qualquer prioridade.
+ * Dias em aberto = Dias da aprovação (corridos desde a criação), pedido do usuário em 25/11/2026.
  */
 export const PRAZO_SLA_DIAS = 30;
 
@@ -173,7 +174,8 @@ export function calcularLinhaBase(r, cfg, hoje) {
   // Data = SE(pedido < criação; criação; pedido). Vazia conta 0.
   const dataRef = (r.dataPedido ?? 0) < (r.criacao ?? 0) ? (r.criacao ?? 0) : (r.dataPedido ?? 0);
   const emAberto = vazia(r.numeroPedido) && vazia(r.dataCancelamento);
-  const diasEmAberto = emAberto ? diasUteis(dataRef, hoje) : null;
+  const diasDaAprovacao = dias(hoje, r.criacao);
+  const diasEmAberto = emAberto ? diasDaAprovacao : null;
   const horasEmAberto = emAberto ? diasUteis(r.criacao, hoje) * 8.8 : null;
 
 
@@ -183,7 +185,7 @@ export function calcularLinhaBase(r, cfg, hoje) {
     ...filial,
     compradorCompleto,
     comprador,
-    diasDaAprovacao: dias(hoje, r.criacao),
+    diasDaAprovacao,
     horasEmAberto,
     diasEmAberto,
     data: dataRef === 0 ? null : dataRef,
