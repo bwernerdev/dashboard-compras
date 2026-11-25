@@ -87,6 +87,23 @@ test('xlsx completo: abas, cabeçalho, colunas escolhidas e linhas', async () =>
   assert.equal(dg[1][1], '01/10/2026');
 });
 
+test('linha vazia (formatada no Excel) antes do cabeçalho é pulada', async () => {
+  const blob = await criarXlsx([{ nome: 'Relatório', linhas: [[null, null], ['', null], ['A', 'B'], ['x', 1]] }]);
+  const recebidas = [];
+  let cab;
+  await lerAba(await abrirPasta(blob), 'Relatório', {
+    aoCabecalho: (c) => { cab = c; return null; },
+    aoLinha: (v, n) => recebidas.push([n, Array.from(v)]),
+  });
+  assert.deepEqual(cab, ['A', 'B']);
+  assert.deepEqual(recebidas, [[4, ['x', 1]]]);
+});
+
+test('aba só com linhas vazias dá erro de aba vazia', async () => {
+  const pasta = await abrirPasta(await criarXlsx([{ nome: 'Relatório', linhas: [[null], [null]] }]));
+  await assert.rejects(lerAba(pasta, 'Relatório', {}), /está vazia/);
+});
+
 test('aba inexistente e arquivo que não é xlsx dão mensagem clara', async () => {
   const pasta = await abrirPasta(await criarXlsx([{ nome: 'Plan1', linhas: [['a']] }]));
   await assert.rejects(lerAba(pasta, 'Relatório', {}), /Aba "Relatório" não encontrada.*Plan1/);

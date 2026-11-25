@@ -246,6 +246,8 @@ export async function lerAba(pasta, nomeAba, { aoCabecalho, aoLinha, aoAvancar, 
   let cabecalho = null;
   const leitor = new LeitorDeLinhas(strings, (valores, numero) => {
     if (cabecalho === null) {
+      // Linha só com células vazias (formatadas no Excel) não é cabeçalho: segue para a próxima.
+      if (!valores.some((v) => v !== undefined && v !== null && v !== '')) return;
       cabecalho = Array.from(valores, (v) => (v === undefined || v === null ? '' : String(v)));
       const colunas = aoCabecalho ? aoCabecalho(cabecalho) : null;
       if (colunas) leitor.definirColunas(colunas);
