@@ -215,204 +215,67 @@ Exportação em todas: Excel e PDF (mesmo padrão do `giro-estoque`).
 
 ---
 
-## 8. Resultado da fase 1 (11/11/2026)
+## 8. Fase 1 — leitor e regras (11/11/2026)
+- Base 54 MB (190.112 linhas lidas, 8.555 mantidas, 26 filiais) + Follow-Up 11 MB: 4,2 s no navegador (worker). Meta era 20 s.
+- `npm run conferir` bate com a planilha: colunas da Base/Follow-UP, Spend (ao centavo), Saving, sc p Compr, dias úteis (DIATRABALHOTOTAL(0; 11/11/2026) = 33098). Colunas da seção 2 (dias em aberto, SLA, tempos) só têm teste unitário: na planilha estão erradas.
+- `Saving` vem do ME como texto pt-BR (`"268,93"`): converter como o Excel (leitura ingênua zerava 86 linhas).
+- No Saving da planilha, os filtros ativos vêm das segmentações, não do filtro de página: o painel mostra os filtros ativos.
 
-### Desempenho (bases de 11/11/2026)
-| Arquivo | Linhas lidas | Mantidas (26 filiais) | Tempo Node | Tempo navegador (worker) |
-|---|---|---|---|---|
-| `base.xlsx` (54 MB) | 190.112 | 8.555 | ~3 s | 3,1 s |
-| `Follow-Up.xlsx` (11 MB) | 76.389 | 2.983 | ~0,7 s | as duas juntas em 4,2 s |
+## 9. Fase 2 — telas do app (11 e 12/11/2026)
+- **Casca:** abas, filtros globais (Regional, Filial, Comprador, Prioridade, Contrato?; "Mês do pedido" só no Saving), Atualizar bases, Configuração, Imprimir (A4 deitado, filtros no topo), tema claro/escuro. Clicar em linha de regional/filial/comprador filtra tudo.
+- **Toda tabela:** ordena, pesquisa, pagina, exporta .xlsx. **Memória local:** última importação no IndexedDB; dias em aberto e SLA recalculados para hoje; nada sai do computador.
+- **Configuração** (filiais e compradores) salva no navegador, com "Restaurar padrão". SLA fixo: 30 dias úteis. Filial nova no de-para pede reimportar a Base.
+- **Regional:** SCs em aberto, % no prazo, fora do prazo, média, mais antiga; SCs por faixa de dias; tabela por regional/filial; lista de itens. **Compradores:** pré-pedidos por comprador × regional (primeiro), SCs distintas por comprador × status. **Saving:** total, economia, % por filial, mês e comprador.
+- **Regras conferidas com a aba sc p Compr (12/11/2026):**
+  - SCs por comprador × status: contagem distinta de "Solicitação de Compra"; "-" fora do de-para; Pendente sem "Selecionado por". Total Geral difere em 1 (linha vazia da Base).
+  - Pré-pedidos: contagem distinta de "Número Pré-Pedido"; **vazio conta 1 por grupo**, igual à planilha (Thayane 1.354 = 1.353 + 1). Só compradores do de-para; "-" e Pendente ficam fora da tabela e do cartão.
+  - Período De/Até: pré-pedidos recortados pela data de criação do pré-pedido; SCs, pela criação da SC.
+  - Filial 555 mantida por decisão da equipe.
+- Saíram a pedido da equipe (12/11): recorte por SLA da lista, tabela "Participação e SLA por comprador", legenda de regularização, coluna Prazo máx.
 
-Meta era < 20 s.
-
-### Conferência com a planilha (`npm run conferir`)
-Recalculando as 10.824 linhas da aba `Base` e as 2.357 da `Follow-UP` com `src/regras.js`, **tudo confere**:
-- Colunas por linha: SC, OF, Filial Corr., Nm Fil Corr., Comprador Ajustado Completo, Comprador, Dias da Aprovação, Contrato?, Saving Real, Regional, Filial Ajust, Ano OF, Mês OF.
-- Tabelas dinâmicas: **Spend** (11 filiais, ao centavo), **Saving** (total e economia por filial, com o filtro que estava aplicado: Comprador = Thayane, Contrato? = não) e **sc p Compr** (SCs distintas por comprador × status).
-- Método dos dias úteis: DIATRABALHOTOTAL(0; 11/11/2026) = 33098, o mesmo número que a planilha mostra nas linhas quebradas.
-
-As colunas da seção 2 (dias em aberto, Data, Serviço, SLA, tempos por etapa) não têm como conferir com a planilha, porque lá estão erradas. Ficam cobertas pelos testes unitários.
-
-### Achados durante a fase 1
-- O `Saving` vem do ME como texto pt-BR (`"268,93"`). Uma leitura ingênua zerava 86 linhas; a regra converte como o Excel.
-- Na tabela Saving, os filtros ativos vêm das segmentações, não do filtro de página (que mostra "(Tudo)"). O painel novo precisa deixar os filtros ativos visíveis.
-
-### Tela da fase 1
-`npm run dev`: escolher/arrastar as duas bases, progresso, cartões (linhas, período, SCs em aberto, SLA, Spend, Economia) e prévia das SCs em aberto ordenadas por dias.
-
----
-
-## 9. Resultado da fase 2 (11/11/2026)
-
-### O que existe
-- **Casca:** topo com as abas Regional | Compradores | Saving, período das bases (Dados Gerais), "Atualizar bases", "Configuração", "Imprimir" e tema claro/escuro.
-- **Filtros globais** numa faixa fixa acima de tudo: Regional, Filial, Comprador, Prioridade, Contrato?; "Mês do pedido" só no Saving. Clicar numa linha de regional/filial/comprador filtra o painel inteiro.
-- **Regional:** SCs em aberto, % no prazo, itens fora do prazo, média e mais antiga; SCs por faixa de dias úteis (clique recorta a lista); tabela por regional ou filial com barra de SLA; lista dos itens em aberto (o recorte por SLA saiu em 12/11/2026, a pedido da equipe).
-- **Compradores:** pré-pedidos por comprador × regional (em destaque), SCs distintas por comprador × status (barras empilhadas + tabela). "Pendente" destacado. A tabela "Participação e SLA por comprador" (a % sc's atendidas da planilha) saiu em 12/11/2026 a pedido da equipe.
-- **Saving:** total comprado, economia, % saving (2 casas), por filial, por mês do pedido e por comprador.
-- **Toda tabela** ordena, pesquisa (lista de SCs), pagina e exporta para o Excel (.xlsx, botão "Exportar Excel"). "Imprimir" sai em A4 deitado com os filtros ativos escritos no topo.
-- **Memória local:** a última importação fica no navegador (IndexedDB). Ao abrir, dias em aberto e SLA são recalculados para hoje. Nada sai do computador.
-- **Configuração** editável na tela (filiais, compradores; o SLA saiu em 12/11/2026, prazo fixo de 30 dias úteis), salva no navegador, com "Restaurar padrão". Filial nova no de-para pede reimportar a Base.
-
-### Conferência (`npm run conferir`, usando `src/analise.js`, as mesmas funções das telas)
-- **Spend** e **Saving** por filial: batem ao centavo.
-- **sc p Compr, SCs por comprador × status:** batem. Única diferença: a planilha tem 1 SC a mais em "-", que é uma linha vazia da tabela Base (o app não lê linha sem filial).
-- **sc p Compr, pré-pedidos por comprador × regional:** batem (ex.: Thayane 1.354). A contagem distinta do modelo de dados da planilha conta o pré-pedido vazio como um valor (+1 em cada grupo com SC sem pré-pedido); por decisão de 11/11/2026 o app conta igual. Só aparecem compradores e regionais com pelo menos um pré-pedido de verdade.
-- **Revalidação da aba sc p Compr (12/11/2026, pedido da equipe: "regra exatamente a da planilha"):** lidas as definições das 3 tabelas dinâmicas e das segmentações (todas em "Todos").
-  - SCs por comprador × status: contagem distinta de "Solicitação de Compra" no modelo de dados, comprador = coluna "Comprador" (apelido do de-para; "-" fora dele; Pendente sem "Selecionado por"). Bate linha a linha, inclusive a linha Total Geral (3.837 x 3.836: a linha vazia da tabela Base).
-  - Pré-pedidos (QTD Pré-Pedido): contagem distinta de "Número Pré-Pedido"; o vazio conta 1 em cada grupo (ex.: Thayane 1.354 = 1.353 pré-pedidos gerados + 1). A planilha mostra **só os compradores do de-para** (Thayane, Vitor, Bruno W.): "-" tinha 218 itens com pré-pedido e ficava de fora. **Corrigido no app**: "-" e Pendente saem da tabela e do cartão "Pré-pedidos" (antes o app mostrava "-" com 162).
-  - % sc's atendidas: contagem de SC (itens) do comprador ÷ total dos compradores visíveis. A planilha foi salva filtrada só na Thayane (100%); o app com o filtro Comprador = Thayane dá 100%. Sem filtro, o app mostra todos.
-  - `npm run conferir` passou a conferir também a linha Total Geral e comprador que só o app mostra.
-  - Depois, a pedido da equipe, a tabela "Participação e SLA por comprador" (% sc's atendidas) saiu do app; o `conferir` deixou de comparar essa tabela.
-  - Destaque da aba igual à planilha (pedido da equipe): pré-pedidos por comprador e regional em primeiro (cartão, gráfico empilhado por regional e tabela), SCs por status depois.
-  - Período De/Até: os pré-pedidos agora são recortados pela **data de criação do pré-pedido** (antes, pela criação da SC). Com o período só em 12/11, o Bruno W. tinha 4 (pré-pedidos das 4 SCs criadas nesse dia); pela data do pré-pedido são 23. As SCs continuam pela criação da SC. Sem período, nada muda (igual à planilha, que não tem período).
-  - Planilha atualizada com a base de 12/11 (consultas apontando para a pasta `dashboard`): `npm run conferir` deu tudo igual. O app com a `base.xlsx` só difere pela filial 555, mantida por decisão da equipe (1.702 SCs: 1.489 em "-", 212 Pendente, 1 da Thayane).
-
-### Base de 11/11/2026 na tela
-397 SCs em aberto (622 itens), 74,1% no prazo, 143 itens fora do prazo, 70 sem prazo (status sem SLA ou sem linha na tabela), média de 9,7 dias úteis, mais antiga com 42.
-
-### Testes
-- `npm test`: 48 testes unitários (inclui `tests/analise.test.js`).
-- `npm run test:e2e`: 8 testes no Chrome com bases fictícias (importação, filtros, as três telas, memória, CSV, configuração, tema).
-
----
-
-## 10. Resultado da fase 3 (11/11/2026)
-
-### O que existe
-- **Botão "Gerar painel"** no app da equipe (ativo depois de importar a Base): baixa `painel-compras.html` e mostra como publicar.
-- **O arquivo** é um `.html` único (CSS, JS e dados embutidos), com as telas **Regional** e **Saving**, os filtros globais, tema e "Copiar tabela". Números congelados na data em que foi gerado (o topo mostra "dados de dd/mm/aaaa hh:mm").
-- **Dados dentro do arquivo:** só os campos que essas duas telas usam (`src/painel/dados.js`). O detalhe do item (descrição, solicitante, código) vai só para SC em aberto. **Não vão:** tela Compradores, pré-pedidos, configuração (de-para com descrições e nomes completos), regras de importação.
-- **No quadro do SharePoint:** aviso no topo, sem "Exportar Excel" e sem "Imprimir"; "Copiar tabela" cola em células no Excel. Baixado e aberto no computador: "Exportar Excel" e Imprimir voltam.
-- Casca comum ao app e ao painel (`src/ui/casca.js`): o painel usa as mesmas telas e contas do app.
-
-### Base de 11/11/2026
-Painel com 8.555 linhas: **0,18 MB**, gerado em ~0,1 s. Aberto num quadro isolado igual ao do SharePoint, mostra os mesmos números do app (397 SCs em aberto, 622 itens, 74,1% no prazo, 143 fora).
-
-### Pendências de compra e contrato (11/11/2026)
-Status do acompanhamento diário. No ME esses itens **nunca** têm "Selecionado por" (6.099 de 6.099 na base de 11/11/2026), então ficam no comprador **"Pendente"**: filtrar por um comprador os esconde. A lista de SCs em aberto (Regional) ganhou o recorte **Status** com contagem (lista de marcar: vários status de uma vez, igual aos filtros globais) e o atalho **"Só pendências"** (378 itens nas 26 filiais: 210 de compra, 168 de contrato). Lista vazia com pendência escolhida explica o filtro Comprador. Em aberto: como a equipe divide as pendências entre compradores (categoria/"Grupo Produto", filial?). Com a regra, o app pode atribuir o comprador.
-
-### Lista de SCs em aberto agrupada por SC (11/11/2026)
-Pedido da equipe: igual à tabela dinâmica da aba Regional, cada SC aparece uma vez (Dias da aprovação, SC, Data, Prioridade na 1ª linha) com os itens embaixo (Status, Produto, Código, Qtd., Solicitante, Filial, Nome da filial, Comprador, Regional). A equipe pediu para tirar as colunas Dias em aberto, SLA, Prazo máx. e Item; o recorte de faixa de dias continua. O recorte de SLA acima da lista saiu em 12/11/2026 (pedido da equipe); o SLA segue nos cartões e na tabela por regional. Ordem: Dias da aprovação, do maior para o menor. Dias da aprovação e Qtd. centralizados. O painel publicado deixou de levar `item` e `slaMax` (dados versão 2). Contagem "397 SCs, 622 itens"; paginação por SC. CSV e "Copiar tabela" continuam com um item por linha, tudo preenchido (melhor para filtrar no Excel). Conferido com a SC 7715098: 3 itens, como na planilha.
-
-### Largura das colunas (12/11/2026)
-Pedido da equipe: aumentar e diminuir colunas. Em todas as tabelas, a borda direita do cabeçalho muda a largura: **arrastar**, ou **setas** com o foco nela (10 px; Shift: 50 px). **Dois cliques** na borda fazem o **autoajuste**: a coluna fica com a largura do maior conteúdo da página (cabeçalho numa linha), como no Excel; **"Larguras originais"** (barra da tabela) volta todas. Texto que não cabe fica com reticências (texto inteiro ao passar o mouse). Mínimo 40 px. Lembradas neste navegador por tabela. Arrastar não reordena.
-
-### Lista de SCs em tela cheia (12/11/2026)
-Pedido da equipe: a lista "SCs em aberto" ocupar a tela toda, em desktop (não há uso em celular). Botão **"Tela cheia"** no título do bloco: a lista cobre a janela e a tabela usa toda a altura que sobra (cabeçalho fixo, rolagem só dentro dela), de borda a borda: sem margem à esquerda, à direita e embaixo; a paginação sobe para a linha da pesquisa. **Esc** ou "Sair da tela cheia" volta; com a lista de Status aberta, o Esc fecha a lista primeiro. Lembrada neste navegador (`lista-tela-cheia`). Vale também no painel publicado (dentro do quadro do SharePoint).
-- Sem rolagem para o lado de 1366 a 1920 px, nos dois modos: Produto, Solicitante e Nome da filial encolhem com a janela (reticências; texto inteiro ao passar o mouse), cabeçalhos quebram em 2 linhas quando falta espaço, células e margens mais justas abaixo de 1500 px e página até 1920 px de largura (antes 1500).
-
-### SCs de regularização em vermelho (12/11/2026)
-Pedido da equipe: SC com "Categoria solicitação" = **REGULARIZAÇÃO** (compra já feita, SC aberta depois) fica com a **linha toda em vermelho** na lista de SCs em aberto da Regional. A planilha antiga não tinha essa cor: regra nova.
-- Categoria vale para a SC inteira (nenhuma SC mistura categorias na base de 11/11/2026): todos os itens ficam vermelhos. Base de 11/11/2026: 51 SCs em aberto (57 itens) de 397.
-- Cor: vermelho claro com texto vermelho escuro (estilo do Excel: fundo `#ffc7ce`, texto `#9c0006`); tema escuro `#4a1d22` / `#ffb3b8`. Tokens `--linha-reg-*`. A coluna do olho fica sem cor (fora da grade).
-- Sem legenda (tirada em 12/11/2026 a pedido da equipe, para sobrar espaço para a tabela: a equipe conhece a cor). Leitor de tela ouve "(regularização)" na célula da SC.
-- `analise.ehRegularizacao` (sem maiúsculas nem acento). Também no painel publicado: dados versão 3 com o campo `categoria`.
-
-### SCs emergenciais com faixa vermelha (12/11/2026)
-Pedido da equipe: item com prioridade **EMERGENCIAL** ganha uma **faixa vermelha à esquerda** da linha (4 px, mesma cor da marca da planilha, `--pl-emergencial`) nas listas da Regional, Atendimento e Status. Não é a linha toda em vermelho para não se confundir com regularização; as duas podem aparecer juntas. A prioridade continua escrita na coluna Prioridade (cor nunca sozinha). `classeDaLinhaSc` em `src/ui/cores-planilha.js`; também no painel.
-
-### SCs atendidas: olho e duplo clique (11/11/2026)
-Pedido da equipe: marcar na lista de SCs em aberto as SCs que o comprador já atendeu (a SC continua sem pedido no ME até a próxima base). Na lista da Regional, cada SC tem um **olho** à esquerda, fora da grade; clicar no olho ou dar **dois cliques** em qualquer linha da SC (menos na coluna SC: ali dois cliques selecionam o número para copiar) **recolhe** a SC numa linha só, com Dias da aprovação (fundo cinza) e SC, o resto vazio: igual a recolher a SC na tabela dinâmica da planilha (pedido da equipe em 12/11/2026; antes a SC sumia da lista). Olho riscado ou dois cliques expandem de novo. Sem aviso nem "Desfazer" (tirados a pedido da equipe, para sobrar espaço): o olho riscado desfaz; a contagem mostra "N SCs (M atendidas)". Recolhida fica neutra, sem o vermelho de regularização.
-- Só muda a lista: cartões, gráficos e tabelas por regional continuam contando a SC (ela ainda está em aberto no ME).
-- Fica salvo **neste navegador** (`localStorage`, `src/atendidas.js`), por número de Solicitação; cada marca vence em 120 dias. Não vai para outros computadores nem para o painel.
-- Só no app da equipe (`ligarAtendidas()` no `main.js`); o painel publicado mostra a lista inteira, sem olho.
-- "Exportar Excel", "Copiar tabela", pesquisa e impressão ignoram a coluna do olho (`controle: true` em `ui/tabela.js`).
+## 10. Fase 3 — painel publicado (11 e 12/11/2026)
+- "Gerar painel" baixa `painel-compras.html` (CSS, JS e dados embutidos; números congelados na data da geração). Base de 11/11: 0,18 MB.
+- **Dados públicos** (`src/painel/dados.js`): só o que as telas públicas usam. **Fora:** Compradores, pré-pedidos, configuração (de-para com nomes completos), regras de importação.
+- No quadro do SharePoint: aviso no topo, sem Exportar Excel nem Imprimir; "Copiar tabela" cola no Excel. Aberto como arquivo no computador, os dois voltam.
+- **Pendências de compra/contrato:** no ME nunca têm "Selecionado por", então ficam no comprador "Pendente" (filtrar por comprador as esconde). Recorte Status na lista e atalho "Só pendências". Em aberto: como dividir as pendências entre compradores.
+- **Lista de SCs em aberto:** agrupada por SC (uma linha de SC, itens embaixo), ordem por Dias da aprovação decrescente, paginação por SC. CSV e "Copiar tabela" saem com um item por linha.
+- **Colunas:** largura por arrasto, setas (10 px; Shift 50) ou duplo clique (autoajuste); "Larguras originais"; mínimo 40 px; lembrada por tabela.
+- **Tela cheia** (`lista-tela-cheia`, Esc sai): sem rolagem lateral de 1366 a 1920 px.
+- **Regularização:** categoria = REGULARIZAÇÃO deixa a linha toda vermelha (`#ffc7ce`/`#9c0006`; escuro `#4a1d22`/`#ffb3b8`; `--linha-reg-*`). `analise.ehRegularizacao`; campo `categoria` no painel. Leitor de tela ouve "(regularização)".
+- **Emergencial:** faixa vermelha de 4 px à esquerda (`--pl-emergencial`, `classeDaLinhaSc` em `src/ui/cores-planilha.js`); pode somar com regularização; a prioridade continua escrita.
+- **SC atendida:** olho à esquerda ou duplo clique (fora da coluna SC) recolhe a SC numa linha. Só muda a lista; cartões e gráficos continuam contando. Salvo no navegador (`localStorage`, `src/atendidas.js`), 120 dias; só no app, não no painel. Exportar, copiar, pesquisar e imprimir ignoram a coluna do olho (`controle: true`).
 
 ### Cores da planilha (11/11/2026)
-Pedido da equipe: mesmas cores da formatação condicional do `.xlsm` (abas Status, Entrega, Regional, Saving; tema Office).
+Mesmas cores da formatação condicional do `.xlsm` (tema Office).
 | Valor | Planilha (selo na tabela) | Gráfico claro / escuro |
 |---|---|---|
 | Em Pedido | `#C6E0B4` | `#1BAF7A` / `#199E70` |
 | Em Pré-Pedido | `#2F5597` (texto branco) | `#6250D6` / `#9085E9` |
 | Em Cotação | `#FFE699` | `#EDA100` / `#C98500` |
 | Em pendências de compra | `#B4C6E7` | `#6AA8F0` / `#5594DC` |
-| Em pendências de contrato | `#8EA9DB` (planilha: `#B4C6E7`, igual à de compra) | `#1D5FB0` / `#2A5FC4` |
-| Sel. Comprador | sem cor (como na planilha) | `#9AA1AB` / `#8B929C` |
+| Em pendências de contrato | `#8EA9DB` (planilha: `#B4C6E7`) | `#1D5FB0` / `#2A5FC4` |
+| Sel. Comprador | sem cor | `#9AA1AB` / `#8B929C` |
 | Cancelado | `#FF0000` | `#E5483B` / `#E0584C` |
 | NORMAL / URGENTE / EMERGENCIAL | marca `#D9D9D9` / `#FFFF00` / `#C00000` | — |
 | % Saving "-" ou < 0,1% / ≥ 6% | `#FFD966` / `#00B050` | — |
 
-**Reavaliação (11/11/2026).** A 1ª versão pintava a célula inteira e usava os fundos da planilha também nas barras. Problemas: no gráfico, os fundos claros somem no tema claro e o azul-escuro e o roxo somem no escuro (o validador reprova); branco sobre `#FF0000` tem contraste 4,0, abaixo de 4,5; amarelo e vermelho significam coisas diferentes em Prioridade e Status, colunas vizinhas; contrato tinha uma cor na lista e outra no gráfico. Ficou assim:
-- **Tabela:** Status e % Saving em selo com o fundo exato da planilha e texto preto (contraste ≥ 5:1); branco só no azul-escuro. Prioridade como marca quadrada + texto, então não se confunde com o status.
-- **Gráfico:** a mesma família de cor de cada status, em tons validados por tema (luminosidade, daltonismo, contraste). As duas pendências se separam por claro/escuro, e o selo de contrato fica um tom acima para casar.
-- Sel. Comprador fica cinza neutro no gráfico de propósito, porque não tem cor na planilha.
+- **Tabela:** selo com o fundo exato da planilha e texto preto (contraste ≥ 5:1; branco só no azul-escuro). Prioridade em marca quadrada + texto, para não se confundir com o status.
+- **Gráfico:** mesma família de cor, em tons validados por tema (contraste, daltonismo). Fundos da planilha somem no claro e o azul/roxo escuros somem no escuro.
+- Sel. Comprador fica cinza neutro no gráfico de propósito.
 
 ### Publicar (toda atualização)
-1. App da equipe: "Atualizar bases" e depois "Gerar painel".
-2. OneDrive/SharePoint, pasta do painel: enviar `painel-compras.html` e escolher **Substituir** (mesmo nome).
-3. O link "Pessoas da empresa" e o cadastro na Intranet continuam os mesmos. A primeira vez: criar o link desse arquivo e cadastrar na Intranet.
+1. App da equipe: "Atualizar bases", depois "Gerar painel".
+2. OneDrive/SharePoint: enviar `painel-compras.html` com **Substituir** (mesmo nome). O link e o cadastro na Intranet não mudam.
 
-### Testes
-- `npm test`: 53 testes unitários (novos em `tests/painel.test.js`: campos públicos, compactação, `gerarTsv`).
-- `npm run test:e2e`: 10 testes. Novos em `e2e/painel.spec.js`: painel aberto como arquivo e num iframe `sandbox` + `srcdoc` (como o SharePoint), conferindo telas, números, aviso, botões e que os dados embutidos não têm pré-pedido nem nome completo.
+## 11. Fase 4 — demais telas públicas (12/11/2026)
+- **Ordem das abas** (app e painel, `src/telas/publicas.js`): Status, Entrega, Regional, Spend, Saving, Atendimento, Organograma; no app, Compradores (interna) entra depois da Regional. Aba inicial: Regional.
+- **Status:** SCs distintas por status (a barra recorta a lista), lista agrupada por SC com recorte Status e pesquisa.
+- **Entrega** (Follow-Up): OFs distintas por status e filial, lista por SC e OF com fornecedor e CNPJ. `comprador` e `temContrato` também calculados no Follow-Up (`src/regras.js`). Sem Follow-Up, a tela avisa.
+- **Spend:** pedido c/ impostos por filial (% do total, OFs distintas) e por mês; barras no lugar da pizza; soma toda linha com valor, mesmo sem nº de pedido.
+- **Atendimento:** itens em aberto, mais antigos primeiro, com SLA; recorte Todos/Fora/No prazo. Cartões contam **SCs**: fora = algum item fora; no prazo = algum no prazo e nenhum fora.
+- **Organograma:** `src/telas/organograma.js` + fotos em `organograma-fotos.js` (96 px, entram no painel). Mudou a equipe: editar os dois. Desde 19/11/2026 Lili Beth no lugar de Bruno Werner (regional "Filiais Lili"; Bruno W. continua no de-para para SCs antigas; `REGIONAIS_ANTIGAS`, `COMPRADORES_NOVOS` em `src/config/index.js`; o `conferir` usa o nome antigo).
+- **Painel:** `VERSAO` 5 (`src/painel/dados.js`); bloco `followUp` só com campos da Entrega. Base de 11/11: 0,72 MB com Follow-Up.
+- Follow-Up de 11/11: 2.983 itens, 1.259 OFs (não entregue 919, parcial 409, entregue 8).
 
----
-
-## 11. Resultado da fase 4 (12/11/2026)
-
-Pedido da equipe: tudo o que as abas visíveis da planilha mostram precisa estar no painel gerado.
-
-### O que existe
-- **Abas na ordem da planilha**, no app e no painel (`src/telas/publicas.js`): Status, Entrega, Regional, Spend, Saving, Atendimento, Organograma. O app põe Compradores (interna) depois da Regional. Aba inicial: Regional.
-- **Status** (aba Status): todas as SCs do período, SCs distintas por status (barra recorta a lista), lista agrupada por SC com recorte por Status e pesquisa (no lugar da segmentação Solicitante).
-- **Entrega** (aba Entrega, base Follow-Up): OFs distintas por status de entrega e por filial, lista agrupada por SC e OF com fornecedor e CNPJ. Os filtros globais valem para o Follow-Up (`comprador` e `temContrato` passaram a ser calculados também no Follow-Up, `src/regras.js`). Sem Follow-Up importado, a tela avisa.
-- **Spend** (aba Spend): pedido c/ impostos por filial com % do total e OFs distintas; por mês do pedido. A pizza virou barras ordenadas. Soma toda linha com valor, mesmo sem nº de pedido, como a planilha.
-- **Atendimento** (aba Atendimento): itens em aberto um por linha, do mais antigo, com SLA (a coluna "Prazo máx." saiu com o prazo único de 30 dias); recorte Todos / Fora do prazo / No prazo. Cartões "SCs no prazo" e "SCs fora do prazo" contam SCs, não itens (pedido da equipe, 12/11/2026): SC fora = algum item fora; no prazo = algum item no prazo e nenhum fora.
-- **Organograma**: texto e fotos da aba (cargos e filiais de cada comprador; fotos recortadas em 96 px dentro de `src/telas/organograma-fotos.js`, entram no painel). Erico não tem foto na planilha: iniciais. Corrigidos "Bruno Wener" e "Acessoria". Sem contagem de SCs (pedido da equipe). Mudou a equipe: editar `src/telas/organograma.js` e as fotos. Em 19/11/2026 Lili Beth entrou no lugar de Bruno Werner (mesmo cargo e filiais), com foto enviada pelo usuário; no de-para, a regional "Filiais Bruno" virou "Filiais Lili" e entrou a compradora "Lili Beth Carlos da Silva Melo" (apelido Lili Beth; o Bruno W. continua, para as SCs antigas). Configuração salva no navegador acompanha (`REGIONAIS_ANTIGAS`, `COMPRADORES_NOVOS` em `src/config/index.js`); o `conferir` usa o nome antigo da regional.
-- **Painel** (`src/painel/dados.js`, `VERSAO` 4; 5 desde o SLA único): produto, solicitante, data e filial em toda linha (tela Status), `numeroPedido` (Spend) e `slaMax` (Atendimento); bloco `followUp` só com os campos da Entrega. Continuam fora: Compradores, pré-pedidos, configuração.
-
-- **Tabelas na altura da janela:** a área rolável vai até o fim da janela (desconta a faixa de filtros fixa, medida em `ui/casca.js`) e encolhe com poucas linhas. Corrigido o espaço vazio embaixo das páginas com lista de SCs: textos só para leitor de tela (`.so-leitor`) escapavam da área rolável e esticavam a página.
-- **Organograma em árvore**, como na planilha: líderes em cadeia, equipe embaixo com as filiais; fotos de Bruno e Vitor recortadas dentro do círculo.
-- **Aba "SCs por Comprador"** (era Compradores; id `compradores` mantido) com **período De/Até** pela "Data Criação solicitação": recorta cartões, gráfico e tabelas da tela; fica salvo no navegador; "Limpar período" volta a tudo.
-- **Atendimento agrupado por SC:** itens da mesma SC juntos, com dias em aberto, SC, filial, regional e solicitante só na 1ª linha (como a Regional); a paginação conta SCs. "Exportar Excel" e "Copiar tabela" seguem com um item por linha.
-- **Data da lista da Regional** (coluna "Data Aprovação" desde 12/11/2026) = "Data Criação solicitação" (coluna C do Relatório do ME). Antes vinha da coluna calculada `Data` (a maior entre pedido e criação), que para SC em aberto já dava a mesma data (0 diferenças nas bases de 11/11/2026); agora está explícito. Painel `VERSAO` 6 (+ `criacao` nas SCs em aberto).
-- **Ajustes de UI/UX (12/11/2026, pedido da equipe):**
-  - Regional também conta SLA por SC (cartões "SLA no prazo" e "SCs fora do prazo"; colunas "SCs no prazo"/"SCs fora do prazo" da tabela por regional), igual ao Atendimento; o detalhe do cartão mostra os itens fora.
-  - Variação desde a base anterior nos cartões de Status, Regional e Atendimento ("▼ −1 desde 10/11"). A base anterior é a última de outro dia do ME (IndexedDB, tipo `base-anterior`; reimportar no mesmo dia não troca), recalculada com o "hoje" dela. Verde/vermelho só reforçam o sinal do texto; só no app da equipe, o painel não leva.
-  - Base com 2+ dias úteis desde a execução no ME: selo do período em amarelo com o texto "N dias úteis atrás" (app e painel).
-  - Subtítulos dos blocos em uma frase; o resto (como pesquisar, exportar, olho de atendida) num botão "?" ao lado do título, com dica no hover e no foco.
-  - Spend e Saving por mês: barras deitadas no lugar de colunas (o gráfico `colunas` saiu).
-  - Acabamento (pacote A): fundo da página um tom abaixo do branco, cantos de 12 px e sombra suave em cartões e blocos; cartões com ícone no canto (cor do tom) e número maior (`--fs-3xl`); tabelas com faixa alternada (por SC/OF nas agrupadas) e algarismos de largura fixa; esqueleto enquanto as bases salvas abrem (app) ou os dados descompactam (painel); fade curto ao trocar de aba (sem animação com "reduzir movimento"); estados vazios com ícone e "Limpar filtros".
-  - Topo abaixo de 1100 px (janela pela metade): ações descem para uma linha própria; título e período não quebram. Sem layout de celular.
-  - Pacote moderno (12/11/2026):
-    - Aba **Hoje** (só no app, primeira aba): SCs que viraram fora do prazo desde a base anterior, que vencem em até 2 dias úteis, sem comprador (Pendente) e novas. **Removida em 12/11/2026 (pedido da equipe: não era útil);** aba salva "Hoje" abre a Regional.
-    - **Detalhe da SC:** clicar numa linha (Regional, Atendimento, Status) abre um painel à direita com os dados da SC e todos os itens. Esc ou ✕ fecha. Na Regional com atendidas ligadas, o clique espera 260 ms para não brigar com o duplo clique.
-    - **Mini gráficos** nos cartões de Status, Regional e Atendimento: histórico das últimas 30 bases de dias diferentes (IndexedDB, tipo `historico`). Só sem filtro ativo; aparecem a partir da 2ª base de outro dia.
-    - **Topo compacto** ao rolar: título, abas e emblema numa linha só; volta ao topo, expande.
-    - **Barras** com gradiente e animação de crescer ao abrir a aba (sem animação com "reduzir movimento").
-    - **Comparação de períodos** em Spend e Saving: mês (ou trimestre) atual até o dia de hoje contra o mesmo trecho do anterior, pela data do pedido. Ignora o filtro "Mês do pedido". Painel `VERSAO` 7 (leva `dataPedido`).
-    - **Densidade:** "Linhas compactas" no menu "⋯" das tabelas tira respiro das linhas (todas as tabelas; lembrado no navegador; até 18/11/2026 era o botão "Compacta").
-    - Colunas fixas ao rolar para o lado: testadas e retiradas (a equipe não gostou).
-    - Clicar na coluna SC não abre o detalhe (serve para selecionar e copiar, como no duplo clique).
-  - Recorte de Status das listas (Regional, Status e Entrega) salvo no navegador: volta ao abrir o app (e o painel, onde o navegador deixar guardar) e continua ao importar outra base.
-- **Lista de SCs da Regional (pedido da equipe):** 200 SCs por página (eram 50); as colunas cabem na largura da janela (as de texto e as alargadas encolhem com reticências, sem rolar para o lado); botão "Colunas" oculta colunas (lembrado no navegador; Excel e "Copiar tabela" seguem com todas); tela cheia só pelo botão: abrir o app ou importar mostra sempre a tela normal (pedido da equipe; antes abria sozinha e ficava lembrada).
-- **Filtros lembrados no navegador:** a seleção dos filtros globais volta na próxima vez que abrir o app (e o painel, onde o navegador deixar guardar). "Limpar filtros" limpa também o que ficou salvo.
-- **Status Pré-Pedido no Atendimento (pedido da equipe):** coluna ao lado de Status com a coluna AI da base e os níveis de aprovação traduzidos (seção 3); o nome do aprovador GA do nível 1 vem por filial no padrão (`src/config/padrao.js`, lista da equipe de 12/11/2026; 716 e 555 sem nome) e pode ser trocado na Configuração (salvo só no navegador, como o de-para); configuração salva antes do campo usa o nome do padrão. Painel `VERSAO` 8 (+ `aprovacao`, só o texto traduzido, só em item em aberto; o número do pré-pedido continua fora). Bases de 11/11/2026: 67 itens em aberto em "APROVAÇÃO NÍVEL 1"; nível 2 e 3 não aparecem.
-- **Recortes do Atendimento lembrados (17/11/2026):** SLA e Status Pré-Pedido voltam ao abrir de novo e não zeram ao importar, como o recorte de Status das outras telas. Todo estado lembrado das telas passa por `src/preferencias.js` (`lerEscolha`, `lerConjunto`, `lerJson`).
-- **Itajaí separada (17/11/2026, pedido da equipe):** HUB (570), Fatiados (572) e CD (573) viram filiais próprias em todas as telas e filtros; antes as três somavam como "Itajai". Configuração salva no navegador com o nome antigo é atualizada ao abrir (`atualizarConfigSalva`); nome editado pela equipe fica. Filtro salvo em "Itajai" sai sozinho (valor que não existe mais). O painel publicado muda quando for gerado de novo.
-- **Reimportar bases (17/11/2026, pedido da equipe; 18/11/2026 com cópia do arquivo):** filial incluída na Configuração só tem linhas depois de importar a base de novo (o app guarda só as filiais do de-para: a base real tem 289 mil linhas de 197 filiais e ficam ~12,6 mil). Botão "Reimportar bases" na Configuração: salva as edições e lê a Base e o Follow-Up de novo sem escolher arquivo. Desde 18/11/2026 o app guarda no navegador (IndexedDB, `arquivo-<tipo>`) uma cópia do último arquivo importado de cada tipo, escolhido por clique ou arrastado (~83 MB a Base e ~11 MB o Follow-Up, trocada a cada importação), e o Reimportar lê essa cópia, mesmo depois de fechar o navegador e no Citrix. A cópia vale 8 horas (pedido da equipe: algumas horas, para não ocupar o perfil do navegador); vencida, é apagada quando o app abre e o Reimportar pede o arquivo. Antes usava a referência ao arquivo no disco (`FileSystemFileHandle`), que só existia com o seletor do navegador e não funcionava com pasta de rede no Citrix. Sem cópia (dados do site limpos, sem espaço), pede para escolher o arquivo de novo pela caixa.
-- **Pasta lembrada por tipo na importação (17/11/2026, desfeita em 18/11/2026):** cada caixa abria o seletor do navegador na pasta da última importação daquele tipo (`showOpenFilePicker` com `id` por tipo). No Citrix, com o arquivo na pasta de rede, esse seletor não devolvia o arquivo e a importação não começava (Base, Follow-Up e Contratos). Voltou o seletor comum (`<input type="file">`), que funcionava antes; o Windows abre na última pasta usada, a mesma para os três tipos. Antes de ler, o app copia o arquivo inteiro para a memória numa leitura só, com progresso ("Copiando o arquivo"), porque ler um zip direto da rede, pulando entre partes, é lento. O rodapé dos diálogos mostra a versão do app (data do build e commit), para conferir se o navegador já pegou a versão publicada.
-- **Planilha de contratos como anexo (17/11/2026, pedido da equipe):** a `CONTROLE DE CONTRATOS.xlsx` entra opcional na importação (caixa "Contratos (anexo)") e abre no botão **Contratos** do topo, numa janela em tela cheia separada do dashboard (sem os filtros globais), no app e no painel. Abas Contratos, Pequeno porte, ME e Inativos; Renovações ficou de fora a pedido da equipe (mistura economia por índice, reajuste aplicado e desconto negociado em quadros soltos). Prazo (dias) refeito para hoje (fim − hoje, como a planilha); cartões de vencem em até 30 dias e fim já passou (sem INATIVO); nome da filial pelo de-para; "Exportar Excel". Código em `src/contratos/` e `src/telas/contratos.js`.
-- **"Exportar Excel" no lugar do CSV (17/11/2026, pedido da equipe):** toda tabela, no app e no painel, tem um botão só, "Exportar Excel", que baixa um .xlsx com as linhas filtradas (o CSV saiu; antes o Atendimento e a janela Contratos tinham também "Exportar .xlsx"). Planilha gerada no navegador, sem dependência (`src/ui/tabela-xlsx.js`): número, data, % e R$ como número com o formato do Excel, cabeçalho congelado e com filtro, um item por linha, aba com o título da tabela. O nome do arquivo segue o de antes com `.xlsx` (`scs-em-aberto.xlsx`); as larguras e colunas salvas continuam. Dentro do quadro do SharePoint some (download bloqueado); "Copiar tabela" fica.
-- **Ajustes de tela (17/11/2026, pedido da equipe):** topo compacto com as 8 abas inteiras (aba sem quebra; com base antiga o selo encolhe para "Base de N dias úteis atrás"); meses de Spend e Saving em colunas (tempo da esquerda para a direita); a tabela embaixo de cada gráfico começa recolhida em "Ver tabela (N linhas)" e fica lembrada aberta no navegador (o gráfico tem dica e a tabela continua a um clique); faixa por SC mais visível só nas listas agrupadas (as tabelas simples, como "Por regional", ficam como antes); tela pesada (Status com a base cheia, ~400 ms) mostra o esqueleto ao trocar de aba e fica apagada enquanto um filtro redesenha; contador de filtros ativos e "×" em cada filtro ativo. Topo mais leve: "Gerar painel" e "Imprimir" no menu "Exportar ▾"; o tema virou um botão só com ícone (lua/sol, nome no title). No painel publicado, Imprimir e Tema são só ícone. Organograma coerente com as outras telas: sem faixa de filtros (não mudavam a árvore), filiais com código curto e nome do de-para ("570 · Itajaí - HUB", nome tirado das bases; o texto da planilha no title) e linha de explicação no bloco. Fontes: rótulo dos cartões em 13 px; datas do período do Status na linha de baixo do cartão; nome do aprovador do pré-pedido sem caixa alta na tela do Atendimento ("Ag. aprovação Fabiano Lechinski"; Excel e pesquisa com o texto do ME). Aba Status mais rápida: a ordenação da lista (12 mil itens) levava ~1 s por usar `localeCompare` em cada comparação; agora um comparador só e o resultado guardado (~0,1 s; trocar de página e ordenar ~30 ms).
-- **Qualidade do código (17/11/2026):** `ui/tabela.js` dividido em módulos (exportar, larguras, colunas ocultas, densidade); ESLint (`npm run lint`) e checagem de tipos em JSDoc (`npm run tipos`: nome de campo errado em regras, agregações e dados do painel vira erro); o GitHub Actions roda lint, tipos, testes unitários e e2e antes de publicar, e não publica se algo falhar.
-- **Período no cartão da Status (pedido da equipe, 13/11/2026):** "SCs no período dd/mm/aaaa até dd/mm/aaaa", com início e fim do relatório do ME (Dados Gerais), no app e no painel.
-- **Recorte Status Pré-Pedido no Atendimento (pedido da equipe):** Todos / Ag. aprovação (n) / Outros, junto do recorte de SLA; "Ag. aprovação" = texto traduzido começa com "Ag. aprovação" (`aguardandoAprovacao` em `analise.js`). Funciona também no painel.
-- **Exportar e importar a Configuração (pedido da equipe):** a Configuração continua salva só no navegador; "Exportar" baixa `configuracao-compras.json` (com o que está na tela, mesmo sem salvar) e "Importar" carrega esse arquivo na tela (só os campos conhecidos, como texto, e conferido por `validarConfig`), para conferir e Salvar. Assim uma pessoa passa a configuração para a equipe sem mudar o padrão do repositório.
-- **SLA com prazo único (pedido da equipe):** fora do prazo só com mais de 30 dias úteis em aberto, qualquer prioridade. Saiu a tabela de SLA da Configuração e a coluna "Prazo máx." do Atendimento; painel `VERSAO` 5 (sem `slaMax`). Bases de 11/11/2026: itens fora do prazo de 149 para 43.
-- **Topo e identidade visual:** logo da Controladoria Administrativa CDs à esquerda (até 12/11/2026 só o emblema, sem o texto; desde 13/11/2026 o logo completo, com Seara e o texto, a pedido da equipe), ocupando as duas linhas do topo; também é o ícone da aba. Topo em duas linhas fixas: título e ações em cima, abas embaixo (antes as ações quebravam sozinhas para uma segunda linha). Ações do topo, seletores de filtro e "Filtros" no mesmo tamanho (13 px, 28 px de altura); abas 14 px. Nada específico para celular (pedido da equipe).
-- **Botões dos blocos padronizados (13/11/2026, pedido da equipe):** dentro dos blocos, seletores (Status, Colunas) e botões (Só pendências, Larguras originais, Compacta, Copiar tabela, Exportar Excel, Tela cheia) com o mesmo formato: 28 px, canto de 6 px, fundo cinza, texto 600. A pílula fica só nos filtros da faixa do topo. "Larguras originais" deixou de ser link.
-- **Fontes padronizadas:** uma família (Segoe UI); todos os tamanhos na escala de tokens (setas de 9/10 px, iniciais do organograma e texto de impressão estavam fora); peso 650 virou 700 (a Segoe UI desenhava 700 de qualquer jeito); título do topo subiu para 20 px, acima dos títulos de bloco (16 px).
-- **Listas de marcar como o filtro do Excel** (filtros globais e recortes de status): sem filtro, "Todos" e todas as opções aparecem marcados; desmarcar uma opção tira só ela; desmarcar "Todos" limpa a lista para marcar só o que interessa; marcar "Todos" volta a todas. Antes "Todos" era um botão que só limpava a seleção e ficava desativado sem filtro (parecia não funcionar).
-- **Revisão de UI (18/11/2026):** plural certo nos cartões ("1 item", "1 filial", `fmt.qtd`); barras de status na cor do status (Status e Entrega, iguais à legenda e à tabela) e todas as barras em cor chapada, sem degradê; Atendimento com o nome de cada grupo de botões à vista (SLA, Status Pré-Pedido); "Maior filial" (Spend) mostra o nome da filial e a fatia no detalhe; Spend e Saving com os blocos lado a lado na mesma altura e "Saving por comprador" na largura toda; janela Contratos com CNPJ, setor, observação, status da demanda e encerramento ocultos por padrão e o Valor em R$ nunca cortado; barra das tabelas com "Excel" à vista e o resto no menu "⋯" (Copiar tabela, Linhas compactas, Larguras originais; onde não há download, "Copiar tabela" fica à vista); Período de SCs por Comprador virou um chip na faixa de filtros.
-
-### Bases de 11/11/2026
-- `npm run conferir`: tudo confere, inclusive a tabela dinâmica Spend, agora calculada com a função da tela (`spendPorFilial`).
-- Follow-Up: 2.983 itens, 1.259 OFs; não entregue 919 OFs (2.032 itens), parcial 409 (938), entregue 8 (13).
-- Painel com Base + Follow-Up: ~0,72 MB (0,55 MB sem o Follow-Up).
-
-### Testes
-- `npm test`: 67 testes unitários (novos: SCs por status, spend por filial, entregas por status, Follow-Up no painel).
-- `npm run test:e2e`: 15 testes (novos: ordem das abas, Status, Spend, Atendimento, Organograma, Entrega com e sem Follow-Up; painel com as 7 telas públicas e o Follow-Up).
-
+## 12. Testes (estado de 12/11/2026)
+`npm test`: 67 unitários. `npm run test:e2e`: 15 (importação, filtros, abas, memória, configuração, tema, painel como arquivo e em iframe `sandbox` + `srcdoc` como o SharePoint, sem pré-pedido nem nome completo nos dados embutidos).
